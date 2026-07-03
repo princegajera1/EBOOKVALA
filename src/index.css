@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@300;400;500;600;700&display=swap');
+
+@import "tailwindcss";
+
+:root {
+  --primary: #111827;
+  --primary-hover: #1F2937;
+  --secondary: #6B7280;
+  --accent: #007AFF;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --bg: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --card: #FFFFFF;
+  --border: #E5E7EB;
+  --input-border: #CBD5E1;
+  --text: #111827;
+  --text-secondary: #6B7280;
+  
+  --radius-button: 12px;
+  --radius-card: 16px;
+  --radius-input: 12px;
+  --radius-image: 16px;
+  
+  color-scheme: light;
+}
+
+.dark {
+  --primary: #FFFFFF;
+  --primary-hover: #F3F4F6;
+  --secondary: #AEAEB2;
+  --accent: #0A84FF;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --bg: #000000;
+  --bg-secondary: #111111;
+  --card: #1C1C1E;
+  --border: #3A3A3C;
+  --input-border: #48484A;
+  --text: #FFFFFF;
+  --text-secondary: #AEAEB2;
+  
+  color-scheme: dark;
+}
+
+@theme {
+  --color-brand-primary: var(--primary);
+  --color-brand-primary-hover: var(--primary-hover);
+  --color-brand-secondary: var(--secondary);
+  --color-brand-accent: var(--accent);
+  --color-brand-success: var(--success);
+  --color-brand-warning: var(--warning);
+  --color-brand-danger: var(--danger);
+  --color-brand-bg: var(--bg);
+  --color-brand-bg-secondary: var(--bg-secondary);
+  --color-brand-card: var(--card);
+  --color-brand-border: var(--border);
+  --color-brand-input-border: var(--input-border);
+  --color-brand-text: var(--text);
+  --color-brand-text-secondary: var(--text-secondary);
+  
+  --radius-brand-btn: var(--radius-button);
+  --radius-brand-card: var(--radius-card);
+  --radius-brand-input: var(--radius-input);
+  --radius-brand-img: var(--radius-image);
+  
+  --font-display: "Clash Display", "Plus Jakarta Sans", "Inter", sans-serif;
+  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --shadow-brand: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
+  --shadow-brand-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+}
+
+/* Custom global styles to enforce the design system */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Smooth page selections */
+::selection {
+  background-color: rgba(37, 99, 235, 0.15);
+  color: var(--text);
+}
+
+/* Section separation styling */
+.section-border-top {
+  border-top: 1px solid var(--border);
+}
+
+/* Alternate backgrounds for section separation */
+.bg-section-primary {
+  background-color: var(--bg);
+}
+
+.bg-section-secondary {
+  background-color: var(--bg-secondary);
+}
+
+/* Glassmorphism styling */
+.glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(229, 231, 235, 0.4);
+}
+
+.dark .glass {
+  background: rgba(28, 28, 30, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(58, 58, 60, 0.4);
+}
+
+/* Custom Hide Scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* 3D Mockup Book animations and styling */
+.book-spine-3d {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0,0,0,0.2) 0%, rgba(255,255,255,0.15) 50%, rgba(0,0,0,0.25) 100%);
+  z-index: 10;
+  pointer-events: none;
+}

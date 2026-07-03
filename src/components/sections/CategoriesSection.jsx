@@ -42,25 +42,25 @@ export const CategoriesSection = () => {
             viewport={{ once: true, margin: "-40px" }}
             whileHover={{ 
               y: -4, 
-              borderColor: "#000000",
+              borderColor: "var(--text)",
               boxShadow: "var(--shadow-brand-hover)"
             }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
             onClick={() => navigate(`/marketplace?category=${encodeURIComponent(cat.label)}`)}
-            className="flex flex-col items-center justify-center py-8 px-5 bg-white border border-[#E5E7EB] rounded-brand-card shadow-brand transition-all duration-250 cursor-pointer group w-full"
+            className="flex flex-col items-center justify-center py-8 px-5 bg-brand-card border border-brand-border rounded-brand-card shadow-brand transition-all duration-250 cursor-pointer group w-full"
           >
             {/* Icon Container - 56x56px, circular, soft gray bg */}
-            <div className="w-14 h-14 rounded-full bg-[#F8FAFC] flex items-center justify-center mb-1 shrink-0 group-hover:scale-105 transition-transform duration-250">
-              <Icon className="h-5.5 w-5.5 text-black" strokeWidth={2} />
+            <div className="w-14 h-14 rounded-full bg-brand-bg-secondary flex items-center justify-center mb-1 shrink-0 group-hover:scale-105 transition-transform duration-250">
+              <Icon className="h-5.5 w-5.5 text-brand-text" strokeWidth={2} />
             </div>
             
             {/* Category Label */}
-            <span className="text-[15px] font-semibold text-black mt-4 text-center tracking-tight">
+            <span className="text-[15px] font-semibold text-brand-text mt-4 text-center tracking-tight">
               {cat.label}
             </span>
 
             {/* Book Count */}
-            <span className="text-xs text-gray-400 mt-1 text-center font-medium">
+            <span className="text-xs text-brand-text-secondary mt-1 text-center font-medium">
               {cat.bookCount}
             </span>
           </motion.button>

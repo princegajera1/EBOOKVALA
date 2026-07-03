@@ -9,6 +9,7 @@ import { Button } from "../components/ui/Button";
 import { dbService } from "../services/db";
 import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { FadeUp } from "../components/common/FadeUp";
+import { BookCard } from "../components/book/BookCard";
 
 // Hero Book Covers Mockup Configurations
 const heroBooks = [
@@ -113,7 +114,7 @@ export const Landing = () => {
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[85vh] pt-28 pb-16">
+      <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[85vh] pt-28 pb-16 scroll-mt-[76px]">
         
         {/* Left Content */}
         <div className="lg:col-span-7 flex flex-col gap-6 text-left">
@@ -132,6 +133,20 @@ export const Landing = () => {
             Read, download, and study with advanced AI assistants on technology, design, and business. No pricing plans. No billing dashboards. 100% community-driven.
           </p>
           
+          <div className="flex flex-wrap gap-4 mt-2">
+            <Link to="/marketplace">
+              <Button variant="outline" size="lg" className="font-bold h-12.5 px-6 rounded-full border-brand-border hover:bg-brand-bg-secondary text-brand-text">
+                Browse Library
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/register?role=author">
+              <Button variant="ghost" size="lg" className="font-bold h-12.5 px-6 rounded-full text-brand-text hover:bg-brand-bg-secondary">
+                Publish a Book
+              </Button>
+            </Link>
+          </div>
+
           {/* Embedded Hero Search */}
           <form onSubmit={handleHeroSearch} className="w-full max-w-lg mt-2">
             <div className="relative flex items-center p-1.5 rounded-2xl bg-brand-bg-secondary border border-brand-border shadow-brand focus-within:ring-4 focus-within:ring-brand-accent/10 focus-within:border-brand-accent transition-all duration-300">
@@ -148,20 +163,6 @@ export const Landing = () => {
               </Button>
             </div>
           </form>
-
-          <div className="flex flex-wrap gap-4 mt-2">
-            <Link to="/marketplace">
-              <Button variant="outline" size="lg" className="font-bold h-12.5 px-6 rounded-full border-brand-border hover:bg-brand-bg-secondary text-brand-text">
-                Browse Library
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link to="/register?role=author">
-              <Button variant="ghost" size="lg" className="font-bold h-12.5 px-6 rounded-full text-brand-text hover:bg-brand-bg-secondary">
-                Publish a Book
-              </Button>
-            </Link>
-          </div>
 
           {/* Stat Numbers */}
           <div className="mt-8 pt-8 border-t border-brand-border flex flex-wrap gap-6 lg:gap-10 select-none">
@@ -257,21 +258,14 @@ export const Landing = () => {
 
       {/* 2. RECENTLY ADDED */}
       {recentlyAdded.length > 0 && (
-        <div className="bg-brand-bg-secondary border-t border-brand-border py-20 transition-colors duration-300">
+        <div className="bg-brand-bg-secondary border-t border-brand-border py-16 md:py-20 transition-colors duration-300 scroll-mt-[76px]">
           <div className="max-w-7xl mx-auto px-6 w-full text-left">
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">New Arrivals</span>
             <h2 className="text-3xl font-display font-black text-brand-text mt-3 mb-8">Recently Added Books</h2>
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {recentlyAdded.map((book) => (
-                <Link key={book.id} to={`/book/${book.slug}`} className="group block text-left">
-                  <div className="aspect-[2/3] rounded-brand-card overflow-hidden border border-brand-border bg-brand-card group-hover:shadow-brand transition-all duration-300 relative">
-                    <img src={book.coverURL} alt="" className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300" />
-                    <div className="absolute top-2 right-2 px-2 py-0.5 bg-brand-success text-white text-[9px] font-bold uppercase rounded-full">Free</div>
-                  </div>
-                  <h4 className="font-bold text-xs text-brand-text mt-3 truncate">{book.title}</h4>
-                  <p className="text-[10px] text-brand-text-secondary mt-0.5 truncate">by {book.authorName}</p>
-                </Link>
+                <BookCard key={book.id} book={book} />
               ))}
             </div>
           </div>
@@ -279,7 +273,7 @@ export const Landing = () => {
       )}
 
       {/* 3. FEATURED BOOKS (Carousel) */}
-      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20">
+      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20 scroll-mt-[76px]">
         <div className="max-w-7xl mx-auto px-6 w-full">
           <div className="flex items-end justify-between mb-8">
             <div className="text-left">
@@ -325,25 +319,7 @@ export const Landing = () => {
             {featuredBooks.map((book, idx) => (
               <FadeUp key={book.id} delay={idx * 0.08}>
                 <div className="w-[280px] shrink-0 snap-start">
-                  <Link to={`/book/${book.slug}`}>
-                    <div className="bg-brand-card border border-brand-border rounded-brand-card p-4 shadow-brand hover:shadow-brand-hover transition-all duration-300 hover:-translate-y-1.5 group text-left">
-                      <div className="aspect-[2/3] rounded-[12px] overflow-hidden border border-brand-border bg-brand-bg mb-4">
-                        <img src={book.coverURL} alt={book.title} className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-300" />
-                      </div>
-                      <h4 className="font-bold text-[14px] text-brand-text truncate leading-snug font-display">{book.title}</h4>
-                      <p className="text-[11px] text-brand-text-secondary mt-0.5 font-semibold">by {book.authorName}</p>
-                      
-                      <div className="flex items-center justify-between mt-3.5 pt-3 border-t border-brand-border/60 font-sans">
-                        <span className="text-xs font-bold text-brand-success uppercase tracking-wider font-mono">
-                          Free
-                        </span>
-                        <div className="flex items-center gap-1 font-sans">
-                          <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                          <span className="text-xs font-semibold text-brand-text">{book.rating || "New"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
+                  <BookCard book={book} />
                 </div>
               </FadeUp>
             ))}
@@ -352,7 +328,7 @@ export const Landing = () => {
       </div>
 
       {/* 4. VALUE PROPOSITION GRID (Replaces PricingSection) */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-16 md:py-20 transition-colors duration-300">
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-12 md:py-16 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Platform Value</span>
@@ -361,7 +337,7 @@ export const Landing = () => {
             <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3" style={{ letterSpacing: "-0.02em" }}>
               Platform Benefits
             </h2>
-            <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 mb-16 max-w-md mx-auto font-semibold">
+            <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 mb-8 max-w-md mx-auto font-semibold">
               Enjoy 100% free access to all core features for our launching year. No subscriptions required.
             </p>
           </FadeUp>
@@ -443,7 +419,7 @@ export const Landing = () => {
       </div>
 
       {/* 5. TRENDING CATEGORIES */}
-      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20">
+      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase">Explore</span>
@@ -458,7 +434,7 @@ export const Landing = () => {
       </div>
 
       {/* 6. BEST SELLERS */}
-      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20">
+      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full">
           <div className="flex items-center justify-between mb-8">
             <div className="text-left">
@@ -564,7 +540,7 @@ export const Landing = () => {
       </div>
 
       {/* 7. TESTIMONIALS */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-16 md:py-20 transition-colors duration-300">
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-16 md:py-20 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center select-none">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Wall of Love</span>
@@ -667,10 +643,10 @@ export const Landing = () => {
       </div>
 
       {/* 8. NEWSLETTER JOIN */}
-      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20">
+      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-12 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full select-none text-center">
           <FadeUp delay={0.1}>
-            <div className="bg-brand-card border border-brand-border rounded-[28px] p-8 md:p-12 text-center flex flex-col items-center gap-6 shadow-brand relative overflow-hidden">
+            <div className="bg-brand-card border border-brand-border rounded-[28px] py-8 px-6 md:py-10 md:px-12 text-center flex flex-col items-center gap-4 shadow-brand relative overflow-hidden">
               <div className="h-12 w-12 rounded-full bg-brand-bg-secondary border border-brand-border text-brand-text flex items-center justify-center shadow-sm">
                 <Mail className="h-5 w-5" />
               </div>

@@ -138,15 +138,15 @@ export const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-40 h-[76px] flex items-center transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 h-[76px] flex items-center transition-all duration-300 ${
           isScrolled 
-            ? "glass shadow-brand border-b border-brand-border/40" 
+            ? "bg-brand-bg/95 backdrop-blur-[10px] shadow-brand border-b border-brand-border/40" 
             : "bg-brand-bg border-b border-brand-border"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 w-full flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
           
-          {/* Logo */}
+          {/* Left Column: Logo */}
           <Link 
             to="/" 
             className="text-[22px] font-extrabold tracking-tighter text-brand-text select-none leading-none hover:opacity-90 shrink-0 font-display"
@@ -154,8 +154,8 @@ export const Navbar = () => {
             EBOOKVALA
           </Link>
 
-          {/* Navigation Links (Desktop) */}
-          <div className="hidden lg:flex items-center gap-6">
+          {/* Center Column: Navigation Links (Desktop) */}
+          <div className="hidden lg:flex items-center gap-8">
             {navLinks.map((link, idx) => {
               const isActive = location.pathname === link.path;
               return (
@@ -178,206 +178,208 @@ export const Navbar = () => {
             })}
           </div>
 
-          {/* Smart Search Bar (Desktop) */}
-          <div ref={searchContainerRef} className="hidden md:flex items-center relative w-60 lg:w-72">
-            <form onSubmit={handleSearchSubmit} className="w-full">
-              <div className="relative">
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Search books, authors..."
-                  value={searchQuery}
-                  onFocus={() => setShowSearchOverlay(true)}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-brand-bg-secondary border border-brand-border pl-9 pr-8 py-2 text-xs rounded-full focus:outline-none focus:bg-brand-bg focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 transition-all placeholder:text-brand-text-secondary/60 text-brand-text font-medium"
-                />
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/50" />
-                <span className="absolute right-3.5 top-2 py-0.5 px-1.5 rounded bg-brand-border text-[9px] font-bold text-brand-text-secondary/70 border border-brand-border/80 select-none">
-                  /
-                </span>
-              </div>
-            </form>
-
-            {/* Smart Suggestions Overlay */}
-            <AnimatePresence>
-              {showSearchOverlay && (searchQuery.trim().length > 1 || suggestions.length > 0) && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="absolute top-11 left-0 right-0 z-50 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-2 select-none"
-                >
-                  {suggestions.length > 0 ? (
-                    <div className="flex flex-col gap-1">
-                      <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider px-2 py-1 flex items-center gap-1">
-                        <Sparkles className="h-3 w-3 text-brand-accent" /> Live Suggestions
-                      </p>
-                      {suggestions.map((book) => (
-                        <Link
-                          key={book.id}
-                          to={`/book/${book.slug}`}
-                          onClick={() => setShowSearchOverlay(false)}
-                          className="flex items-center gap-3 p-2 rounded-xl hover:bg-brand-bg-secondary transition-colors text-left"
-                        >
-                          <div className="h-10 w-7 rounded overflow-hidden bg-brand-bg border border-brand-border shrink-0">
-                            <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-brand-text truncate">{book.title}</p>
-                            <p className="text-[10px] text-brand-text-secondary truncate">by {book.authorName}</p>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="p-4 text-center text-xs text-brand-text-secondary">
-                      No matching books found
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Right Actions */}
-          <div className="flex items-center gap-3 select-none">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-all duration-200 cursor-pointer"
-              aria-label="Toggle Theme"
-            >
-              {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
-            </button>
-
-            {isAuthenticated ? (
-              <>
-                {/* Wishlist Link */}
-                <Link
-                  to="/dashboard?tab=wishlist"
-                  className="p-2 rounded-full hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-colors relative"
-                  aria-label="Wishlist"
-                >
-                  <Heart className={`h-4.5 w-4.5 ${wishlist.length > 0 ? "fill-brand-text text-brand-text" : ""}`} />
-                  {wishlist.length > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-brand-accent text-white text-[8px] font-bold flex items-center justify-center">
-                      {wishlist.length}
-                    </span>
-                  )}
-                </Link>
-
-                {/* Continue Reading Button (Instantly visible if progress exists) */}
-                {continueReadingBook && (
-                  <Link
-                    to={`/dashboard?tab=home`}
-                    className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-accent/10 hover:bg-brand-accent/15 text-brand-accent text-xs font-semibold transition-all"
-                  >
-                    <BookOpen className="h-3.5 w-3.5" />
-                    <span>Continue Reading</span>
-                  </Link>
-                )}
-
-                {/* Reading Stats (Streak count) */}
-                <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1.5 rounded-full">
-                  <Flame className="h-4.5 w-4.5 fill-amber-500" />
-                  <span>{user?.readingStreak || 3}d Streak</span>
-                </div>
-
-                {/* Profile Button */}
+          {/* Right Column: Search & Actions */}
+          <div className="flex items-center gap-6">
+            {/* Smart Search Bar */}
+            <div ref={searchContainerRef} className="hidden md:flex items-center relative w-64 max-w-[260px]">
+              <form onSubmit={handleSearchSubmit} className="w-full">
                 <div className="relative">
-                  <button
-                    onClick={() => setIsProfileOpen(!isProfileOpen)}
-                    className="flex items-center gap-2 cursor-pointer focus:outline-none"
-                  >
-                    <div className="h-8.5 w-8.5 rounded-full border border-brand-border overflow-hidden bg-brand-bg-secondary shadow-sm hover:ring-2 hover:ring-brand-accent/50 transition-all">
-                      <img 
-                        src={user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
-                        alt={user.displayName}
-                        className="h-full w-full object-cover"
-                      />
-                    </div>
-                  </button>
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    placeholder="Search books, authors..."
+                    value={searchQuery}
+                    onFocus={() => setShowSearchOverlay(true)}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-brand-bg-secondary border border-brand-border pl-9 pr-8 py-2 text-xs rounded-full focus:outline-none focus:bg-brand-bg focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 transition-all placeholder:text-brand-text-secondary/60 text-brand-text font-medium"
+                  />
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/50" />
+                  <span className="absolute right-3.5 top-2 py-0.5 px-1.5 rounded bg-brand-border text-[9px] font-bold text-brand-text-secondary/70 border border-brand-border/80 select-none">
+                    /
+                  </span>
+                </div>
+              </form>
 
-                  <AnimatePresence>
-                    {isProfileOpen && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
-                        <motion.div
-                          initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                          transition={{ duration: 0.18 }}
-                          className="absolute right-0 mt-2.5 w-56 z-50 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-1.5"
-                        >
-                          <div className="px-3 py-2.5 border-b border-brand-border select-none text-left">
-                            <p className="text-xs font-bold text-brand-text truncate">{user.displayName}</p>
-                            <p className="text-[10px] text-brand-text-secondary truncate mt-0.5">{user.email}</p>
-                            <div className="inline-block mt-2 px-2 py-0.5 bg-brand-accent/15 text-brand-accent text-[9px] font-bold uppercase rounded-full">
-                              {user.role} Account
+              {/* Smart Suggestions Overlay */}
+              <AnimatePresence>
+                {showSearchOverlay && (searchQuery.trim().length > 1 || suggestions.length > 0) && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-11 left-0 right-0 z-50 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-2 select-none"
+                  >
+                    {suggestions.length > 0 ? (
+                      <div className="flex flex-col gap-1">
+                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider px-2 py-1 flex items-center gap-1">
+                          <Sparkles className="h-3 w-3 text-brand-accent" /> Live Suggestions
+                        </p>
+                        {suggestions.map((book) => (
+                          <Link
+                            key={book.id}
+                            to={`/book/${book.slug}`}
+                            onClick={() => setShowSearchOverlay(false)}
+                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-brand-bg-secondary transition-colors text-left"
+                          >
+                            <div className="h-10 w-7 rounded overflow-hidden bg-brand-bg border border-brand-border shrink-0">
+                              <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
                             </div>
-                          </div>
-                          <div className="py-1">
-                            <Link
-                              to={getDashboardLink()}
-                              className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-brand-text hover:bg-brand-bg-secondary transition-colors"
-                              onClick={() => setIsProfileOpen(false)}
-                            >
-                              <LayoutDashboard className="h-4 w-4 text-brand-text-secondary" />
-                              My Dashboard
-                            </Link>
-                            {continueReadingBook && (
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-brand-text truncate">{book.title}</p>
+                              <p className="text-[10px] text-brand-text-secondary truncate">by {book.authorName}</p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-xs text-brand-text-secondary">
+                        No matching books found
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-3 select-none">
+              {/* Theme Toggle */}
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-full hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-all duration-200 cursor-pointer"
+                aria-label="Toggle Theme"
+              >
+                {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
+              </button>
+
+              {isAuthenticated ? (
+                <>
+                  {/* Wishlist Link */}
+                  <Link
+                    to="/dashboard?tab=wishlist"
+                    className="p-2 rounded-full hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-colors relative"
+                    aria-label="Wishlist"
+                  >
+                    <Heart className={`h-4.5 w-4.5 ${wishlist.length > 0 ? "fill-brand-text text-brand-text" : ""}`} />
+                    {wishlist.length > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-brand-accent text-white text-[8px] font-bold flex items-center justify-center">
+                        {wishlist.length}
+                      </span>
+                    )}
+                  </Link>
+
+                  {/* Continue Reading Button (Instantly visible if progress exists) */}
+                  {continueReadingBook && (
+                    <Link
+                      to={`/dashboard?tab=home`}
+                      className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-accent/10 hover:bg-brand-accent/15 text-brand-accent text-xs font-semibold transition-all"
+                    >
+                      <BookOpen className="h-3.5 w-3.5" />
+                      <span>Continue Reading</span>
+                    </Link>
+                  )}
+
+                  {/* Reading Stats (Streak count) */}
+                  <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1.5 rounded-full">
+                    <Flame className="h-4.5 w-4.5 fill-amber-500" />
+                    <span>{user?.readingStreak || 3}d Streak</span>
+                  </div>
+
+                  {/* Profile Button */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsProfileOpen(!isProfileOpen)}
+                      className="flex items-center gap-2 cursor-pointer focus:outline-none"
+                    >
+                      <div className="h-8.5 w-8.5 rounded-full border border-brand-border overflow-hidden bg-brand-bg-secondary shadow-sm hover:ring-2 hover:ring-brand-accent/50 transition-all">
+                        <img 
+                          src={user.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${user.displayName}`} 
+                          alt={user.displayName}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    </button>
+
+                    <AnimatePresence>
+                      {isProfileOpen && (
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setIsProfileOpen(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                            transition={{ duration: 0.18 }}
+                            className="absolute right-0 mt-2.5 w-56 z-50 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-1.5"
+                          >
+                            <div className="px-3 py-2.5 border-b border-brand-border select-none text-left">
+                              <p className="text-xs font-bold text-brand-text truncate">{user.displayName}</p>
+                              <p className="text-[10px] text-brand-text-secondary truncate mt-0.5">{user.email}</p>
+                              <div className="inline-block mt-2 px-2 py-0.5 bg-brand-accent/15 text-brand-accent text-[9px] font-bold uppercase rounded-full">
+                                {user.role} Account
+                              </div>
+                            </div>
+                            <div className="py-1">
                               <Link
-                                to={`/dashboard?tab=home`}
+                                to={getDashboardLink()}
                                 className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-brand-text hover:bg-brand-bg-secondary transition-colors"
                                 onClick={() => setIsProfileOpen(false)}
                               >
-                                <BookOpen className="h-4 w-4 text-brand-text-secondary" />
-                                Resume: {continueReadingBook.title.slice(0, 14)}...
+                                <LayoutDashboard className="h-4 w-4 text-brand-text-secondary" />
+                                My Dashboard
                               </Link>
-                            )}
-                            <button
-                              onClick={() => {
-                                logout();
-                                setIsProfileOpen(false);
-                              }}
-                              className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-brand-danger hover:bg-brand-danger/10 transition-colors cursor-pointer"
-                            >
-                              <LogOut className="h-4 w-4" />
-                              Sign Out
-                            </button>
-                          </div>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
+                              {continueReadingBook && (
+                                <Link
+                                  to={`/dashboard?tab=home`}
+                                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-brand-text hover:bg-brand-bg-secondary transition-colors"
+                                  onClick={() => setIsProfileOpen(false)}
+                                >
+                                  <BookOpen className="h-4 w-4 text-brand-text-secondary" />
+                                  Resume: {continueReadingBook.title.slice(0, 14)}...
+                                </Link>
+                              )}
+                              <button
+                                onClick={() => {
+                                  logout();
+                                  setIsProfileOpen(false);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-brand-danger hover:bg-brand-danger/10 transition-colors cursor-pointer"
+                              >
+                                <LogOut className="h-4 w-4" />
+                                Sign Out
+                              </button>
+                            </div>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </>
+              ) : (
+                /* Guest Auth Buttons */
+                <div className="flex items-center gap-2 select-none">
+                  <Link to="/login">
+                    <Button variant="secondary" size="sm" className="h-9 px-4 rounded-brand-btn text-xs font-bold bg-transparent border-transparent hover:bg-brand-bg-secondary">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link to="/register">
+                    <Button variant="primary" size="sm" className="h-9 px-4 rounded-brand-btn text-xs font-bold shadow-sm">
+                      Start Free
+                    </Button>
+                  </Link>
                 </div>
-              </>
-            ) : (
-              /* Guest Auth Buttons */
-              <div className="flex items-center gap-2 select-none">
-                <Link to="/login">
-                  <Button variant="secondary" size="sm" className="h-9 px-4 rounded-brand-btn text-xs font-bold bg-transparent border-transparent hover:bg-brand-bg-secondary">
-                    Log In
-                  </Button>
-                </Link>
-                <Link to="/register">
-                  <Button variant="primary" size="sm" className="h-9 px-4 rounded-brand-btn text-xs font-bold shadow-sm">
-                    Start Free
-                  </Button>
-                </Link>
-              </div>
-            )}
+              )}
 
-            {/* Mobile Hamburger Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-full hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-colors"
-              aria-label="Toggle Menu"
-            >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+              {/* Mobile Hamburger Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="lg:hidden p-2 rounded-full hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-colors"
+                aria-label="Toggle Menu"
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+            </div>
           </div>
-
         </div>
       </nav>
 

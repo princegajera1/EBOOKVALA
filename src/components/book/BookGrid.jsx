@@ -12,7 +12,7 @@ export const BookGrid = ({
   
   const containerVariants = {
     hidden: { opacity: 0 },
-    show: {
+    visible: {
       opacity: 1,
       transition: {
         staggerChildren: 0.05
@@ -46,7 +46,7 @@ export const BookGrid = ({
     <motion.div
       variants={containerVariants}
       initial="hidden"
-      animate="show"
+      animate="visible"
       className={
         view === "list"
           ? "flex flex-col gap-6"

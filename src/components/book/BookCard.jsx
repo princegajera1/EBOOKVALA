@@ -278,6 +278,7 @@ export const BookCard = ({ book, view = "grid" }) => {
         onKeyDown={handleKeyDown}
         tabIndex={0}
         animate={{
+          opacity: 1,
           rotateX: isHovered ? tilt.x : 0,
           rotateY: isHovered ? tilt.y : 0,
           transformPerspective: 1000,

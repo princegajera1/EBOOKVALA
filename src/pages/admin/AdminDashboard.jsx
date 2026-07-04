@@ -89,23 +89,10 @@ export const AdminDashboard = () => {
       const allCategories = await dbService.getCategories();
       setCategories(allCategories);
 
-      // Construct live users list from authors + hardcoded demo entries
-      const readerUser = await dbService.getUserProfile("user-prince") || {
-        uid: "user-prince", displayName: "Prince Gajera", email: "prince@ebookvala.com", role: "reader", createdAt: "2025-12-01T10:00:00Z"
-      };
-      const adminUser = { uid: "user-admin", email: "admin@ebookvala.com", displayName: "Admin Ebookvala", role: "admin", createdAt: "2025-01-01T00:00:00Z" };
+      // Retrieve actual registered users from Firestore
+      const realUsers = await dbService.getUsers();
       
-      setUsersList([
-        readerUser,
-        adminUser,
-        ...allAuthors.map(a => ({ 
-          uid: a.uid, 
-          email: `${a.displayName.toLowerCase().replace(/\s+/g, "")}@ebookvala.com`, 
-          displayName: a.displayName, 
-          role: "author", 
-          createdAt: a.createdAt 
-        }))
-      ]);
+      setUsersList(realUsers);
     } catch (err) {
       console.error("Error loading admin dashboard stats:", err);
     }

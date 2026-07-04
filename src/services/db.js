@@ -643,6 +643,16 @@ export const dbService = {
     }
   },
   
+  getUsers: async () => {
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      return snap.docs.map(doc => ({ uid: doc.id, ...doc.data() }));
+    } catch (error) {
+      console.error("Firestore getUsers error:", error);
+      return [];
+    }
+  },
+  
   updateUserProfile: async (uid, updateData) => {
     const docRef = doc(db, "users", uid);
     await setDoc(docRef, updateData, { merge: true });

@@ -7,23 +7,19 @@ export const AdminRoute = ({ children }) => {
   const { user, loading, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
 
-  // Secret token granted via /635284 page
-  const hasSecretToken = sessionStorage.getItem("secret_admin_token") === "granted";
-
   useEffect(() => {
-    if (!loading && !hasSecretToken) {
+    if (!loading) {
       if (!isAuthenticated || !isAdmin) {
         navigate("/635284");
       }
     }
-  }, [isAuthenticated, isAdmin, loading, navigate, hasSecretToken]);
+  }, [isAuthenticated, isAdmin, loading, navigate]);
 
   if (loading) {
     return <FullScreenSpinner />;
   }
 
-  // Allow access if secret token OR proper Firebase admin auth
-  if (!hasSecretToken && (!isAuthenticated || !isAdmin)) {
+  if (!isAuthenticated || !isAdmin) {
     return null;
   }
 

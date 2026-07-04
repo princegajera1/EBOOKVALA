@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 // Read from env — not hardcoded in bundle
 const SECRET_PASSWORD = import.meta.env.VITE_SECRET_ADMIN_TOKEN || "";
@@ -11,12 +12,25 @@ export const SecretAdminEntry = () => {
   const inputRef = useRef(null);
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const { login } = useAuth();
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setErrorMsg("");
     if (value === SECRET_PASSWORD) {
       setUnlocked(true);
-      sessionStorage.setItem("secret_admin_token", "granted");
-      setTimeout(() => navigate("/admin/dashboard"), 700);
+      try {
+        // Authenticate with real Firebase credentials
+        await login("admin@ebookvala.com", "admin0561");
+        setTimeout(() => navigate("/admin/dashboard"), 700);
+      } catch (err) {
+        setUnlocked(false);
+        setErrorMsg("Firebase admin auth failed. Check credentials.");
+        setShake(true);
+        setValue("");
+        setTimeout(() => setShake(false), 600);
+      }
     } else {
       setShake(true);
       setValue("");
@@ -96,6 +110,12 @@ export const SecretAdminEntry = () => {
             animation: shake ? "shake 0.4s ease" : "none",
           }}
         />
+
+        {errorMsg && (
+          <div style={{ color: "#ef4444", fontSize: "11px", fontWeight: "600", marginTop: "-8px" }}>
+            {errorMsg}
+          </div>
+        )}
 
         <button
           type="submit"

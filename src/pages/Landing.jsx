@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { 
-  ArrowRight, Star, ArrowLeft, Mail, ChevronLeft, ChevronRight, 
+  ArrowRight, Star, Mail, ChevronLeft, ChevronRight, 
   ShieldCheck, Search, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
@@ -10,12 +10,6 @@ import { dbService } from "../services/db";
 import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { FadeUp } from "../components/common/FadeUp";
 import { BookCard } from "../components/book/BookCard";
-import { HeroBookStack } from "../components/common/HeroBookStack";
-import { HeroVisualV1 } from "../components/common/HeroVisualV1";
-import { HeroVisualV2 } from "../components/common/HeroVisualV2";
-import { HeroVisualV3 } from "../components/common/HeroVisualV3";
-import { HeroVisualV4 } from "../components/common/HeroVisualV4";
-import { HeroVisualV5 } from "../components/common/HeroVisualV5";
 import { HeroImageStack } from "../components/common/HeroImageStack";
 import princeAvatar from "../assets/testimonials/prince.png";
 import amaraAvatar from "../assets/testimonials/amara.png";
@@ -130,7 +124,7 @@ export const Landing = () => {
   const handleHeroSearch = (e) => {
     e.preventDefault();
     if (heroSearchQuery.trim()) {
-      navigate(`/marketplace?search=${encodeURIComponent(heroSearchQuery.trim())}`);
+      navigate(`/search?q=${encodeURIComponent(heroSearchQuery.trim())}`);
     }
   };
 
@@ -275,14 +269,16 @@ export const Landing = () => {
 
       {/* 2. RECENTLY ADDED */}
       {recentlyAdded.length > 0 && (
-        <div className="bg-brand-bg-secondary border-t border-brand-border py-20 md:py-28 transition-colors duration-300 scroll-mt-[76px]">
+        <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">
           <div className="max-w-7xl mx-auto px-6 w-full text-left">
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">New Arrivals</span>
             <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-8 tracking-tight">Recently Added Books</h2>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+            <div className="flex md:grid overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 gap-6 sm:gap-8 grid-cols-2 md:grid-cols-4 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-6 px-6 md:mx-0 md:px-0 select-none">
               {recentlyAdded.map((book) => (
-                <BookCard key={book.id} book={book} />
+                <div key={book.id} className="snap-center shrink-0 w-[240px] sm:w-[280px] md:w-auto">
+                  <BookCard book={book} />
+                </div>
               ))}
             </div>
           </div>
@@ -290,7 +286,7 @@ export const Landing = () => {
       )}
 
       {/* 4. VALUE PROPOSITION GRID (Replaces PricingSection) */}
-      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 transition-colors duration-300 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Platform Value</span>
@@ -381,7 +377,7 @@ export const Landing = () => {
       </div>
 
       {/* 5. TRENDING CATEGORIES */}
-      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Explore</span>
@@ -396,7 +392,7 @@ export const Landing = () => {
       </div>
 
       {/* 6. BEST SELLERS */}
-      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full">
           <div className="flex items-center justify-between mb-8">
             <div className="text-left">
@@ -502,7 +498,7 @@ export const Landing = () => {
       </div>
 
       {/* 7. TESTIMONIALS */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-20 md:py-28 transition-colors duration-300 scroll-mt-[76px]">
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center select-none">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Wall of Love</span>
@@ -549,7 +545,7 @@ export const Landing = () => {
       </div>
 
       {/* CONFIDENT FINAL CTA SECTION */}
-      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0.1}>
             <h2 className="text-3xl sm:text-5xl font-display font-black text-brand-text leading-tight tracking-tight">
@@ -569,7 +565,7 @@ export const Landing = () => {
       </div>
 
       {/* 8. NEWSLETTER JOIN */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full select-none text-center">
           <FadeUp delay={0.1}>
             <div className="bg-brand-card border border-brand-border rounded-[28px] py-10 px-6 md:py-14 md:px-12 text-center flex flex-col items-center gap-4 shadow-brand relative overflow-hidden">

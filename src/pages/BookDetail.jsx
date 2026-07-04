@@ -140,7 +140,7 @@ export const BookDetail = () => {
   };
 
   return (
-    <div className="bg-brand-bg min-h-screen py-24 select-none transition-colors duration-300">
+    <div className="bg-brand-bg min-h-screen py-10 md:py-14 pb-24 md:pb-14 select-none transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-6">
         
         {/* 2-COLUMN HERO VIEW */}
@@ -651,6 +651,36 @@ export const BookDetail = () => {
         />
 
       </div>
+
+      {/* Mobile Sticky Bottom CTA Bar */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-brand-card/90 backdrop-blur-md border-t border-brand-border p-4 flex items-center justify-between gap-4 shadow-brand select-none">
+        <div className="flex flex-col text-left">
+          <span className="text-[10px] font-mono text-brand-text-secondary uppercase">Price</span>
+          <span className="text-xs font-bold text-brand-success uppercase">Free Forever</span>
+        </div>
+        
+        {isPurchased ? (
+          <div className="flex gap-2 flex-grow max-w-[200px] justify-end">
+            <a href={book.pdfURL} download={`${book.slug}.pdf`} className="w-full">
+              <Button size="sm" variant="primary" className="w-full h-10 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active-tap">
+                <Download className="h-3.5 w-3.5" />
+                Download
+              </Button>
+            </a>
+          </div>
+        ) : (
+          <Button 
+            onClick={handleAddToLibrary}
+            size="sm"
+            variant="primary" 
+            className="flex-grow max-w-[200px] h-10 rounded-full font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active-tap"
+          >
+            <BookOpen className="h-3.5 w-3.5" />
+            Add to Library
+          </Button>
+        )}
+      </div>
+
     </div>
   );
 };

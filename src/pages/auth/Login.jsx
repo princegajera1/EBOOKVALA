@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
@@ -7,8 +7,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Mail, Lock, Sparkles, BookOpen, User, ArrowRight, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
 import { AuthLayout } from "../../components/layout/AuthLayout";
+import { Modal } from "../../components/ui/Modal";
 import { toast } from "react-hot-toast";
 import { auth, db } from "../../lib/firebase";
 import { sendEmailVerification } from "firebase/auth";
@@ -41,6 +41,68 @@ const GithubIcon = ({ className }) => (
   </svg>
 );
 
+const AuthInput = React.forwardRef(({ 
+  label, 
+  icon: Icon, 
+  error, 
+  type = "text", 
+  showToggle, 
+  toggleOpen, 
+  setToggleOpen, 
+  ...props 
+}, ref) => {
+  return (
+    <div className="w-full flex flex-col gap-1.5 text-left select-none relative">
+      {label && (
+        <label className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono">
+          {label}
+        </label>
+      )}
+      <div className="relative flex items-center">
+        {Icon && (
+          <Icon className="absolute left-4 h-4.5 w-4.5 text-brand-text-secondary/60 transition-colors pointer-events-none" />
+        )}
+        <input
+          type={type}
+          ref={ref}
+          className={`flex w-full bg-brand-bg-secondary border px-4 py-3 rounded-[16px] text-xs sm:text-sm transition-all placeholder:text-brand-text-secondary/30 focus:outline-none focus:bg-brand-card text-brand-text font-medium border-brand-border focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 disabled:cursor-not-allowed disabled:opacity-50 ${
+            Icon ? "pl-11" : ""
+          } ${showToggle ? "pr-11" : ""} ${
+            error ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/5" : ""
+          }`}
+          {...props}
+        />
+        {showToggle && (
+          <button
+            type="button"
+            onClick={() => setToggleOpen(!toggleOpen)}
+            className="absolute right-4 text-brand-text-secondary/70 hover:text-brand-text transition-colors cursor-pointer focus:outline-none"
+            aria-label={toggleOpen ? "Hide password" : "Show password"}
+          >
+            {toggleOpen ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        )}
+      </div>
+      
+      <AnimatePresence>
+        {error && (
+          <motion.span
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+            className="text-[11px] text-red-500 font-bold mt-0.5 select-text"
+            aria-live="polite"
+          >
+            {error}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+});
+AuthInput.displayName = "AuthInput";
+
 export const Login = () => {
   const { 
     login, 
@@ -50,14 +112,20 @@ export const Login = () => {
     loading 
   } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || null;
 
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [isEmailNotVerified, setIsEmailNotVerified] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
-  
+  const [submitError, setSubmitError] = useState("");
+  const [shake, setShake] = useState(false);
+
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [googleUserForRegistration, setGoogleUserForRegistration] = useState(null);
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const {
     register,
@@ -68,17 +136,23 @@ export const Login = () => {
     defaultValues: { rememberMe: true }
   });
 
+  const triggerShake = () => {
+    if (prefersReducedMotion) return;
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
+
   const onLogin = async (data) => {
     setIsEmailNotVerified(false);
+    setSubmitError("");
     const toastId = toast.loading("Verifying credentials...");
     try {
       const firebaseUser = await login(data.email, data.password);
       if (firebaseUser) {
         toast.success("Welcome back! 👋", { id: toastId });
         if (data.email.toLowerCase() === "admin@ebookvala.com") {
-          navigate("/admin/dashboard");
+          navigate(from || "/admin/dashboard", { replace: true });
         } else {
-          // Check role and redirect
           const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
           if (userDoc.exists() && userDoc.data()?.role) {
             redirectByRole(userDoc.data().role);
@@ -89,18 +163,21 @@ export const Login = () => {
       }
     } catch (err) {
       console.error("Login error:", err);
+      triggerShake();
+      let errMsg = err.message || "Invalid email or password.";
       if (err.code === "auth/email-not-verified") {
         setIsEmailNotVerified(true);
-        toast.error("Please verify your email first. Check your inbox.", { id: toastId });
-      } else if (err.code === "auth/user-not-found") {
-        toast.error("No account found. Please register first.", { id: toastId });
-      } else {
-        toast.error(err.message || "Invalid email or password.", { id: toastId });
+        errMsg = "Please verify your email first. Check your inbox for the verification link.";
+      } else if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
+        errMsg = "No account found or invalid credentials. Please check your email and password.";
       }
+      setSubmitError(errMsg);
+      toast.error(errMsg, { id: toastId });
     }
   };
 
   const handleGoogleLogin = async () => {
+    setSubmitError("");
     try {
       const result = await loginWithGoogle();
       if (result.isNew) {
@@ -112,6 +189,8 @@ export const Login = () => {
       }
     } catch (err) {
       console.error("Google login error:", err);
+      triggerShake();
+      setSubmitError("Google Sign-In failed. Please try again.");
       toast.error("Google Sign-In failed.");
     }
   };
@@ -125,6 +204,7 @@ export const Login = () => {
       redirectByRole(userData.role);
     } catch (err) {
       console.error("Google registration error:", err);
+      setSubmitError("Failed to complete Google registration.");
       toast.error("Failed to complete Google registration.");
     }
   };
@@ -144,14 +224,20 @@ export const Login = () => {
   };
 
   const redirectByRole = (role) => {
-    if (role === "admin") navigate("/admin/dashboard");
-    else if (role === "author") navigate("/author/dashboard");
-    else navigate("/dashboard");
+    if (from) {
+      navigate(from, { replace: true });
+    } else {
+      if (role === "admin") navigate("/admin/dashboard");
+      else if (role === "author") navigate("/author/dashboard");
+      else navigate("/dashboard");
+    }
   };
 
   const handleForgotPasswordSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError("");
     if (!resetEmail) {
+      setSubmitError("Please enter your email address.");
       toast.error("Please enter your email address.");
       return;
     }
@@ -163,13 +249,22 @@ export const Login = () => {
       setResetEmail("");
     } catch (err) {
       console.error("Forgot password error:", err);
-      toast.error(err.message || "Failed to send reset link.", { id: toastId });
+      triggerShake();
+      let errMsg = err.message || "Failed to send reset link.";
+      if (err.code === "auth/user-not-found") {
+        errMsg = "No registered user found with this email address.";
+      }
+      setSubmitError(errMsg);
+      toast.error(errMsg, { id: toastId });
     }
   };
 
   return (
     <AuthLayout>
-      <div className="flex flex-col gap-6 w-full text-left select-none">
+      <motion.div 
+        animate={shake ? { x: [-10, 10, -10, 10, -5, 5, 0], transition: { duration: 0.4 } } : {}}
+        className="flex flex-col gap-6 w-full text-left select-none"
+      >
         
         {/* FORGOT PASSWORD VIEW */}
         {isForgotPassword ? (
@@ -181,22 +276,33 @@ export const Login = () => {
               </p>
             </div>
 
+            {submitError && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-red-600 font-medium">
+                <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                <span>{submitError}</span>
+              </div>
+            )}
+
             <form onSubmit={handleForgotPasswordSubmit} className="flex flex-col gap-4">
-              <Input
+              <AuthInput
                 type="email"
                 required
                 placeholder="name@example.com"
                 label="Email Address"
+                icon={Mail}
                 value={resetEmail}
                 onChange={(e) => setResetEmail(e.target.value)}
               />
-              <Button type="submit" variant="primary" className="w-full h-11 text-xs font-bold rounded-full">
+              <Button type="submit" variant="primary" className="w-full h-12 text-xs font-bold rounded-full mt-2 shadow-sm">
                 Send Reset Link
               </Button>
             </form>
 
             <button 
-              onClick={() => setIsForgotPassword(false)}
+              onClick={() => {
+                setIsForgotPassword(false);
+                setSubmitError("");
+              }}
               className="text-xs text-brand-text hover:underline font-bold self-center cursor-pointer py-1"
             >
               Back to Sign In
@@ -209,6 +315,13 @@ export const Login = () => {
               <h2 className="text-3xl font-display font-black text-brand-text">Sign in</h2>
               <p className="text-xs text-brand-text-secondary mt-1.5 font-semibold">Enter credentials to access EBOOKVALA.</p>
             </div>
+
+            {submitError && (
+              <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-red-600 font-medium animate-fade-in">
+                <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+                <span>{submitError}</span>
+              </div>
+            )}
 
             {/* Email Not Verified Warning */}
             {isEmailNotVerified && (
@@ -244,7 +357,7 @@ export const Login = () => {
               
               <div className="grid grid-cols-2 gap-2">
                 <Button 
-                  onClick={handleGoogleLogin}
+                  onClick={() => toast("GitHub Sign-In coming soon!", { icon: "🐙" })}
                   variant="secondary" 
                   className="h-10.5 rounded-full border-brand-border bg-brand-card hover:bg-brand-bg-secondary flex items-center justify-center gap-2 text-[11px] font-bold text-brand-text shadow-sm"
                 >
@@ -271,36 +384,35 @@ export const Login = () => {
 
             {/* Form */}
             <form onSubmit={handleSubmit(onLogin)} className="flex flex-col gap-4">
-              <Input
+              <AuthInput
                 type="email"
                 placeholder="name@example.com"
                 label="Email Address"
+                icon={Mail}
                 error={errors.email?.message}
                 {...register("email")}
               />
               
               <div className="flex flex-col gap-1 relative">
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    label="Password"
-                    error={errors.password?.message}
-                    {...register("password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-[38px] text-brand-text-secondary hover:text-brand-text transition-colors cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
+                <AuthInput
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
+                  label="Password"
+                  icon={Lock}
+                  showToggle
+                  toggleOpen={showPassword}
+                  setToggleOpen={setShowPassword}
+                  error={errors.password?.message}
+                  {...register("password")}
+                />
                 
                 <button 
                   type="button"
-                  onClick={() => setIsForgotPassword(true)}
-                  className="text-[11px] font-bold text-brand-accent hover:underline text-right mt-1 cursor-pointer w-fit self-end"
+                  onClick={() => {
+                    setIsForgotPassword(true);
+                    setSubmitError("");
+                  }}
+                  className="text-[11px] font-bold text-brand-accent hover:underline text-right mt-1.5 cursor-pointer w-fit self-end"
                 >
                   Forgot Password?
                 </button>
@@ -315,7 +427,7 @@ export const Login = () => {
                 <span>Remember me for 30 days</span>
               </label>
 
-              <Button type="submit" variant="primary" isLoading={loading} className="w-full h-11 rounded-full text-xs font-bold mt-2 shadow-sm">
+              <Button type="submit" variant="primary" isLoading={loading} className="w-full h-12 rounded-full text-xs font-bold mt-2 shadow-sm">
                 Sign In
                 <ArrowRight className="ml-1.5 h-4 w-4" />
               </Button>
@@ -330,69 +442,47 @@ export const Login = () => {
           </div>
         )}
 
-      </div>
+      </motion.div>
 
       {/* GOOGLE FIRST-LOGIN ROLE SELECTION MODAL */}
-      <AnimatePresence>
-        {isRoleModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsRoleModalOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            />
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative z-10 w-full max-w-sm bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand text-center select-none text-left"
-            >
-              <div className="h-12 w-12 rounded-full bg-brand-bg-secondary border border-brand-border text-brand-accent flex items-center justify-center mx-auto mb-4 shadow-sm">
-                <Sparkles className="h-5 w-5" />
-              </div>
+      <Modal
+        isOpen={isRoleModalOpen}
+        onClose={() => setIsRoleModalOpen(false)}
+        title="Choose Your Role"
+        className="max-w-sm"
+      >
+        <p className="text-xs text-brand-text-secondary text-center max-w-[240px] mx-auto mb-6 leading-relaxed font-semibold">
+          Welcome! Please select how you want to use EBOOKVALA.
+        </p>
 
-              <h3 className="text-lg font-bold text-brand-text text-center mb-1">
-                Choose Your Role
-              </h3>
-              <p className="text-xs text-brand-text-secondary text-center max-w-[240px] mx-auto mb-6 leading-relaxed font-semibold">
-                Welcome! Please select how you want to use EBOOKVALA.
-              </p>
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={() => handleCompleteGoogleRegistration("reader")}
+            className="flex items-center gap-4 p-4 border border-brand-border rounded-[16px] hover:border-brand-accent hover:bg-brand-bg-secondary group transition-all text-left cursor-pointer"
+          >
+            <div className="h-9.5 w-9.5 rounded-full bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-text-secondary/70 group-hover:text-brand-accent shrink-0">
+              <BookOpen className="h-4.5 w-4.5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-brand-text">Reader Account</h4>
+              <p className="text-[10px] text-brand-text-secondary mt-0.5 font-semibold">Browse, download and read free digital books.</p>
+            </div>
+          </button>
 
-              <div className="flex flex-col gap-3">
-                <button
-                  onClick={() => handleCompleteGoogleRegistration("reader")}
-                  className="flex items-center gap-4 p-4 border border-brand-border rounded-[16px] hover:border-brand-accent hover:bg-brand-bg-secondary group transition-all text-left cursor-pointer"
-                >
-                  <div className="h-9.5 w-9.5 rounded-full bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-text-secondary/70 group-hover:text-brand-accent shrink-0">
-                    <BookOpen className="h-4.5 w-4.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-brand-text">Reader Account</h4>
-                    <p className="text-[10px] text-brand-text-secondary mt-0.5 font-semibold">Browse, download and read free digital books.</p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => handleCompleteGoogleRegistration("author")}
-                  className="flex items-center gap-4 p-4 border border-brand-border rounded-[16px] hover:border-brand-accent hover:bg-brand-bg-secondary group transition-all text-left cursor-pointer"
-                >
-                  <div className="h-9.5 w-9.5 rounded-full bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-text-secondary/70 group-hover:text-brand-accent shrink-0">
-                    <User className="h-4.5 w-4.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-brand-text">Author Account</h4>
-                    <p className="text-[10px] text-brand-text-secondary mt-0.5 font-semibold">Upload, publish, and share your eBooks for free.</p>
-                  </div>
-                </button>
-              </div>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+          <button
+            onClick={() => handleCompleteGoogleRegistration("author")}
+            className="flex items-center gap-4 p-4 border border-brand-border rounded-[16px] hover:border-brand-accent hover:bg-brand-bg-secondary group transition-all text-left cursor-pointer"
+          >
+            <div className="h-9.5 w-9.5 rounded-full bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-text-secondary/70 group-hover:text-brand-accent shrink-0">
+              <User className="h-4.5 w-4.5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-brand-text">Author Account</h4>
+              <p className="text-[10px] text-brand-text-secondary mt-0.5 font-semibold">Upload, publish, and share your eBooks for free.</p>
+            </div>
+          </button>
+        </div>
+      </Modal>
     </AuthLayout>
   );
 };

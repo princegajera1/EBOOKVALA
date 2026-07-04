@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { toast } from "react-hot-toast";
 
@@ -18,18 +18,24 @@ export const FullScreenSpinner = () => (
 export const ProtectedRoute = ({ role, children }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
-        toast.error("Please sign in to continue");
-        navigate("/login");
+        const isLoggingOut = sessionStorage.getItem("logging_out") === "true";
+        if (isLoggingOut) {
+          sessionStorage.removeItem("logging_out");
+        } else {
+          toast.error("Please sign in to continue");
+        }
+        navigate("/login", { state: { from: location } });
       } else if (role && user?.role !== role) {
         toast.error("Access denied");
         navigate("/");
       }
     }
-  }, [isAuthenticated, user, loading, navigate, role]);
+  }, [isAuthenticated, user, loading, navigate, role, location]);
 
   if (loading) {
     return <FullScreenSpinner />;

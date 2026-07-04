@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as zod from "zod";
-import { BookOpen, PenTool, ArrowRight, Mail, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { BookOpen, PenTool, ArrowRight, Mail, Check, Eye, EyeOff, AlertCircle, User, Lock } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button";
-import { Input } from "../../components/ui/Input";
 import { AuthLayout } from "../../components/layout/AuthLayout";
 import { toast } from "react-hot-toast";
 
@@ -21,11 +21,79 @@ const registerSchema = zod.object({
   path: ["confirmPassword"],
 });
 
+const AuthInput = React.forwardRef(({ 
+  label, 
+  icon: Icon, 
+  error, 
+  type = "text", 
+  showToggle, 
+  toggleOpen, 
+  setToggleOpen, 
+  ...props 
+}, ref) => {
+  return (
+    <div className="w-full flex flex-col gap-1.5 text-left select-none relative">
+      {label && (
+        <label className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono">
+          {label}
+        </label>
+      )}
+      <div className="relative flex items-center">
+        {Icon && (
+          <Icon className="absolute left-4 h-4.5 w-4.5 text-brand-text-secondary/60 transition-colors pointer-events-none" />
+        )}
+        <input
+          type={type}
+          ref={ref}
+          className={`flex w-full bg-brand-bg-secondary border px-4 py-3 rounded-[16px] text-xs sm:text-sm transition-all placeholder:text-brand-text-secondary/30 focus:outline-none focus:bg-brand-card text-brand-text font-medium border-brand-border focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 disabled:cursor-not-allowed disabled:opacity-50 ${
+            Icon ? "pl-11" : ""
+          } ${showToggle ? "pr-11" : ""} ${
+            error ? "border-red-500/50 focus:border-red-500 focus:ring-red-500/5" : ""
+          }`}
+          {...props}
+        />
+        {showToggle && (
+          <button
+            type="button"
+            onClick={() => setToggleOpen(!toggleOpen)}
+            className="absolute right-4 text-brand-text-secondary/70 hover:text-brand-text transition-colors cursor-pointer focus:outline-none"
+            aria-label={toggleOpen ? "Hide password" : "Show password"}
+          >
+            {toggleOpen ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        )}
+      </div>
+      
+      <AnimatePresence>
+        {error && (
+          <motion.span
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.15 }}
+            className="text-[11px] text-red-500 font-bold mt-0.5 select-text"
+            aria-live="polite"
+          >
+            {error}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+});
+AuthInput.displayName = "AuthInput";
+
 export const Register = () => {
   const { register: signUp, loading } = useAuth();
   const navigate = useNavigate();
   const [isSuccess, setIsSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState("");
+  const [submitError, setSubmitError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const {
     register,
@@ -39,8 +107,31 @@ export const Register = () => {
   });
 
   const selectedRole = watch("role");
+  const passwordValue = watch("password") || "";
+
+  const triggerShake = () => {
+    if (prefersReducedMotion) return;
+    setShake(true);
+    setTimeout(() => setShake(false), 500);
+  };
+
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return { score: 0, label: "", color: "bg-transparent", text: "text-transparent" };
+    let score = 0;
+    if (pwd.length >= 6) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    
+    if (score <= 1) return { score: 25, label: "Weak", color: "bg-red-500", text: "text-red-500" };
+    if (score === 2 || score === 3) return { score: 60, label: "Medium", color: "bg-amber-500", text: "text-amber-500" };
+    return { score: 100, label: "Strong", color: "bg-emerald-500", text: "text-emerald-500" };
+  };
+
+  const strength = getPasswordStrength(passwordValue);
 
   const onSubmit = async (data) => {
+    setSubmitError("");
     const toastId = toast.loading("Creating account...");
     try {
       setRegisteredEmail(data.email);
@@ -49,14 +140,22 @@ export const Register = () => {
       toast.success("Account created successfully! Check your inbox.", { id: toastId });
     } catch (err) {
       console.error("Registration error:", err);
-      toast.error(err.message || "Registration failed. Email might already be in use.", { id: toastId });
+      triggerShake();
+      let errMsg = err.message || "Registration failed. Please try again.";
+      if (err.code === "auth/email-already-in-use") {
+        errMsg = "An account with this email address already exists. Please sign in instead.";
+      } else if (err.code === "auth/weak-password") {
+        errMsg = "The password is too weak. Please use a stronger password.";
+      }
+      setSubmitError(errMsg);
+      toast.error(errMsg, { id: toastId });
     }
   };
 
   if (isSuccess) {
     return (
       <AuthLayout>
-        <div className="flex flex-col gap-6 text-center select-none w-full max-w-sm mx-auto">
+        <div className="flex flex-col gap-6 text-center select-none w-full max-w-sm mx-auto animate-fade-in">
           <div className="h-14 w-14 rounded-full bg-brand-bg-secondary border border-brand-border text-brand-text flex items-center justify-center mx-auto mb-2 shadow-sm">
             <Mail className="h-6 w-6 text-brand-accent" />
           </div>
@@ -70,7 +169,7 @@ export const Register = () => {
 
           <div className="flex flex-col gap-3 mt-4 w-full">
             <Link to="/login" className="w-full">
-              <Button variant="primary" className="w-full h-11 rounded-full text-xs font-bold shadow-sm">
+              <Button variant="primary" className="w-full h-12 rounded-full text-xs font-bold shadow-sm">
                 Back to Sign In
               </Button>
             </Link>
@@ -82,41 +181,79 @@ export const Register = () => {
 
   return (
     <AuthLayout>
-      <div className="flex flex-col gap-6 w-full text-left select-none">
+      <motion.div 
+        animate={shake ? { x: [-10, 10, -10, 10, -5, 5, 0], transition: { duration: 0.4 } } : {}}
+        className="flex flex-col gap-6 w-full text-left select-none"
+      >
         <div>
           <h2 className="text-3xl font-display font-black text-brand-text">Create account</h2>
           <p className="text-xs text-brand-text-secondary mt-1.5 font-semibold">Join EBOOKVALA to read and publish free digital books.</p>
         </div>
 
+        {submitError && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-red-600 font-medium animate-fade-in">
+            <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
+            <span>{submitError}</span>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-          <Input
+          <AuthInput
             type="text"
             placeholder="Prince Gajera"
             label="Full Name"
+            icon={User}
             error={errors.displayName?.message}
             {...register("displayName")}
           />
           
-          <Input
+          <AuthInput
             type="email"
             placeholder="name@example.com"
             label="Email Address"
+            icon={Mail}
             error={errors.email?.message}
             {...register("email")}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              type="password"
-              placeholder="••••••••"
-              label="Password"
-              error={errors.password?.message}
-              {...register("password")}
-            />
-            <Input
-              type="password"
+            <div className="flex flex-col gap-1">
+              <AuthInput
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                label="Password"
+                icon={Lock}
+                showToggle
+                toggleOpen={showPassword}
+                setToggleOpen={setShowPassword}
+                error={errors.password?.message}
+                {...register("password")}
+              />
+              {/* Password strength meter */}
+              {passwordValue && (
+                <div className="flex flex-col gap-1.5 mt-1 select-none px-1">
+                  <div className="flex items-center justify-between text-[9px] font-bold">
+                    <span className="text-brand-text-secondary">Password Strength:</span>
+                    <span className={strength.text}>{strength.label}</span>
+                  </div>
+                  <div className="h-1 w-full bg-brand-border rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full ${strength.color} transition-all duration-300`} 
+                      style={{ width: `${strength.score}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <AuthInput
+              type={showConfirmPassword ? "text" : "password"}
               placeholder="••••••••"
               label="Confirm Password"
+              icon={Lock}
+              showToggle
+              toggleOpen={showConfirmPassword}
+              setToggleOpen={setShowConfirmPassword}
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
             />
@@ -124,7 +261,7 @@ export const Register = () => {
 
           {/* Role Selection Cards */}
           <div className="flex flex-col gap-2.5 select-none text-left mt-1">
-            <label className="text-xs font-bold text-brand-text uppercase tracking-wider font-mono">I want to...</label>
+            <label className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono">I want to...</label>
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
@@ -154,7 +291,7 @@ export const Register = () => {
             </div>
           </div>
 
-          <Button type="submit" variant="primary" isLoading={loading} className="w-full h-11 rounded-full text-xs font-bold mt-3 shadow-sm">
+          <Button type="submit" variant="primary" isLoading={loading} className="w-full h-12 rounded-full text-xs font-bold mt-3 shadow-sm">
             Create Account
             <ArrowRight className="ml-1.5 h-4 w-4" />
           </Button>
@@ -166,7 +303,7 @@ export const Register = () => {
             Sign In
           </Link>
         </div>
-      </div>
+      </motion.div>
     </AuthLayout>
   );
 };

@@ -13,6 +13,7 @@ import { MarketLayout } from "./components/layout/MarketLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AdminRoute } from "./components/layout/AdminRoute";
 import { GuestRoute } from "./components/layout/GuestRoute";
+import { ScrollToTop } from "./components/layout/ScrollToTop";
 
 // Pages
 import { Landing } from "./pages/Landing";
@@ -30,6 +31,12 @@ import { Reader } from "./pages/reader/Reader";
 import { AuthorDashboard } from "./pages/author/AuthorDashboard";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { NotFound } from "./pages/NotFound";
+
+// New Pages
+import { OurMission } from "./pages/OurMission";
+import { Terms } from "./pages/Terms";
+import { Privacy } from "./pages/Privacy";
+import { SearchResults } from "./pages/SearchResults";
 
 // Create Query Client
 const queryClient = new QueryClient({
@@ -69,6 +76,7 @@ function App() {
       <AuthProvider>
         <AppProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               
               {/* Public Marketplace / Landing routes */}
@@ -77,6 +85,10 @@ function App() {
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/book/:slug" element={<BookDetail />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/our-mission" element={<OurMission />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/search" element={<SearchResults />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/help" element={<HelpCenter />} />

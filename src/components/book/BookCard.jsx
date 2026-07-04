@@ -283,6 +283,7 @@ export const BookCard = ({ book, view = "grid" }) => {
           transformPerspective: 1000,
           y: isHovered ? -6 : 0,
         }}
+        whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 350, damping: 22 }}
         className="flex flex-col bg-brand-card rounded-brand-card border border-brand-border shadow-brand focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none transition-all duration-300 group overflow-hidden relative cursor-pointer text-left h-full"
       >

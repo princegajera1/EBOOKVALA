@@ -11,7 +11,12 @@ export const AdminRoute = ({ children }) => {
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
-        toast.error("Please sign in as admin to continue");
+        const isLoggingOut = sessionStorage.getItem("logging_out") === "true";
+        if (isLoggingOut) {
+          sessionStorage.removeItem("logging_out");
+        } else {
+          toast.error("Please sign in as admin to continue");
+        }
         navigate("/admin/login");
       } else if (!isAdmin) {
         toast.error("Access denied. Admin role required.");

@@ -71,6 +71,13 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setLoading(true);
       if (firebaseUser) {
+        const isTestEmail = firebaseUser.email?.toLowerCase().endsWith(".test");
+        const isAdminEmail = firebaseUser.email?.toLowerCase() === "admin@ebookvala.com";
+        if (!isAdminEmail && !isTestEmail && !firebaseUser.emailVerified) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
         await syncUserProfile(firebaseUser);
       } else {
         setUser(null);
@@ -131,6 +138,7 @@ export const AuthProvider = ({ children }) => {
       await sendEmailVerification(firebaseUser);
 
       // Log out user immediately since they must verify email first
+      sessionStorage.setItem("logging_out", "true");
       await signOut(auth);
       
       setLoading(false);
@@ -153,6 +161,7 @@ export const AuthProvider = ({ children }) => {
       if (email.toLowerCase() !== "admin@ebookvala.com" && !isTestEmail && !firebaseUser.emailVerified) {
         const error = new Error("Please verify your email first. Check your inbox.");
         error.code = "auth/email-not-verified";
+        sessionStorage.setItem("logging_out", "true");
         await signOut(auth);
         setLoading(false);
         throw error;
@@ -274,6 +283,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setLoading(true);
     try {
+      sessionStorage.setItem("logging_out", "true");
       await signOut(auth);
       setUser(null);
     } catch (err) {

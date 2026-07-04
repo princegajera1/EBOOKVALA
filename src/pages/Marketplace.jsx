@@ -10,6 +10,7 @@ import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { BookCardSkeleton } from "../components/ui/Skeleton";
 import { useAuth } from "../hooks/useAuth";
+import { Modal } from "../components/ui/Modal";
 
 export const Marketplace = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -18,6 +19,7 @@ export const Marketplace = () => {
   const [books, setBooks] = useState([]);
   const [filteredBooks, setFilteredBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visibleCount, setVisibleCount] = useState(8);
 
   // Filters State
   const [selectedCategories, setSelectedCategories] = useState(
@@ -29,6 +31,7 @@ export const Marketplace = () => {
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [sortBy, setSortBy] = useState("best-selling");
   const [view, setView] = useState("grid");
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
 
   // Search History & AutoSuggestions
   const [suggestions, setSuggestions] = useState([]);
@@ -124,6 +127,7 @@ export const Marketplace = () => {
       }
 
       setFilteredBooks(result);
+      setVisibleCount(8); // Reset pagination count on filter change
       setLoading(false);
     }, 350);
 
@@ -203,110 +207,150 @@ export const Marketplace = () => {
     setSearchParams({});
   };
 
+  const activeFiltersCount = selectedCategories.length + selectedLanguages.length + (minRating > 0 ? 1 : 0) + selectedFormats.length;
+
+  const FiltersContent = () => (
+    <div className="flex flex-col gap-6">
+      <div className="flex items-center justify-between pb-4 border-b border-brand-border">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="h-4 w-4 text-brand-accent" />
+          <span className="text-sm font-bold text-brand-text">Library Filters</span>
+        </div>
+        <button 
+          onClick={handleClearAll}
+          className="text-xs font-semibold text-brand-text-secondary hover:text-brand-text transition-colors cursor-pointer"
+        >
+          Clear All
+        </button>
+      </div>
+
+      {/* Categories */}
+      <div>
+        <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Categories</h5>
+        <div className="flex flex-col gap-2.5">
+          {["Technology", "Business", "Self-Help", "Fiction", "Romance", "Design"].map((cat) => (
+            <label key={cat} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(cat)}
+                onChange={() => handleCategoryToggle(cat)}
+                className="rounded border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
+              />
+              <span>{cat}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Languages */}
+      <div>
+        <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Language</h5>
+        <div className="flex flex-col gap-2.5">
+          {["English", "Hindi"].map((lang) => (
+            <label key={lang} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
+              <input
+                type="checkbox"
+                checked={selectedLanguages.includes(lang)}
+                onChange={() => handleLanguageToggle(lang)}
+                className="rounded border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
+              />
+              <span>{lang}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* Ratings */}
+      <div>
+        <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Minimum Rating</h5>
+        <div className="flex flex-col gap-2.5">
+          {[4, 3].map((stars) => (
+            <label key={stars} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
+              <input
+                type="radio"
+                name="rating-filter"
+                checked={minRating === stars}
+                onChange={() => setMinRating(stars)}
+                className="border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
+              />
+              <span className="flex items-center gap-1">
+                {stars}★ &amp; above
+              </span>
+            </label>
+          ))}
+          <label className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
+            <input
+              type="radio"
+              name="rating-filter"
+              checked={minRating === 0}
+              onChange={() => setMinRating(0)}
+              className="border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
+            />
+            <span>Any rating</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Format */}
+      <div>
+        <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Formats Available</h5>
+        <div className="flex flex-col gap-2.5">
+          {["PDF", "EPUB"].map((fmt) => (
+            <label key={fmt} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
+              <input
+                type="checkbox"
+                checked={selectedFormats.includes(fmt)}
+                onChange={() => handleFormatToggle(fmt)}
+                className="rounded border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
+              />
+              <span>{fmt} Files</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20 md:py-28 relative select-none">
+    <div className="max-w-7xl mx-auto px-6 py-10 md:py-14 relative select-none">
+      
+      {/* Page Hero Header */}
+      <div className="text-left mb-10 pb-8 border-b border-brand-border">
+        <span className="text-[10px] font-mono text-brand-accent font-bold tracking-widest uppercase mb-3 block">
+          Digital Catalog
+        </span>
+        <h1 className="text-4xl sm:text-5xl font-display font-black text-brand-text tracking-tight">
+          Explore Library
+        </h1>
+        <p className="text-sm text-brand-text-secondary mt-2 max-w-xl font-normal leading-relaxed">
+          Access our open digital library of premium developer editions, SaaS design architectures, and founder-focused self-help books. 100% free forever for the first year.
+        </p>
+      </div>
+      {/* Mobile-Native Swipeable Category chips */}
+      <div className="lg:hidden w-full overflow-x-auto flex gap-2 pb-4 mb-3 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-6 px-6 select-none">
+        {["Technology", "Business", "Self-Help", "Fiction", "Romance", "Design"].map((cat) => {
+          const isSelected = selectedCategories.includes(cat);
+          return (
+            <button
+              key={cat}
+              onClick={() => handleCategoryToggle(cat)}
+              className={`snap-center shrink-0 text-xs font-bold px-4 py-2 rounded-full border transition-all active-tap cursor-pointer ${
+                isSelected 
+                  ? "bg-brand-primary text-brand-bg border-brand-primary" 
+                  : "bg-brand-card text-brand-text-secondary border-brand-border hover:border-brand-text"
+              }`}
+            >
+              {cat}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
         
-        {/* LEFT SIDEBAR FILTERS */}
-        <aside className="lg:col-span-3 bg-brand-card border border-brand-border rounded-brand-card p-6 sticky top-24 shadow-brand select-none text-left">
-          <div className="flex items-center justify-between pb-4 border-b border-brand-border mb-6">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className="h-4 w-4 text-brand-accent" />
-              <span className="text-sm font-bold text-brand-text">Library Filters</span>
-            </div>
-            <button 
-              onClick={handleClearAll}
-              className="text-xs font-semibold text-brand-text-secondary hover:text-brand-text transition-colors cursor-pointer"
-            >
-              Clear All
-            </button>
-          </div>
-
-          {/* Categories */}
-          <div className="mb-6">
-            <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Categories</h5>
-            <div className="flex flex-col gap-2.5">
-              {["Technology", "Business", "Self-Help", "Fiction", "Romance", "Design"].map((cat) => (
-                <label key={cat} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={selectedCategories.includes(cat)}
-                    onChange={() => handleCategoryToggle(cat)}
-                    className="rounded border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
-                  />
-                  <span>{cat}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Languages */}
-          <div className="mb-6">
-            <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Language</h5>
-            <div className="flex flex-col gap-2.5">
-              {["English", "Hindi"].map((lang) => (
-                <label key={lang} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={selectedLanguages.includes(lang)}
-                    onChange={() => handleLanguageToggle(lang)}
-                    className="rounded border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
-                  />
-                  <span>{lang}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Ratings */}
-          <div className="mb-6">
-            <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Minimum Rating</h5>
-            <div className="flex flex-col gap-2.5">
-              {[4, 3].map((stars) => (
-                <label key={stars} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
-                  <input
-                    type="radio"
-                    name="rating-filter"
-                    checked={minRating === stars}
-                    onChange={() => setMinRating(stars)}
-                    className="border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
-                  />
-                  <span className="flex items-center gap-1">
-                    {stars}★ & above
-                  </span>
-                </label>
-              ))}
-              <label className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
-                <input
-                  type="radio"
-                  name="rating-filter"
-                  checked={minRating === 0}
-                  onChange={() => setMinRating(0)}
-                  className="border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
-                />
-                <span>Any rating</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Format */}
-          <div>
-            <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Formats Available</h5>
-            <div className="flex flex-col gap-2.5">
-              {["PDF", "EPUB"].map((fmt) => (
-                <label key={fmt} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
-                  <input
-                    type="checkbox"
-                    checked={selectedFormats.includes(fmt)}
-                    onChange={() => handleFormatToggle(fmt)}
-                    className="rounded border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
-                  />
-                  <span>{fmt} Files</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
+        {/* LEFT SIDEBAR FILTERS (Desktop Only) */}
+        <aside className="hidden lg:block lg:col-span-3 bg-brand-card border border-brand-border rounded-brand-card p-6 sticky top-24 shadow-brand select-none text-left">
+          <FiltersContent />
         </aside>
 
         {/* MAIN CONTENT AREA */}
@@ -379,42 +423,107 @@ export const Marketplace = () => {
               )}
             </div>
 
-            {/* Sorting options */}
-            <div className="flex items-center justify-end gap-3 select-none">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2 px-4 focus:outline-none focus:border-brand-accent cursor-pointer font-bold"
+            {/* Sorting and view options */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 select-none w-full sm:w-auto">
+              <button
+                onClick={() => setIsMobileFiltersOpen(true)}
+                className="lg:hidden flex items-center gap-1.5 bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2 px-4 focus:outline-none cursor-pointer font-bold active-tap"
               >
-                <option value="best-selling">Popularity</option>
-                <option value="newest">Newest Releases</option>
-                <option value="top-rated">Top Rated</option>
-              </select>
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                <span>Filters</span>
+                {activeFiltersCount > 0 && (
+                  <span className="h-4.5 w-4.5 rounded-full bg-brand-accent text-white text-[9.5px] flex items-center justify-center font-bold">
+                    {activeFiltersCount}
+                  </span>
+                )}
+              </button>
 
-              {/* View options */}
-              <div className="flex items-center border border-brand-border rounded-full p-0.5 bg-brand-bg-secondary">
-                <button
-                  onClick={() => setView("grid")}
-                  className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                    view === "grid" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
-                  }`}
-                  aria-label="Grid View"
+              <div className="flex items-center gap-3">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2 px-4 focus:outline-none focus:border-brand-accent cursor-pointer font-bold"
                 >
-                  <Grid className="h-4 w-4" />
-                </button>
-                <button
-                  onClick={() => setView("list")}
-                  className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                    view === "list" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
-                  }`}
-                  aria-label="List View"
-                >
-                  <List className="h-4 w-4" />
-                </button>
+                  <option value="best-selling">Popularity</option>
+                  <option value="newest">Newest Releases</option>
+                  <option value="top-rated">Top Rated</option>
+                </select>
+
+                {/* View options */}
+                <div className="flex items-center border border-brand-border rounded-full p-0.5 bg-brand-bg-secondary">
+                  <button
+                    onClick={() => setView("grid")}
+                    className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                      view === "grid" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
+                    }`}
+                    aria-label="Grid View"
+                  >
+                    <Grid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setView("list")}
+                    className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                      view === "list" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
+                    }`}
+                    aria-label="List View"
+                  >
+                    <List className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
           </div>
+
+          {/* Active Filters list */}
+          {(selectedCategories.length > 0 || selectedLanguages.length > 0 || minRating > 0 || selectedFormats.length > 0 || searchQuery) && (
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono mr-1">Active:</span>
+              {selectedCategories.map(cat => (
+                <span key={cat} className="inline-flex items-center gap-1 bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-[11px] font-bold px-2.5 py-0.5 rounded-full select-none">
+                  {cat}
+                  <button onClick={() => handleCategoryToggle(cat)} className="hover:text-brand-text-secondary transition-colors cursor-pointer">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+              {selectedLanguages.map(lang => (
+                <span key={lang} className="inline-flex items-center gap-1 bg-brand-primary/10 border border-brand-primary/20 text-brand-text text-[11px] font-bold px-2.5 py-0.5 rounded-full select-none">
+                  {lang}
+                  <button onClick={() => handleLanguageToggle(lang)} className="hover:text-brand-accent transition-colors cursor-pointer">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+              {minRating > 0 && (
+                <span className="inline-flex items-center gap-1 bg-amber-400/10 border border-amber-400/20 text-amber-500 text-[11px] font-bold px-2.5 py-0.5 rounded-full select-none">
+                  {minRating}★ &amp; above
+                  <button onClick={() => setMinRating(0)} className="hover:text-brand-accent transition-colors cursor-pointer">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              {selectedFormats.map(fmt => (
+                <span key={fmt} className="inline-flex items-center gap-1 bg-brand-bg-secondary border border-brand-border text-brand-text text-[11px] font-bold px-2.5 py-0.5 rounded-full select-none">
+                  {fmt}
+                  <button onClick={() => handleFormatToggle(fmt)} className="hover:text-brand-accent transition-colors cursor-pointer">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              ))}
+              {searchQuery && (
+                <span className="inline-flex items-center gap-1 bg-brand-bg-secondary border border-brand-border text-brand-text text-[11px] font-bold px-2.5 py-0.5 rounded-full select-none">
+                  Search: "{searchQuery}"
+                  <button onClick={() => setSearchQuery("")} className="hover:text-brand-accent transition-colors cursor-pointer">
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              )}
+              <button onClick={handleClearAll} className="text-[10px] font-bold text-brand-text-secondary hover:text-brand-text hover:underline transition-colors ml-1 cursor-pointer">
+                Clear all
+              </button>
+            </div>
+          )}
 
           {/* Book grid/list container */}
           {loading ? (
@@ -424,7 +533,22 @@ export const Marketplace = () => {
               ))}
             </div>
           ) : filteredBooks.length > 0 ? (
-            <BookGrid books={filteredBooks} view={view} />
+            <>
+              <BookGrid books={filteredBooks.slice(0, visibleCount)} view={view} />
+              
+              {visibleCount < filteredBooks.length && (
+                <div className="flex justify-center mt-10">
+                  <Button 
+                    onClick={() => setVisibleCount(prev => prev + 8)} 
+                    variant="secondary" 
+                    className="h-11 px-8 rounded-full text-xs font-bold border-brand-border bg-brand-bg-secondary hover:bg-brand-bg text-brand-text flex items-center gap-2 shadow-sm cursor-pointer"
+                  >
+                    Load More eBooks
+                    <ArrowRight className="h-4 w-4 text-brand-accent" />
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
             <EmptyState 
               title="No matching eBooks found"
@@ -437,6 +561,26 @@ export const Marketplace = () => {
         </section>
 
       </div>
+
+      {/* Mobile-Native Bottom Sheet Filters Drawer */}
+      <Modal
+        isOpen={isMobileFiltersOpen}
+        onClose={() => setIsMobileFiltersOpen(false)}
+        title="Filter Library"
+        className="max-w-md"
+      >
+        <div className="pb-6">
+          <FiltersContent />
+          <Button 
+            onClick={() => setIsMobileFiltersOpen(false)}
+            variant="primary" 
+            className="w-full h-12 rounded-full text-xs font-bold mt-8 shadow-sm"
+          >
+            Apply Filters
+          </Button>
+        </div>
+      </Modal>
+
     </div>
   );
 };

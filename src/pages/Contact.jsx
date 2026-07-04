@@ -21,11 +21,11 @@ export const Contact = () => {
   };
 
   return (
-    <div className="bg-brand-bg min-h-screen py-20 md:py-28 select-none text-left transition-colors duration-300">
+    <div className="bg-brand-bg min-h-screen py-10 md:py-14 select-none text-left transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-6">
         
         {/* Header */}
-        <div className="mb-16">
+        <div className="mb-8">
           <span className="text-[10px] font-mono text-brand-text-secondary font-bold tracking-widest uppercase mb-3 block">
             Contact Support
           </span>

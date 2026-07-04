@@ -154,7 +154,7 @@ export const Navbar = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/marketplace?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
       setShowSearchOverlay(false);
       setSearchQuery("");
     }
@@ -164,6 +164,16 @@ export const Navbar = () => {
     if (user?.role === "admin") return "/admin/dashboard";
     if (user?.role === "author") return "/author/dashboard";
     return "/dashboard";
+  };
+
+  const handleSignOut = () => {
+    logout();
+    setIsProfileOpen(false);
+    setIsMobileMenuOpen(false);
+    const protectedPrefixes = ["/dashboard", "/author", "/admin"];
+    if (protectedPrefixes.some(prefix => location.pathname.startsWith(prefix))) {
+      navigate("/");
+    }
   };
 
   const navLinks = [
@@ -177,10 +187,10 @@ export const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 h-20 flex items-center transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 flex items-center transition-all duration-300 ${
           isScrolled 
-            ? "bg-brand-bg/85 backdrop-blur-md shadow-brand border-b border-brand-border/40" 
-            : "bg-brand-bg border-b border-brand-border"
+            ? "h-14 md:h-16 bg-brand-bg/85 backdrop-blur-md shadow-brand border-b border-brand-border/40" 
+            : "h-20 bg-brand-bg border-b border-brand-border"
         }`}
       >
         {/* Thin Scroll Progress Indicator */}
@@ -398,10 +408,7 @@ export const Navbar = () => {
                                 </Link>
                               )}
                               <button
-                                onClick={() => {
-                                  logout();
-                                  setIsProfileOpen(false);
-                                }}
+                                onClick={handleSignOut}
                                 className="flex w-full items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-xl text-brand-danger hover:bg-brand-danger/10 transition-colors cursor-pointer"
                               >
                                 <LogOut className="h-4 w-4" />
@@ -527,10 +534,7 @@ export const Navbar = () => {
                       </Button>
                     </Link>
                     <Button
-                      onClick={() => {
-                        logout();
-                        setIsMobileMenuOpen(false);
-                      }}
+                      onClick={handleSignOut}
                       variant="ghost"
                       className="w-full text-brand-danger hover:bg-brand-danger/10 text-xs font-bold py-2.5 rounded-brand-btn"
                     >

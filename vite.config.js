@@ -16,6 +16,14 @@ export default defineConfig({
       host: 'localhost',
       port: 5173,
     },
+    proxy: {
+      // Forward /api calls to live Vercel deployment for local testing
+      '/api': {
+        target: 'https://ebookvala-lts4-black.vercel.app',
+        changeOrigin: true,
+        secure: true,
+      }
+    }
   },
   build: {
     rollupOptions: {

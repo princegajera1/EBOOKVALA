@@ -10,42 +10,39 @@ import { dbService } from "../services/db";
 import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { FadeUp } from "../components/common/FadeUp";
 import { BookCard } from "../components/book/BookCard";
+import { HeroBookStack } from "../components/common/HeroBookStack";
+import princeAvatar from "../assets/testimonials/prince.png";
+import amaraAvatar from "../assets/testimonials/amara.png";
+import rohanAvatar from "../assets/testimonials/rohan.png";
 
-// Hero Book Covers Mockup Configurations
-const heroBooks = [
+const testimonialsData = [
   {
-    id: 1,
-    title: "Designing for Scale",
-    cover: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=280&h=420&fit=crop"
+    name: "Prince Gajera",
+    role: "Software Engineer",
+    location: "Rajkot",
+    image: princeAvatar,
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "Designing for Scale is an absolute masterpiece. The chapters on database sharding and caching saved our startup weeks of trial and error. EBOOKVALA's reader interface is also incredibly smooth."
   },
   {
-    id: 2,
-    title: "Zero to $10M ARR",
-    cover: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=280&h=420&fit=crop&crop=center"
+    name: "Amara Dev",
+    role: "Technical Author",
+    location: "Bengaluru",
+    image: amaraAvatar,
+    rating: 5,
+    badge: "Author Creator",
+    quote: "As an independent author, EBOOKVALA makes it incredibly simple to publish and distribute digital editions. The interface feels premium, fast, and the reading analytics help me understand reader engagement."
   },
   {
-    id: 3,
-    title: "The Minimalist UI",
-    cover: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=280&h=420&fit=crop&crop=center"
-  },
-  {
-    id: 4,
-    title: "Atomic Habits",
-    cover: "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=280&h=420&fit=crop&crop=center"
-  },
-  {
-    id: 5,
-    title: "Think Again",
-    cover: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=280&h=420&fit=crop&crop=center"
+    name: "Rohan Mehta",
+    role: "Founder, SaaS Lab",
+    location: "Mumbai",
+    image: rohanAvatar,
+    rating: 5,
+    badge: "Active Reader",
+    quote: "The curated selection on EBOOKVALA is incredible. Instead of digging through thousands of low-quality files, I get access to high-quality, beautifully typeset guides on SaaS, design system architectures, and startup logic."
   }
-];
-
-const positions = [
-  { rotate: -18, x: -110, y: 30, scale: 0.78, opacity: 0.45 },
-  { rotate: -9,  x: -55,  y: 12, scale: 0.87, opacity: 0.68 },
-  { rotate: -1,  x: 0,    y: 0,  scale: 1.00, opacity: 1.00 },
-  { rotate: 9,   x: 55,   y: 12, scale: 0.87, opacity: 0.68 },
-  { rotate: 18,  x: 110,  y: 30, scale: 0.78, opacity: 0.45 },
 ];
 
 export const Landing = () => {
@@ -56,17 +53,10 @@ export const Landing = () => {
   const [heroSearchQuery, setHeroSearchQuery] = useState("");
   const [recentlyAdded, setRecentlyAdded] = useState([]);
   
-  const [activeIdx, setActiveIdx] = useState(2);
-  const [isEntered, setIsEntered] = useState(false);
   const [startIndex, setStartIndex] = useState(0);
-
+  
   const carouselRef = useRef(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsEntered(true), 800);
-    return () => clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,7 +104,7 @@ export const Landing = () => {
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[85vh] pt-28 pb-16 scroll-mt-[76px]">
+      <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[85vh] pt-8 md:pt-12 lg:pt-16 scroll-mt-[76px]">
         
         {/* Left Content */}
         <div className="lg:col-span-7 flex flex-col gap-6 text-left">
@@ -195,64 +185,9 @@ export const Landing = () => {
         </div>
 
         {/* Right Floating Mockups Stack */}
-        <motion.div 
-          animate={{ y: [0, -12, 0] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="lg:col-span-5 h-[360px] sm:h-[440px] lg:h-[520px] relative flex items-center justify-center overflow-visible"
-        >
-          <div className="absolute h-[380px] w-[380px] rounded-full bg-brand-accent/5 z-0 blur-2xl pointer-events-none" />
-          
-          <div className="relative w-[210px] h-[315px] z-10">
-            {heroBooks.map((book, idx) => {
-              const posIdx = (idx - activeIdx + 2 + 5) % 5;
-              const pos = positions[posIdx];
-              const zIndex = posIdx === 2 ? 5 : (posIdx === 1 || posIdx === 3 ? 3 : 1);
-              const isActive = posIdx === 2;
-
-              return (
-                <motion.div
-                  key={book.id}
-                  onClick={() => setActiveIdx(idx)}
-                  animate={{ 
-                    opacity: pos.opacity, 
-                    x: pos.x, 
-                    rotate: pos.rotate, 
-                    scale: pos.scale,
-                    y: [pos.y, pos.y - 6, pos.y]
-                  }}
-                  transition={{
-                    y: { 
-                      duration: 4.5 + idx * 0.4, 
-                      repeat: Infinity, 
-                      ease: "easeInOut"
-                    },
-                    default: { 
-                      type: "spring", 
-                      stiffness: 170, 
-                      damping: 24
-                    }
-                  }}
-                  className="absolute inset-0 cursor-pointer"
-                  style={{ zIndex }}
-                >
-                  <div 
-                    className={`w-[210px] aspect-[2/3] rounded-[18px] overflow-hidden transition-all duration-300 ${
-                      isActive 
-                        ? "shadow-brand-hover border-2 border-brand-accent/30" 
-                        : "shadow-brand border border-brand-border"
-                    } bg-brand-card`}
-                  >
-                    <img 
-                      src={book.cover} 
-                      alt={book.title} 
-                      className="w-full h-full object-cover select-none"
-                    />
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
+        <div className="lg:col-span-5 overflow-visible flex items-center justify-center">
+          <HeroBookStack />
+        </div>
 
       </section>
 
@@ -552,92 +487,36 @@ export const Landing = () => {
           </FadeUp>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            <FadeUp delay={0.1} className="flex">
-              <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-full hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 group">
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
-                    <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
-                      Verified Reader
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6">
-                    "Designing for Scale is an absolute masterpiece. The chapters on database sharding and caching saved our startup weeks of trial and error. EBOOKVALA's reader interface is also incredibly smooth."
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
-                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&h=100&q=80" alt="Prince" className="h-full w-full object-cover" />
-                  </div>
+            {testimonialsData.map((t, idx) => (
+              <FadeUp key={idx} delay={idx * 0.08} className="flex">
+                <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-full hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 group">
                   <div>
-                    <h5 className="text-xs font-bold text-brand-text leading-none">Prince Gajera</h5>
-                    <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">Software Engineer • Rajkot</p>
-                  </div>
-                </div>
-              </div>
-            </FadeUp>
-
-            <FadeUp delay={0.18} className="flex">
-              <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-full hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 group">
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      ))}
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex gap-0.5">
+                        {[...Array(t.rating)].map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
+                        {t.badge}
+                      </span>
                     </div>
-                    <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
-                      Author Creator
-                    </span>
+                    <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6">
+                      "{t.quote}"
+                    </p>
                   </div>
-                  <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6">
-                    "As an independent author, EBOOKVALA makes it incredibly simple to publish and distribute digital editions. The interface feels premium, fast, and the reading analytics help me understand reader engagement."
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
-                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=100&h=100&q=80" alt="Amara" className="h-full w-full object-cover" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-brand-text leading-none">Amara Dev</h5>
-                    <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">Technical Author • Bengaluru</p>
-                  </div>
-                </div>
-              </div>
-            </FadeUp>
-
-            <FadeUp delay={0.26} className="flex">
-              <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-full hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 group">
-                <div>
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="flex gap-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      ))}
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
+                      <img src={t.image} alt={t.name} className="h-full w-full object-cover" />
                     </div>
-                    <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
-                      Active Reader
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6">
-                    "The curated selection on EBOOKVALA is incredible. Instead of digging through thousands of low-quality files, I get access to high-quality, beautifully typeset guides on SaaS, design system architectures, and startup logic."
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
-                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100&q=80" alt="Rohan" className="h-full w-full object-cover" />
-                  </div>
-                  <div>
-                    <h5 className="text-xs font-bold text-brand-text leading-none">Rohan Mehta</h5>
-                    <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">Founder, SaaS Lab • Mumbai</p>
+                    <div>
+                      <h5 className="text-xs font-bold text-brand-text leading-none">{t.name}</h5>
+                      <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">{t.role} • {t.location}</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </FadeUp>
+              </FadeUp>
+            ))}
           </div>
         </section>
       </div>

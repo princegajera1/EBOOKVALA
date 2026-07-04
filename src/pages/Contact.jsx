@@ -21,18 +21,18 @@ export const Contact = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen py-16 select-none text-left">
+    <div className="bg-brand-bg min-h-screen py-16 select-none text-left transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-6">
         
         {/* Header */}
         <div className="mb-12">
-          <span className="text-[10px] font-mono text-gray-400 font-bold tracking-widest uppercase mb-3 block">
+          <span className="text-[10px] font-mono text-brand-text-secondary font-bold tracking-widest uppercase mb-3 block">
             Contact Support
           </span>
-          <h1 className="text-4xl sm:text-5xl font-display font-bold text-black leading-tight tracking-tight">
+          <h1 className="text-4xl sm:text-5xl font-display font-bold text-brand-text leading-tight tracking-tight">
             We'd love to hear from you.
           </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-2 leading-relaxed max-w-xl font-semibold">
+          <p className="text-xs sm:text-sm text-brand-text-secondary mt-2 leading-relaxed max-w-xl font-semibold">
             Have a question about our books, interested in publishing with us, or need technical assistance? Our support team is here to help.
           </p>
         </div>
@@ -40,20 +40,20 @@ export const Contact = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* Left Column: Form (7 cols) */}
-          <div className="lg:col-span-7 bg-white border border-[#E5E7EB] rounded-brand-card p-6 md:p-8 shadow-brand">
+          <div className="lg:col-span-7 bg-brand-card border border-brand-border rounded-brand-card p-6 md:p-8 shadow-brand">
             {submitted ? (
               <div className="text-center py-12 flex flex-col items-center gap-4">
-                <div className="h-14 w-14 rounded-full bg-black text-white flex items-center justify-center shadow-sm">
+                <div className="h-14 w-14 rounded-full bg-brand-primary text-brand-bg flex items-center justify-center shadow-sm">
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
-                <h3 className="text-xl font-bold text-black">Message Sent Successfully</h3>
-                <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed font-semibold">
+                <h3 className="text-xl font-bold text-brand-text">Message Sent Successfully</h3>
+                <p className="text-xs text-brand-text-secondary max-w-sm mx-auto leading-relaxed font-semibold">
                   Thank you for reaching out! A support representative has received your request and will respond within 24 business hours.
                 </p>
                 <Button 
                   onClick={() => setSubmitted(false)}
                   variant="secondary" 
-                  className="h-10 px-6 rounded-full text-xs font-bold mt-4"
+                  className="h-10 px-6 rounded-full text-xs font-bold mt-4 border-brand-border bg-brand-bg-secondary hover:bg-brand-bg text-brand-text"
                 >
                   Send Another Message
                 </Button>
@@ -78,11 +78,11 @@ export const Contact = () => {
                 </div>
                 
                 <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-xs font-bold text-black uppercase tracking-wider">Subject</label>
+                  <label className="text-xs font-bold text-brand-text uppercase tracking-wider">Subject</label>
                   <select 
                     name="subject"
                     required
-                    className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-brand-input py-2.5 px-4 text-xs focus:outline-none focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 text-black font-semibold transition-all"
+                    className="w-full bg-brand-bg-secondary border border-brand-border rounded-brand-input py-2.5 px-4 text-xs focus:outline-none focus:bg-brand-bg focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 text-brand-text font-semibold transition-all"
                   >
                     <option value="general">General Inquiry</option>
                     <option value="billing">Billing & Refunds</option>
@@ -90,91 +90,91 @@ export const Contact = () => {
                     <option value="technical">Technical Support</option>
                   </select>
                 </div>
-
+ 
                 <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-xs font-bold text-black uppercase tracking-wider">Your Message</label>
+                  <label className="text-xs font-bold text-brand-text uppercase tracking-wider">Your Message</label>
                   <textarea 
                     name="message"
                     rows="5" 
                     required
                     placeholder="How can we help you?"
-                    className="w-full bg-[#F8FAFC] border border-[#E5E7EB] rounded-brand-input py-3 px-4 text-xs focus:outline-none focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 text-black font-medium transition-all resize-none"
+                    className="w-full bg-brand-bg-secondary border border-brand-border rounded-brand-input py-3 px-4 text-xs focus:outline-none focus:bg-brand-bg focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 text-brand-text font-medium transition-all resize-none"
                   />
                 </div>
-
+ 
                 <Button 
                   type="submit" 
                   variant="primary" 
                   isLoading={loading}
-                  className="h-12 w-full text-xs font-bold rounded-full mt-2"
+                  className="h-12 w-full text-xs font-bold rounded-full mt-2 shadow-sm animate-pulse-subtle"
                 >
                   Send Message
                 </Button>
               </form>
             )}
           </div>
-
+ 
           {/* Right Column: Office info & FAQ shortcut (5 cols) */}
           <div className="lg:col-span-5 flex flex-col gap-6">
             
             {/* Info Card */}
-            <div className="bg-[#F8FAFC] border border-[#E5E7EB] rounded-brand-card p-6 flex flex-col gap-6">
-              <h3 className="text-sm font-bold text-black uppercase tracking-wider">Contact Details</h3>
+            <div className="bg-brand-bg-secondary border border-brand-border rounded-brand-card p-6 flex flex-col gap-6">
+              <h3 className="text-sm font-bold text-brand-text uppercase tracking-wider">Contact Details</h3>
               
-              <div className="flex flex-col gap-5 text-xs text-gray-500 font-semibold">
+              <div className="flex flex-col gap-5 text-xs text-brand-text-secondary font-semibold">
                 <div className="flex items-start gap-3">
-                  <Mail className="h-4.5 w-4.5 text-black shrink-0 mt-0.5" />
+                  <Mail className="h-4.5 w-4.5 text-brand-text shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-bold text-black">Email Support</p>
-                    <p className="mt-0.5">support@ebookvala.com</p>
+                    <p className="font-bold text-brand-text">Email Support</p>
+                    <p className="mt-0.5 font-normal">support@ebookvala.com</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex items-start gap-3">
-                  <Phone className="h-4.5 w-4.5 text-black shrink-0 mt-0.5" />
+                  <Phone className="h-4.5 w-4.5 text-brand-text shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-bold text-black">Call Support</p>
-                    <p className="mt-0.5">+91 98765 43210</p>
+                    <p className="font-bold text-brand-text">Call Support</p>
+                    <p className="mt-0.5 font-normal">+91 98765 43210</p>
                   </div>
                 </div>
-
+ 
                 <div className="flex items-start gap-3">
-                  <MapPin className="h-4.5 w-4.5 text-black shrink-0 mt-0.5" />
+                  <MapPin className="h-4.5 w-4.5 text-brand-text shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-bold text-black">Headquarters</p>
-                    <p className="mt-0.5">
+                    <p className="font-bold text-brand-text">Headquarters</p>
+                    <p className="mt-0.5 font-normal">
                       Vikas Marg, Sector 62,<br />
                       Noida, UP 201301, India
                     </p>
                   </div>
                 </div>
-
+ 
                 <div className="flex items-start gap-3">
-                  <Clock className="h-4.5 w-4.5 text-black shrink-0 mt-0.5" />
+                  <Clock className="h-4.5 w-4.5 text-brand-text shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-bold text-black">Business Hours</p>
-                    <p className="mt-0.5">Monday – Friday: 9 AM – 6 PM IST</p>
+                    <p className="font-bold text-brand-text">Business Hours</p>
+                    <p className="mt-0.5 font-normal">Monday – Friday: 9 AM – 6 PM IST</p>
                   </div>
                 </div>
               </div>
             </div>
-
+ 
             {/* FAQ Shortcut */}
-            <div className="border border-[#E5E7EB] rounded-brand-card p-6 flex flex-col gap-3">
-              <h3 className="text-sm font-bold text-black">Looking for quick answers?</h3>
-              <p className="text-xs text-gray-500 leading-relaxed font-semibold">
+            <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 flex flex-col gap-3 shadow-sm">
+              <h3 className="text-sm font-bold text-brand-text">Looking for quick answers?</h3>
+              <p className="text-xs text-brand-text-secondary leading-relaxed font-semibold">
                 Check our Frequently Asked Questions for instant help with downloads, payments, and account setup.
               </p>
-              <Link to="/faq" className="text-xs text-black font-bold flex items-center gap-1 hover:underline mt-2">
+              <Link to="/faq" className="text-xs text-brand-text hover:text-brand-accent font-bold flex items-center gap-1 mt-2 transition-colors">
                 Read our FAQs
                 <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-
+ 
           </div>
-
+ 
         </div>
-
+ 
       </div>
     </div>
   );

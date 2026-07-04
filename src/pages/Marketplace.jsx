@@ -8,6 +8,7 @@ import { dbService } from "../services/db";
 import { BookGrid } from "../components/book/BookGrid";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
+import { BookCardSkeleton } from "../components/ui/Skeleton";
 import { useAuth } from "../hooks/useAuth";
 
 export const Marketplace = () => {
@@ -417,9 +418,10 @@ export const Marketplace = () => {
 
           {/* Book grid/list container */}
           {loading ? (
-            <div className="py-24 flex flex-col items-center gap-3">
-              <RefreshCw className="h-8 w-8 text-brand-accent animate-spin" />
-              <p className="text-xs font-bold text-brand-text-secondary">Filtering catalog results...</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <BookCardSkeleton key={i} />
+              ))}
             </div>
           ) : filteredBooks.length > 0 ? (
             <BookGrid books={filteredBooks} view={view} />

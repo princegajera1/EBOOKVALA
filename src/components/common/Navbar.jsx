@@ -183,7 +183,7 @@ export const Navbar = () => {
             {/* Smart Search Bar */}
             <div ref={searchContainerRef} className="hidden md:flex items-center relative w-64 max-w-[260px]">
               <form onSubmit={handleSearchSubmit} className="w-full">
-                <div className="relative">
+                <div className="relative group">
                   <input
                     ref={searchInputRef}
                     type="text"
@@ -191,10 +191,10 @@ export const Navbar = () => {
                     value={searchQuery}
                     onFocus={() => setShowSearchOverlay(true)}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-brand-bg-secondary border border-brand-border pl-9 pr-8 py-2 text-xs rounded-full focus:outline-none focus:bg-brand-bg focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 transition-all placeholder:text-brand-text-secondary/60 text-brand-text font-medium"
+                    className="w-full bg-brand-bg-secondary border border-brand-border/60 hover:border-brand-border/90 hover:bg-brand-bg-secondary/75 pl-9 pr-8 py-2.5 text-xs rounded-full focus:outline-none focus:bg-brand-bg focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 transition-all placeholder:text-brand-text-secondary/55 text-brand-text font-medium"
                   />
-                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/50" />
-                  <span className="absolute right-3.5 top-2 py-0.5 px-1.5 rounded bg-brand-border text-[9px] font-bold text-brand-text-secondary/70 border border-brand-border/80 select-none">
+                  <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-brand-text-secondary/50 transition-colors group-focus-within:text-brand-accent" />
+                  <span className="absolute right-3.5 top-2.5 py-0.5 px-1.5 rounded bg-brand-bg border border-brand-border/80 text-[8.5px] font-bold text-brand-text-secondary/70 shadow-sm select-none pointer-events-none group-focus-within:opacity-0 transition-opacity duration-200">
                     /
                   </span>
                 </div>
@@ -279,11 +279,27 @@ export const Navbar = () => {
                     </Link>
                   )}
 
-                  {/* Reading Stats (Streak count) */}
-                  <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-amber-500 bg-amber-500/10 px-2.5 py-1.5 rounded-full">
-                    <Flame className="h-4.5 w-4.5 fill-amber-500" />
+                  {/* Reading Stats (Streak count) with Premium Glow & Hover Animation */}
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -1 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                    className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-amber-500 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-full cursor-pointer hover:shadow-[0_0_12px_rgba(245,158,11,0.15)] transition-all select-none"
+                  >
+                    <motion.div
+                      animate={{ 
+                        scale: [1, 1.12, 1],
+                        rotate: [0, 4, -4, 0]
+                      }}
+                      transition={{ 
+                        duration: 3, 
+                        repeat: Infinity, 
+                        ease: "easeInOut" 
+                      }}
+                    >
+                      <Flame className="h-4 w-4 fill-amber-500 text-amber-500" />
+                    </motion.div>
                     <span>{user?.readingStreak || 3}d Streak</span>
-                  </div>
+                  </motion.div>
 
                   {/* Profile Button */}
                   <div className="relative">

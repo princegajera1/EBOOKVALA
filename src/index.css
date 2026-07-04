@@ -6,18 +6,18 @@
 :root {
   --primary: #111827;
   --primary-hover: #1F2937;
-  --secondary: #6B7280;
+  --secondary: #575F6E;
   --accent: #007AFF;
-  --success: #10B981;
-  --warning: #F59E0B;
-  --danger: #EF4444;
+  --success: #047857;
+  --warning: #B45309;
+  --danger: #DC2626;
   --bg: #FFFFFF;
   --bg-secondary: #F8FAFC;
   --card: #FFFFFF;
   --border: #E5E7EB;
   --input-border: #CBD5E1;
   --text: #111827;
-  --text-secondary: #6B7280;
+  --text-secondary: #575F6E;
   
   --radius-button: 12px;
   --radius-card: 16px;

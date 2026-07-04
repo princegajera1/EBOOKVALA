@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useScroll } from "framer-motion";
 import { 
   Search, Heart, Menu, X, LogOut, LayoutDashboard, 
   Bell, Sun, Moon, BookOpen, Flame, Sparkles, Clock, Compass 
@@ -13,6 +13,7 @@ import { Button } from "../ui/Button";
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated, theme, toggleTheme } = useApp();
+  const { scrollYProgress } = useScroll();
   const { wishlist } = useWishlist();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -176,12 +177,17 @@ export const Navbar = () => {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 h-[76px] flex items-center transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 h-20 flex items-center transition-all duration-300 ${
           isScrolled 
             ? "bg-brand-bg/85 backdrop-blur-md shadow-brand border-b border-brand-border/40" 
             : "bg-brand-bg border-b border-brand-border"
         }`}
       >
+        {/* Thin Scroll Progress Indicator */}
+        <motion.div 
+          className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-accent origin-left z-50"
+          style={{ scaleX: scrollYProgress }}
+        />
         <div className="max-w-7xl mx-auto px-6 w-full flex items-center justify-between">
           
           {/* Left Column: Logo */}

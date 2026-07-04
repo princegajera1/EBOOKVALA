@@ -12,7 +12,7 @@ export const MarketLayout = () => {
       <Navbar />
       
       {/* Main Content Area */}
-      <main className="flex-grow pt-[76px] bg-brand-bg overflow-hidden">
+      <main className="flex-grow pt-20 bg-brand-bg overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}

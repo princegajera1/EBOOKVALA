@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import { 
   ArrowRight, Star, ArrowLeft, Mail, ChevronLeft, ChevronRight, 
   ShieldCheck, Search, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles
@@ -20,6 +20,42 @@ import { HeroImageStack } from "../components/common/HeroImageStack";
 import princeAvatar from "../assets/testimonials/prince.png";
 import amaraAvatar from "../assets/testimonials/amara.png";
 import rohanAvatar from "../assets/testimonials/rohan.png";
+
+const AnimatedCounter = ({ value, duration = 1.5 }) => {
+  const [count, setCount] = useState(0);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-50px" });
+
+  useEffect(() => {
+    if (!isInView) return;
+    
+    let start = 0;
+    const end = parseInt(value.replace(/,/g, ""), 10);
+    if (isNaN(end)) return;
+    
+    const totalFrames = Math.round(duration * 60);
+    let frame = 0;
+    
+    const countUp = () => {
+      frame++;
+      const progress = frame / totalFrames;
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const currentCount = Math.round(easeProgress * end);
+      
+      setCount(currentCount);
+      
+      if (frame < totalFrames) {
+        requestAnimationFrame(countUp);
+      } else {
+        setCount(end);
+      }
+    };
+    
+    requestAnimationFrame(countUp);
+  }, [isInView, value, duration]);
+
+  return <span ref={ref}>{count.toLocaleString()}</span>;
+};
 
 const testimonialsData = [
   {
@@ -110,7 +146,7 @@ export const Landing = () => {
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center lg:h-[calc(100vh-76px)] min-h-[calc(100vh-76px)] lg:min-h-0 pt-8 pb-16 lg:py-0 scroll-mt-[76px] overflow-hidden">
+      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center lg:h-[calc(100vh-80px)] min-h-[calc(100vh-80px)] lg:min-h-0 pt-8 pb-16 lg:py-0 scroll-mt-20 overflow-hidden">
         
         {/* Left Content */}
         <motion.div 
@@ -172,21 +208,27 @@ export const Landing = () => {
               </div>
               <div className="text-[11px] lg:text-xs leading-snug">
                 <p className="font-bold text-brand-text">4.9/5 Rating</p>
-                <p className="text-brand-text-secondary">50,000+ Readers</p>
+                <p className="text-brand-text-secondary">
+                  <AnimatedCounter value="50000" />+ Readers
+                </p>
               </div>
             </div>
             
             <div className="hidden sm:block h-6 w-[1px] bg-brand-border" />
             
             <div className="text-[11px] lg:text-xs leading-snug text-center flex-1 sm:flex-none">
-              <p className="font-bold text-brand-text">10,000+ eBooks</p>
+              <p className="font-bold text-brand-text">
+                <AnimatedCounter value="10000" />+ eBooks
+              </p>
               <p className="text-brand-text-secondary">Free Access</p>
             </div>
             
             <div className="hidden sm:block h-6 w-[1px] bg-brand-border" />
             
             <div className="text-[11px] lg:text-xs leading-snug text-center flex-1 sm:flex-none">
-              <p className="font-bold text-brand-text">100% Free Forever</p>
+              <p className="font-bold text-brand-text">
+                <AnimatedCounter value="100" />% Free Forever
+              </p>
               <p className="text-brand-text-secondary">First Year Guarantee</p>
             </div>
           </div>

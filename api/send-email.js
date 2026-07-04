@@ -26,7 +26,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Email parameter is required" });
     }
 
-    const gmailUser = process.env.GMAIL_USER || "ebookvala.official@gmail.com";
+    const gmailUser = process.env.GMAIL_USER || "princegajera944@gmail.com";
     const gmailPass = process.env.GMAIL_PASS || "vazlgqamwfcoznve";
     const resendApiKey = process.env.RESEND_API_KEY;
     const adminRecipient = process.env.EMAIL_TO || "ebookvala.official@gmail.com";

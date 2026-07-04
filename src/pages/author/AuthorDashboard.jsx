@@ -106,7 +106,7 @@ export const AuthorDashboard = () => {
     categories: [], tags: [], language: "English", isbn: "",
     publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
     coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
-    pdfURL: "/demo-preview.pdf", fileSize: "8.5 MB", format: ["PDF"], status: "pending"
+    pdfURL: "/demo-preview.pdf", fileSize: "8.5 MB", format: ["PDF"], status: "published"
   });
 
   // AI assistant simulation states
@@ -159,7 +159,7 @@ export const AuthorDashboard = () => {
 
   // Upload actions
   const handleUploadSubmit = async () => {
-    const toastId = toast.loading("Submitting eBook for admin review...");
+    const toastId = toast.loading("Publishing your eBook...");
     try {
       await dbService.createBook({
         ...newBook,
@@ -169,19 +169,19 @@ export const AuthorDashboard = () => {
         rating: 0
       });
       
-      toast.success("eBook submitted successfully!", { id: toastId });
+      toast.success("eBook published successfully! It's now live in the catalog.", { id: toastId });
       setNewBook({
         title: "", subtitle: "", description: "", aiDescription: "",
         categories: [], tags: [], language: "English", isbn: "",
         publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
         coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
-        pdfURL: "/demo-preview.pdf", fileSize: "8.5 MB", format: ["PDF"], status: "pending"
+        pdfURL: "/demo-preview.pdf", fileSize: "8.5 MB", format: ["PDF"], status: "published"
       });
       setWizardStep(1);
       handleTabChange("books");
       loadAuthorData();
     } catch (err) {
-      toast.error("Failed to submit eBook.", { id: toastId });
+      toast.error("Failed to publish eBook.", { id: toastId });
     }
   };
 

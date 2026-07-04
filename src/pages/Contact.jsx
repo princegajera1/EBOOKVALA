@@ -20,34 +20,42 @@ export const Contact = () => {
       email: form.email.value.trim(),
       subject: form.subject.value,
       message: form.message.value.trim(),
-      createdAt: serverTimestamp(),
       status: "new"
     };
+
+    // 1. Try to save to Firestore (non-blocking)
     try {
-      await addDoc(collection(db, "contacts"), data);
-      
-      // Dispatch email notification securely via Vercel serverless function (non-blocking)
-      try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            type: "contact",
-            email: data.email,
-            name: data.name,
-            message: data.message
-          })
-        });
-      } catch (mailErr) {
-        console.warn("Email dispatch warning:", mailErr);
+      await addDoc(collection(db, "contacts"), {
+        ...data,
+        createdAt: serverTimestamp()
+      });
+    } catch (firestoreErr) {
+      console.warn("Firestore contact save failed (non-blocking):", firestoreErr);
+    }
+
+    // 2. Dispatch email notification securely (blocking success/error)
+    try {
+      const emailRes = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          type: "contact",
+          email: data.email,
+          name: data.name,
+          message: data.message
+        })
+      });
+
+      if (!emailRes.ok) {
+        throw new Error("Email service failed");
       }
 
       setSubmitted(true);
       toast.success("Message sent! We will get back to you soon. ✉️");
     } catch (err) {
-      console.error("Contact form error:", err);
+      console.error("Contact form mail dispatch error:", err);
       toast.error("Failed to send message. Please try again.");
     } finally {
       setLoading(false);

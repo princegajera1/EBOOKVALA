@@ -135,35 +135,40 @@ export const Landing = () => {
     e.preventDefault();
     const subscriberEmail = email.trim().toLowerCase();
     if (!subscriberEmail) return;
+
+    // 1. Try to save subscriber to Firestore (non-blocking)
     try {
       await addDoc(collection(db, "subscribers"), {
         email: subscriberEmail,
         subscribedAt: serverTimestamp()
       });
+    } catch (firestoreErr) {
+      console.warn("Firestore subscription save failed (non-blocking):", firestoreErr);
+    }
 
-      // Dispatch welcome email securely via Vercel serverless function (non-blocking)
-      try {
-        await fetch("/api/send-email", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            type: "newsletter",
-            email: subscriberEmail
-          })
-        });
-      } catch (mailErr) {
-        console.warn("Welcome email dispatch warning:", mailErr);
+    // 2. Dispatch welcome email securely (blocking success/error)
+    try {
+      const emailRes = await fetch("/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          type: "newsletter",
+          email: subscriberEmail
+        })
+      });
+
+      if (!emailRes.ok) {
+        throw new Error("Email service failed");
       }
 
       setSubscribed(true);
       setEmail("");
+      toast.success("Thank you for joining our community! 📖");
     } catch (err) {
-      // Silently succeed even if Firestore fails (e.g. duplicate)
-      console.warn("Newsletter subscribe error:", err);
-      setSubscribed(true);
-      setEmail("");
+      console.error("Newsletter subscription mail dispatch error:", err);
+      toast.error("Failed to subscribe. Please try again.");
     }
   };
 

@@ -25,6 +25,25 @@ export const Contact = () => {
     };
     try {
       await addDoc(collection(db, "contacts"), data);
+      
+      // Dispatch email notification securely via Vercel serverless function (non-blocking)
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "contact",
+            email: data.email,
+            name: data.name,
+            message: data.message
+          })
+        });
+      } catch (mailErr) {
+        console.warn("Email dispatch warning:", mailErr);
+      }
+
       setSubmitted(true);
       toast.success("Message sent! We will get back to you soon. ✉️");
     } catch (err) {

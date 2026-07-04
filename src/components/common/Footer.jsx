@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { ArrowUp, ShieldCheck, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "../ui/Button";
 import { toast } from "react-hot-toast";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../../lib/firebase";
 
 export const Footer = () => {
   const [openSection, setOpenSection] = useState(null);
@@ -15,12 +17,39 @@ export const Footer = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    const email = e.target.email.value;
+    const email = e.target.email.value.trim();
     if (email) {
-      toast.success("Thank you for joining our newsletter! Check your inbox for updates. ✉️");
-      e.target.reset();
+      try {
+        // Save subscriber to Firestore
+        await addDoc(collection(db, "subscribers"), {
+          email,
+          subscribedAt: serverTimestamp()
+        });
+
+        // Dispatch welcome email securely via Vercel serverless function (non-blocking)
+        try {
+          await fetch("/api/send-email", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              type: "newsletter",
+              email: email
+            })
+          });
+        } catch (mailErr) {
+          console.warn("Welcome email dispatch warning:", mailErr);
+        }
+
+        toast.success("Thank you for joining our newsletter! Check your inbox for updates. ✉️");
+        e.target.reset();
+      } catch (err) {
+        console.error("Newsletter subscription error:", err);
+        toast.error("Failed to subscribe. Please try again.");
+      }
     }
   };
 

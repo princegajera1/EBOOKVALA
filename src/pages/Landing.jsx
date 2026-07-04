@@ -133,12 +133,30 @@ export const Landing = () => {
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    const subscriberEmail = email.trim().toLowerCase();
+    if (!subscriberEmail) return;
     try {
       await addDoc(collection(db, "subscribers"), {
-        email: email.trim().toLowerCase(),
+        email: subscriberEmail,
         subscribedAt: serverTimestamp()
       });
+
+      // Dispatch welcome email securely via Vercel serverless function (non-blocking)
+      try {
+        await fetch("/api/send-email", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            type: "newsletter",
+            email: subscriberEmail
+          })
+        });
+      } catch (mailErr) {
+        console.warn("Welcome email dispatch warning:", mailErr);
+      }
+
       setSubscribed(true);
       setEmail("");
     } catch (err) {

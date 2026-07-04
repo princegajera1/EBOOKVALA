@@ -317,6 +317,9 @@ export const AuthProvider = ({ children }) => {
       if (cleanData.name) {
         cleanData.displayName = cleanData.name;
       }
+      // SECURITY: Never allow a user to change their own role via updateProfile.
+      // Role changes must only happen via admin actions.
+      delete cleanData.role;
       await setDoc(userDocRef, cleanData, { merge: true });
 
       // 3. Update Author profile in Firestore if author

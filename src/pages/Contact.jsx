@@ -4,21 +4,37 @@ import { Mail, Phone, MapPin, Clock, ArrowRight, CheckCircle2 } from "lucide-rea
 import { Button } from "../components/ui/Button";
 import { Input } from "../components/ui/Input";
 import { toast } from "react-hot-toast";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../lib/firebase";
 
 export const Contact = () => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API request
-    setTimeout(() => {
-      setLoading(false);
+    const form = e.target;
+    const data = {
+      name: form.name.value.trim(),
+      email: form.email.value.trim(),
+      subject: form.subject.value,
+      message: form.message.value.trim(),
+      createdAt: serverTimestamp(),
+      status: "new"
+    };
+    try {
+      await addDoc(collection(db, "contacts"), data);
       setSubmitted(true);
       toast.success("Message sent! We will get back to you soon. ✉️");
-    }, 1200);
+    } catch (err) {
+      console.error("Contact form error:", err);
+      toast.error("Failed to send message. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <div className="bg-brand-bg min-h-screen py-10 md:py-14 select-none text-left transition-colors duration-300">

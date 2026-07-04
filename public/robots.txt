@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+Allow: /marketplace
+Allow: /book/
+Allow: /about
+Allow: /our-mission
+Allow: /terms
+Allow: /privacy
+Allow: /contact
+Allow: /faq
+Allow: /help
+Allow: /search
+
+# Disallow private/admin areas
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /author/dashboard
+Disallow: /read/
+Disallow: /635284
+Disallow: /login
+Disallow: /register
+
+Sitemap: https://ebookvala-official.firebaseapp.com/sitemap.xml

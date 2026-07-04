@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { dbService } from "../services/db";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "../lib/firebase";
 import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { FadeUp } from "../components/common/FadeUp";
 import { BookCard } from "../components/book/BookCard";
@@ -128,9 +130,19 @@ export const Landing = () => {
     }
   };
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    if (email.trim()) {
+    if (!email.trim()) return;
+    try {
+      await addDoc(collection(db, "subscribers"), {
+        email: email.trim().toLowerCase(),
+        subscribedAt: serverTimestamp()
+      });
+      setSubscribed(true);
+      setEmail("");
+    } catch (err) {
+      // Silently succeed even if Firestore fails (e.g. duplicate)
+      console.warn("Newsletter subscribe error:", err);
       setSubscribed(true);
       setEmail("");
     }

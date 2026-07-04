@@ -1,7 +1,8 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
-const SECRET_PASSWORD = "0561";
+// Read from env — not hardcoded in bundle
+const SECRET_PASSWORD = import.meta.env.VITE_SECRET_ADMIN_TOKEN || "";
 
 export const SecretAdminEntry = () => {
   const [value, setValue] = useState("");

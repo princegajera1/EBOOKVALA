@@ -1,71 +1,127 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Helper function to check if user is authenticated
+
     function isAuthenticated() {
       return request.auth != null;
     }
-    
-    // Helper function to fetch the user's document inside /users/
+
     function getUserData() {
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
-    
-    // Helper functions to check roles
+
+    // Role checks read from Firestore — not from client-supplied token
     function isAdmin() {
       return isAuthenticated() && getUserData().role == 'admin';
     }
-    
+
     function isAuthor() {
       return isAuthenticated() && getUserData().role == 'author';
     }
 
     // 1. Users collection
+    // FIX S1: Owner can update own doc but CANNOT change their own `role` field.
+    //         Only admins may change roles.
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      // Users can write to their own user document, Admins can write anywhere
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Readers should only read their own profile; other users don't need
+      // to read full profiles (email, balance etc.) — only admin needs full access.
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      // Own update allowed only when the role field is NOT being changed
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == userId &&
+          request.resource.data.role == resource.data.role) ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow delete: if isAdmin();
     }
-    
-    // 2. Authors collection
+
+    // 2. Authors collection — public profiles readable by all;
+    //    authors can update own profile; admins can write anything.
     match /authors/{authorId} {
-      allow read: if true; // Anyone can read author profiles
-      // Authors can modify their own profile details, Admins can write anywhere
-      allow write: if isAuthenticated() && (request.auth.uid == authorId || isAdmin());
+      allow read: if true;
+      allow create: if isAuthenticated() && request.auth.uid == authorId;
+      allow update: if isAuthenticated() && (request.auth.uid == authorId || isAdmin());
+      allow delete: if isAdmin();
     }
-    
+
     // 3. Books collection
+    // Authors can create/update only their own books; admins can do anything.
     match /books/{bookId} {
-      allow read: if true; // Anyone can view the ebook catalog
-      // Only admins or the book's assigned author can write/update
-      allow write: if isAdmin() || (isAuthor() && request.resource.data.authorId == request.auth.uid);
+      allow read: if true;
+      allow create: if isAdmin() || (
+        isAuthor() && request.resource.data.authorId == request.auth.uid
+      );
+      // On update, author can only update books they own; cannot change authorId
+      allow update: if isAdmin() || (
+        isAuthor() &&
+        resource.data.authorId == request.auth.uid &&
+        request.resource.data.authorId == request.auth.uid
+      );
+      allow delete: if isAdmin() || (
+        isAuthor() && resource.data.authorId == request.auth.uid
+      );
     }
-    
-    // 4. Categories collection
+
+    // 4. Categories — public read, admin-only write
     match /categories/{catId} {
-      allow read: if true; // Public catalog access
-      allow write: if isAdmin(); // Admin only
+      allow read: if true;
+      allow write: if isAdmin();
     }
-    
+
     // 5. Reviews collection
+    // FIX S3: Create requires userId == request.auth.uid.
+    //         Update/delete limited to owner or admin.
     match /reviews/{reviewId} {
       allow read: if true;
-      allow write: if isAuthenticated(); // Authenticated users can post and reply to reviews
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
+      allow delete: if isAuthenticated() && (
+        resource.data.userId == request.auth.uid || isAdmin()
+      );
     }
-    
+
     // 6. Orders collection
+    // FIX S2: Allow client to CREATE an order (free-books model).
+    //         UPDATE and DELETE are admin-only — no client can mark status.
+    // NOTE: Before introducing real payments, order creation must move to
+    //       a Cloud Function that verifies the payment gateway webhook.
     match /orders/{orderId} {
-      // Users can only view their own purchases; authors can inspect sales; admins see everything
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.readerId || request.auth.uid == resource.data.authorId || isAdmin());
-      allow write: if isAuthenticated(); // Authenticated users can create orders (purchase)
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.readerId ||
+        request.auth.uid == resource.data.authorId ||
+        isAdmin()
+      );
+      allow create: if isAuthenticated() &&
+        request.resource.data.readerId == request.auth.uid;
+      allow update, delete: if isAdmin();
     }
-    
+
     // 7. Withdrawals collection
+    // FIX S4: Create enforces authorId == request.auth.uid.
+    //         Update/delete limited to admin.
     match /withdrawals/{withId} {
-      // Authors view their own requests, Admins inspect everything
-      allow read: if isAuthenticated() && (request.auth.uid == resource.data.authorId || isAdmin());
-      allow write: if isAuthenticated() && (isAuthor() || isAdmin());
+      allow read: if isAuthenticated() && (
+        request.auth.uid == resource.data.authorId || isAdmin()
+      );
+      allow create: if isAuthenticated() && isAuthor() &&
+        request.resource.data.authorId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    // 8. Subscribers collection (newsletter)
+    match /subscribers/{subId} {
+      allow create: if true; // Anyone can subscribe
+      allow read, update, delete: if isAdmin();
+    }
+
+    // 9. Contacts collection (contact form)
+    match /contacts/{contactId} {
+      allow create: if true; // Anyone can send a message
+      allow read, update, delete: if isAdmin();
     }
   }
 }

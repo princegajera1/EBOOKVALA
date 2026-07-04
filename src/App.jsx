@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
@@ -8,36 +8,51 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 
-// Layouts
+// Layouts (always loaded — no lazy needed)
 import { MarketLayout } from "./components/layout/MarketLayout";
 import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AdminRoute } from "./components/layout/AdminRoute";
 import { GuestRoute } from "./components/layout/GuestRoute";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 
-// Pages
+// Critical pages — loaded eagerly (above the fold)
 import { Landing } from "./pages/Landing";
 import { Marketplace } from "./pages/Marketplace";
 import { BookDetail } from "./pages/BookDetail";
-import { About } from "./pages/About";
-import { Contact } from "./pages/Contact";
-import { FAQ } from "./pages/FAQ";
-import { HelpCenter } from "./pages/HelpCenter";
-import { Login } from "./pages/auth/Login";
-import { Register } from "./pages/auth/Register";
-import { AdminLogin } from "./pages/auth/AdminLogin";
-import { SecretAdminEntry } from "./pages/auth/SecretAdminEntry";
-import { ReaderDashboard } from "./pages/reader/ReaderDashboard";
-import { Reader } from "./pages/reader/Reader";
-import { AuthorDashboard } from "./pages/author/AuthorDashboard";
-import { AdminDashboard } from "./pages/admin/AdminDashboard";
-import { NotFound } from "./pages/NotFound";
 
-// New Pages
-import { OurMission } from "./pages/OurMission";
-import { Terms } from "./pages/Terms";
-import { Privacy } from "./pages/Privacy";
-import { SearchResults } from "./pages/SearchResults";
+// Non-critical pages — lazy loaded for code splitting
+const About = lazy(() => import("./pages/About").then(m => ({ default: m.About })));
+const Contact = lazy(() => import("./pages/Contact").then(m => ({ default: m.Contact })));
+const FAQ = lazy(() => import("./pages/FAQ").then(m => ({ default: m.FAQ })));
+const HelpCenter = lazy(() => import("./pages/HelpCenter").then(m => ({ default: m.HelpCenter })));
+const OurMission = lazy(() => import("./pages/OurMission").then(m => ({ default: m.OurMission })));
+const Terms = lazy(() => import("./pages/Terms").then(m => ({ default: m.Terms })));
+const Privacy = lazy(() => import("./pages/Privacy").then(m => ({ default: m.Privacy })));
+const SearchResults = lazy(() => import("./pages/SearchResults").then(m => ({ default: m.SearchResults })));
+const NotFound = lazy(() => import("./pages/NotFound").then(m => ({ default: m.NotFound })));
+
+// Auth pages — lazy loaded
+const Login = lazy(() => import("./pages/auth/Login").then(m => ({ default: m.Login })));
+const Register = lazy(() => import("./pages/auth/Register").then(m => ({ default: m.Register })));
+const AdminLogin = lazy(() => import("./pages/auth/AdminLogin").then(m => ({ default: m.AdminLogin })));
+const SecretAdminEntry = lazy(() => import("./pages/auth/SecretAdminEntry").then(m => ({ default: m.SecretAdminEntry })));
+
+// Dashboard pages — largest, always lazy loaded
+const ReaderDashboard = lazy(() => import("./pages/reader/ReaderDashboard").then(m => ({ default: m.ReaderDashboard })));
+const Reader = lazy(() => import("./pages/reader/Reader").then(m => ({ default: m.Reader })));
+const AuthorDashboard = lazy(() => import("./pages/author/AuthorDashboard").then(m => ({ default: m.AuthorDashboard })));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard").then(m => ({ default: m.AdminDashboard })));
+
+// Minimal full-screen loader for Suspense fallback
+const PageLoader = () => (
+  <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg, #fff)" }}>
+    <svg style={{ height: 28, width: 28, animation: "spin 1s linear infinite", color: "var(--accent, #7c3aed)" }} viewBox="0 0 24 24" fill="none">
+      <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 // Create Query Client
 const queryClient = new QueryClient({
@@ -78,6 +93,7 @@ function App() {
         <AppProvider>
           <BrowserRouter>
             <ScrollToTop />
+            <Suspense fallback={<PageLoader />}>
             <Routes>
               
               {/* Public Marketplace / Landing routes */}
@@ -139,6 +155,7 @@ function App() {
               } />
 
             </Routes>
+            </Suspense>
           </BrowserRouter>
         
         {/* Sleek, Minimal React Hot Toast */}

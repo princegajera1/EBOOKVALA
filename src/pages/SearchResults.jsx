@@ -73,7 +73,7 @@ export const SearchResults = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-10 md:py-14 relative select-none">
-      
+
       {/* Header Band */}
       <div className="text-left mb-8 pb-6 border-b border-brand-border">
         <span className="text-[10px] font-mono text-brand-accent font-bold tracking-widest uppercase mb-3 block">
@@ -94,7 +94,7 @@ export const SearchResults = () => {
           <div className="text-xs font-bold text-brand-text-secondary">
             Showing results filtered by search relevancy.
           </div>
-          
+
           <div className="flex items-center gap-3 select-none justify-end">
             <select
               value={sortBy}
@@ -110,18 +110,16 @@ export const SearchResults = () => {
             <div className="flex items-center border border-brand-border rounded-full p-0.5 bg-brand-bg-secondary">
               <button
                 onClick={() => setView("grid")}
-                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                  view === "grid" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
-                }`}
+                className={`p-1.5 rounded-full transition-colors cursor-pointer ${view === "grid" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
+                  }`}
                 aria-label="Grid View"
               >
                 <Grid className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setView("list")}
-                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                  view === "list" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
-                }`}
+                className={`p-1.5 rounded-full transition-colors cursor-pointer ${view === "list" ? "bg-brand-card text-brand-accent shadow-sm" : "text-brand-text-secondary hover:text-brand-text"
+                  }`}
                 aria-label="List View"
               >
                 <List className="h-4 w-4" />
@@ -142,13 +140,13 @@ export const SearchResults = () => {
         <BookGrid books={searchResults} view={view} />
       ) : (
         <div className="max-w-xl mx-auto py-6">
-          <EmptyState 
+          <EmptyState
             title={`No results for "${query}"`}
             description="We couldn't find any books matching your query. Try checking for typos or browse our popular categories."
             actionLabel="Explore Library"
-            onAction={() => {}}
+            onAction={() => { }}
           />
-          
+
           {/* Suggestions List */}
           <div className="mt-10 border border-brand-border rounded-brand-card p-6 bg-brand-card shadow-brand text-left">
             <h4 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-4 font-mono flex items-center gap-1.5">
@@ -166,7 +164,7 @@ export const SearchResults = () => {
                 </Link>
               ))}
             </div>
-            
+
             <div className="mt-6 pt-4 border-t border-brand-border text-center">
               <Link to="/marketplace" className="text-xs font-bold text-brand-accent hover:underline inline-flex items-center gap-1">
                 Browse all categories

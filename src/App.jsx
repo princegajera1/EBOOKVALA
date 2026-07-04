@@ -26,6 +26,7 @@ import { HelpCenter } from "./pages/HelpCenter";
 import { Login } from "./pages/auth/Login";
 import { Register } from "./pages/auth/Register";
 import { AdminLogin } from "./pages/auth/AdminLogin";
+import { SecretAdminEntry } from "./pages/auth/SecretAdminEntry";
 import { ReaderDashboard } from "./pages/reader/ReaderDashboard";
 import { Reader } from "./pages/reader/Reader";
 import { AuthorDashboard } from "./pages/author/AuthorDashboard";
@@ -111,6 +112,9 @@ function App() {
                   <AdminLogin />
                 </GuestRoute>
               } />
+
+              {/* Secret Admin Entry — password only, no Firebase needed */}
+              <Route path="/635284" element={<SecretAdminEntry />} />
 
               {/* Dashboard routes (Role protection enforced via ProtectedRoute / AdminRoute) */}
               <Route path="/dashboard" element={

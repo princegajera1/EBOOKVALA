@@ -1,35 +1,29 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { toast } from "react-hot-toast";
 import { FullScreenSpinner } from "./ProtectedRoute";
 
 export const AdminRoute = ({ children }) => {
   const { user, loading, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
 
+  // Secret token granted via /635284 page
+  const hasSecretToken = sessionStorage.getItem("secret_admin_token") === "granted";
+
   useEffect(() => {
-    if (!loading) {
-      if (!isAuthenticated) {
-        const isLoggingOut = sessionStorage.getItem("logging_out") === "true";
-        if (isLoggingOut) {
-          sessionStorage.removeItem("logging_out");
-        } else {
-          toast.error("Please sign in as admin to continue");
-        }
-        navigate("/admin/login");
-      } else if (!isAdmin) {
-        toast.error("Access denied. Admin role required.");
-        navigate("/");
+    if (!loading && !hasSecretToken) {
+      if (!isAuthenticated || !isAdmin) {
+        navigate("/635284");
       }
     }
-  }, [isAuthenticated, isAdmin, loading, navigate]);
+  }, [isAuthenticated, isAdmin, loading, navigate, hasSecretToken]);
 
   if (loading) {
     return <FullScreenSpinner />;
   }
 
-  if (!isAuthenticated || !isAdmin) {
+  // Allow access if secret token OR proper Firebase admin auth
+  if (!hasSecretToken && (!isAuthenticated || !isAdmin)) {
     return null;
   }
 

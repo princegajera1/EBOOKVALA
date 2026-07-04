@@ -241,7 +241,7 @@ export const BookCard = ({ book, view = "grid" }) => {
         className="flex flex-col bg-brand-card rounded-brand-card border border-brand-border shadow-brand transition-all duration-300 group overflow-hidden relative cursor-pointer text-left h-full"
       >
         {/* Cover Image Container */}
-        <Link to={`/book/${book.slug}`} className="relative aspect-[2/3] w-full bg-brand-bg overflow-hidden select-none block">
+        <Link to={`/book/${book.slug}`} className="relative aspect-[3/4] w-full bg-brand-bg overflow-hidden select-none block">
           <img
             src={book.coverURL}
             alt={book.title}
@@ -321,7 +321,7 @@ export const BookCard = ({ book, view = "grid" }) => {
         </Link>
 
         {/* Card Body */}
-        <div className="p-4 flex-grow flex flex-col justify-between gap-3 text-left">
+        <div className="p-3 flex-grow flex flex-col justify-between gap-1.5 text-left">
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="inline-block text-[9px] font-extrabold tracking-wider uppercase text-brand-accent">
@@ -333,7 +333,7 @@ export const BookCard = ({ book, view = "grid" }) => {
             </div>
             
             <Link to={`/book/${book.slug}`} className="hover:text-brand-accent transition-colors block">
-              <h4 className="text-sm font-bold text-brand-text leading-snug line-clamp-2 h-10 font-display">
+              <h4 className="text-sm font-bold text-brand-text leading-snug line-clamp-2 h-9 font-display">
                 {book.title}
               </h4>
             </Link>

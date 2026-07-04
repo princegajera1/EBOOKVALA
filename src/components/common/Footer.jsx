@@ -27,7 +27,7 @@ export const Footer = () => {
           
           {/* Brand & Description (4 cols) */}
           <div className="md:col-span-4 flex flex-col gap-5">
-            <Link to="/" className="text-2xl font-display font-black tracking-tight text-brand-text">
+            <Link to="/" className="text-2xl font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md">
               EBOOKVALA
             </Link>
             <p className="text-xs text-brand-text-secondary leading-relaxed max-w-sm">

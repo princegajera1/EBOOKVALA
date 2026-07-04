@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import logoImg from "../../assets/logo.png";
 
 export const Sidebar = ({ links = [], activeTab, onTabChange }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -24,12 +25,13 @@ export const Sidebar = ({ links = [], activeTab, onTabChange }) => {
       <div>
         <div className="flex items-center justify-between mb-8 px-2">
           {!isCollapsed ? (
-            <Link to="/" className="text-lg font-display font-black tracking-tight text-brand-text">
-              EBOOKVALA
+            <Link to="/" className="text-lg font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-card rounded-md flex items-center gap-2">
+              <img src={logoImg} className="h-6 w-6 object-contain rounded-md" alt="Logo" />
+              <span>EBOOKVALA</span>
             </Link>
           ) : (
-            <Link to="/" className="text-xs font-display font-black tracking-tight text-brand-text mx-auto">
-              EV
+            <Link to="/" className="text-xs font-display font-black tracking-tight text-brand-text mx-auto hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-card rounded-md">
+              <img src={logoImg} className="h-7 w-7 object-contain rounded-md" alt="Logo" />
             </Link>
           )}
           

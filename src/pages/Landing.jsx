@@ -11,6 +11,12 @@ import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { FadeUp } from "../components/common/FadeUp";
 import { BookCard } from "../components/book/BookCard";
 import { HeroBookStack } from "../components/common/HeroBookStack";
+import { HeroVisualV1 } from "../components/common/HeroVisualV1";
+import { HeroVisualV2 } from "../components/common/HeroVisualV2";
+import { HeroVisualV3 } from "../components/common/HeroVisualV3";
+import { HeroVisualV4 } from "../components/common/HeroVisualV4";
+import { HeroVisualV5 } from "../components/common/HeroVisualV5";
+import { HeroImageStack } from "../components/common/HeroImageStack";
 import princeAvatar from "../assets/testimonials/prince.png";
 import amaraAvatar from "../assets/testimonials/amara.png";
 import rohanAvatar from "../assets/testimonials/rohan.png";
@@ -19,7 +25,7 @@ const testimonialsData = [
   {
     name: "Prince Gajera",
     role: "Software Engineer",
-    location: "Rajkot",
+    location: "Ahmedabad",
     image: princeAvatar,
     rating: 5,
     badge: "Verified Reader",
@@ -104,26 +110,23 @@ export const Landing = () => {
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center min-h-[85vh] pt-8 md:pt-12 lg:pt-16 scroll-mt-[76px]">
+      <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center lg:h-[calc(100vh-76px)] min-h-[calc(100vh-76px)] lg:min-h-0 pt-2 md:pt-4 lg:pt-5 scroll-mt-[76px] overflow-hidden">
         
         {/* Left Content */}
-        <div className="lg:col-span-7 flex flex-col gap-6 text-left">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-brand-accent/10 border border-brand-accent/25 text-brand-accent text-xs font-bold w-fit uppercase tracking-wider">
-            <Sparkles className="h-3.5 w-3.5" /> 100% Free Open Library
-          </div>
+        <div className="lg:col-span-7 flex flex-col gap-4 text-left">
 
           <h1 
             className="text-5xl sm:text-6xl lg:text-[70px] font-display font-black text-brand-text leading-[1.05] tracking-tight"
           >
-            Your next great read is <br className="hidden sm:inline" />
-            <span className="text-brand-accent">completely free.</span>
+            The <span className="text-brand-accent">Future of Reading</span> <br className="hidden sm:inline" />
+            Starts Here.
           </h1>
           
           <p className="text-base sm:text-lg font-medium text-brand-text-secondary leading-relaxed max-w-xl">
-            Read, download, and study with advanced AI assistants on technology, design, and business. No pricing plans. No billing dashboards. 100% community-driven.
+            Discover free ebooks, AI-powered learning, smart summaries, quizzes, flashcards, and everything you need to learn faster.
           </p>
           
-          <div className="flex flex-wrap gap-4 mt-2">
+          <div className="flex flex-wrap gap-4 mt-1">
             <Link to="/marketplace">
               <Button variant="outline" size="lg" className="font-bold h-12.5 px-6 rounded-full border-brand-border hover:bg-brand-bg-secondary text-brand-text">
                 Browse Library
@@ -138,7 +141,7 @@ export const Landing = () => {
           </div>
 
           {/* Embedded Hero Search */}
-          <form onSubmit={handleHeroSearch} className="w-full max-w-lg mt-2">
+          <form onSubmit={handleHeroSearch} className="w-full max-w-lg mt-1">
             <div className="relative flex items-center p-1.5 rounded-2xl bg-brand-bg-secondary border border-brand-border shadow-brand focus-within:ring-4 focus-within:ring-brand-accent/10 focus-within:border-brand-accent transition-all duration-300">
               <Search className="absolute left-4.5 h-4.5 w-4.5 text-brand-text-secondary/50" />
               <input
@@ -155,29 +158,29 @@ export const Landing = () => {
           </form>
 
           {/* Stat Numbers */}
-          <div className="mt-8 pt-8 border-t border-brand-border flex flex-wrap gap-6 lg:gap-10 select-none">
+          <div className="w-full mt-6 py-6 border-t border-brand-border flex flex-wrap gap-6 lg:gap-8 items-center select-none">
             <div className="flex items-center gap-3">
               <div className="flex gap-0.5 shrink-0">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <div className="text-xs leading-tight">
+              <div className="text-[11px] lg:text-xs leading-snug">
                 <p className="font-bold text-brand-text">4.9/5 Rating</p>
                 <p className="text-brand-text-secondary">50,000+ Readers</p>
               </div>
             </div>
             
-            <div className="hidden sm:block h-8 w-[1px] bg-brand-border" />
+            <div className="hidden sm:block h-6 w-[1px] bg-brand-border" />
             
-            <div className="text-xs leading-tight">
+            <div className="text-[11px] lg:text-xs leading-snug text-center flex-1 sm:flex-none">
               <p className="font-bold text-brand-text">10,000+ eBooks</p>
               <p className="text-brand-text-secondary">Free Access</p>
             </div>
             
-            <div className="hidden sm:block h-8 w-[1px] bg-brand-border" />
+            <div className="hidden sm:block h-6 w-[1px] bg-brand-border" />
             
-            <div className="text-xs leading-tight">
+            <div className="text-[11px] lg:text-xs leading-snug text-center flex-1 sm:flex-none">
               <p className="font-bold text-brand-text">100% Free Forever</p>
               <p className="text-brand-text-secondary">First Year Guarantee</p>
             </div>
@@ -186,19 +189,19 @@ export const Landing = () => {
 
         {/* Right Floating Mockups Stack */}
         <div className="lg:col-span-5 overflow-visible flex items-center justify-center">
-          <HeroBookStack />
+          <HeroImageStack />
         </div>
 
       </section>
 
       {/* 2. RECENTLY ADDED */}
       {recentlyAdded.length > 0 && (
-        <div className="bg-brand-bg-secondary border-t border-brand-border py-16 md:py-20 transition-colors duration-300 scroll-mt-[76px]">
+        <div className="bg-brand-bg-secondary border-t border-brand-border py-8 md:py-12 transition-colors duration-300 scroll-mt-[76px]">
           <div className="max-w-7xl mx-auto px-6 w-full text-left">
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">New Arrivals</span>
-            <h2 className="text-3xl font-display font-black text-brand-text mt-3 mb-8">Recently Added Books</h2>
+            <h2 className="text-3xl font-display font-black text-brand-text mt-3 mb-6">Recently Added Books</h2>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {recentlyAdded.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}
@@ -207,63 +210,8 @@ export const Landing = () => {
         </div>
       )}
 
-      {/* 3. FEATURED BOOKS (Carousel) */}
-      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20 scroll-mt-[76px]">
-        <div className="max-w-7xl mx-auto px-6 w-full">
-          <div className="flex items-end justify-between mb-8">
-            <div className="text-left">
-              <FadeUp delay={0}>
-                <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase">Editor's Choice</span>
-              </FadeUp>
-              <FadeUp delay={0.05}>
-                <h2 className="text-3xl sm:text-[42px] font-display font-bold text-brand-text mt-1">
-                  Featured This Week
-                </h2>
-              </FadeUp>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link to="/marketplace">
-                <Button variant="secondary" size="sm" className="h-9 px-4 text-xs font-bold rounded-full border-brand-border bg-brand-bg hover:bg-brand-bg-secondary text-brand-text">
-                  View All
-                </Button>
-              </Link>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => handleCarouselScroll("prev")}
-                  className="p-2.5 rounded-full border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text cursor-pointer transition-colors"
-                  aria-label="Previous featured books"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </button>
-                <button 
-                  onClick={() => handleCarouselScroll("next")}
-                  className="p-2.5 rounded-full border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text cursor-pointer transition-colors"
-                  aria-label="Next featured books"
-                >
-                  <ArrowRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Carousel Window */}
-          <div 
-            ref={carouselRef}
-            className="flex gap-6 overflow-x-auto no-scrollbar scroll-smooth snap-x snap-mandatory pb-4"
-          >
-            {featuredBooks.map((book, idx) => (
-              <FadeUp key={book.id} delay={idx * 0.08}>
-                <div className="w-[280px] shrink-0 snap-start">
-                  <BookCard book={book} />
-                </div>
-              </FadeUp>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* 4. VALUE PROPOSITION GRID (Replaces PricingSection) */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-12 md:py-16 transition-colors duration-300 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-12 md:py-16 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Platform Value</span>

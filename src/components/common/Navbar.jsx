@@ -149,7 +149,7 @@ export const Navbar = () => {
           {/* Left Column: Logo */}
           <Link 
             to="/" 
-            className="text-[22px] font-extrabold tracking-tighter text-brand-text select-none leading-none hover:opacity-90 shrink-0 font-display"
+            className="text-[22px] font-extrabold tracking-tighter text-brand-text select-none leading-none hover:opacity-90 hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md shrink-0 font-display"
           >
             EBOOKVALA
           </Link>

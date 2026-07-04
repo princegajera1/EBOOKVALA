@@ -15,6 +15,7 @@ import { Input } from "../../components/ui/Input";
 import { StatusBadge } from "../../components/ui/StatusBadge";
 import { ProgressBar } from "../../components/ui/ProgressBar";
 import { Modal } from "../../components/ui/Modal";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { toast } from "react-hot-toast";
 
 // Recharts simulated dataset (12 months)

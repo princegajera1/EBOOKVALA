@@ -26,6 +26,44 @@ export const Navbar = () => {
   const location = useLocation();
   const searchInputRef = useRef(null);
   const searchContainerRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+
+  // Focus trap for mobile menu drawer (Accessibility)
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const focusableElements = mobileMenuRef.current?.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusableElements || focusableElements.length === 0) return;
+
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // Focus the close or first button initially
+    setTimeout(() => firstElement.focus(), 50);
+
+    const handleTabKey = (e) => {
+      if (e.key !== "Tab") return;
+
+      if (e.shiftKey) {
+        // Shift + Tab
+        if (document.activeElement === firstElement) {
+          lastElement.focus();
+          e.preventDefault();
+        }
+      } else {
+        // Tab
+        if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleTabKey);
+    return () => window.removeEventListener("keydown", handleTabKey);
+  }, [isMobileMenuOpen]);
 
   // Keyboard shortcut: Pressing "/" focuses search input
   useEffect(() => {
@@ -140,7 +178,7 @@ export const Navbar = () => {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 h-[76px] flex items-center transition-all duration-300 ${
           isScrolled 
-            ? "bg-brand-bg/95 backdrop-blur-[10px] shadow-brand border-b border-brand-border/40" 
+            ? "bg-brand-bg/85 backdrop-blur-md shadow-brand border-b border-brand-border/40" 
             : "bg-brand-bg border-b border-brand-border"
         }`}
       >
@@ -162,8 +200,8 @@ export const Navbar = () => {
                 <Link
                   key={idx}
                   to={link.path}
-                  className={`relative py-1 text-[13px] font-medium transition-colors duration-200 hover:text-brand-text ${
-                    isActive ? "text-brand-text font-bold" : "text-brand-text-secondary"
+                  className={`relative py-1 text-[13px] font-medium transition-colors duration-200 hover:text-brand-accent ${
+                    isActive ? "text-brand-accent font-bold" : "text-brand-text-secondary"
                   }`}
                 >
                   {link.label}
@@ -412,11 +450,16 @@ export const Navbar = () => {
             />
             
             <motion.div
+              ref={mobileMenuRef}
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm z-50 bg-brand-card border-l border-brand-border p-6 flex flex-col justify-between shadow-brand-hover"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile Navigation Menu"
+              className="fixed top-0 right-0 bottom-0 w-4/5 max-w-sm z-50 bg-brand-card border-l border-brand-border p-6 flex flex-col justify-between shadow-brand-hover focus:outline-none"
+              tabIndex={-1}
             >
               <div>
                 <div className="flex items-center justify-between pb-6 border-b border-brand-border">

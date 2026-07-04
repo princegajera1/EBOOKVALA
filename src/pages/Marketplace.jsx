@@ -204,8 +204,8 @@ export const Marketplace = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-24 relative select-none">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div className="max-w-7xl mx-auto px-6 py-20 md:py-28 relative select-none">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
         
         {/* LEFT SIDEBAR FILTERS */}
         <aside className="lg:col-span-3 bg-brand-card border border-brand-border rounded-brand-card p-6 sticky top-24 shadow-brand select-none text-left">

@@ -110,13 +110,18 @@ export const Landing = () => {
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center lg:h-[calc(100vh-76px)] min-h-[calc(100vh-76px)] lg:min-h-0 pt-2 md:pt-4 lg:pt-5 scroll-mt-[76px] overflow-hidden">
+      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center lg:h-[calc(100vh-76px)] min-h-[calc(100vh-76px)] lg:min-h-0 pt-8 pb-16 lg:py-0 scroll-mt-[76px] overflow-hidden">
         
         {/* Left Content */}
-        <div className="lg:col-span-7 flex flex-col gap-4 text-left">
+        <motion.div 
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-7 flex flex-col gap-5 text-left z-10"
+        >
 
           <h1 
-            className="text-5xl sm:text-6xl lg:text-[70px] font-display font-black text-brand-text leading-[1.05] tracking-tight"
+            className="text-4xl sm:text-6xl lg:text-[70px] font-display font-black text-brand-text leading-[1.05] tracking-tight"
           >
             The <span className="text-brand-accent">Future of Reading</span> <br className="hidden sm:inline" />
             Starts Here.
@@ -128,13 +133,13 @@ export const Landing = () => {
           
           <div className="flex flex-wrap gap-4 mt-1">
             <Link to="/marketplace">
-              <Button variant="outline" size="lg" className="font-bold h-12.5 px-6 rounded-full border-brand-border hover:bg-brand-bg-secondary text-brand-text">
+              <Button variant="primary" size="lg" className="font-bold h-12 px-6 rounded-full border-brand-border text-white">
                 Browse Library
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
             <Link to="/register?role=author">
-              <Button variant="ghost" size="lg" className="font-bold h-12.5 px-6 rounded-full text-brand-text hover:bg-brand-bg-secondary">
+              <Button variant="ghost" size="lg" className="font-bold h-12 px-6 rounded-full text-brand-text hover:bg-brand-bg-secondary">
                 Publish a Book
               </Button>
             </Link>
@@ -151,7 +156,7 @@ export const Landing = () => {
                 onChange={(e) => setHeroSearchQuery(e.target.value)}
                 className="w-full bg-transparent border-none outline-none pl-11 pr-32 py-3 text-xs sm:text-sm font-semibold placeholder:text-brand-text-secondary/50 text-brand-text"
               />
-              <Button type="submit" variant="primary" className="absolute right-1.5 h-10.5 px-5 text-xs font-bold rounded-xl shadow-sm">
+              <Button type="submit" variant="primary" className="absolute right-1.5 h-10 px-5 text-xs font-bold rounded-xl shadow-sm">
                 Search
               </Button>
             </div>
@@ -185,23 +190,64 @@ export const Landing = () => {
               <p className="text-brand-text-secondary">First Year Guarantee</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Right Floating Mockups Stack */}
-        <div className="lg:col-span-5 overflow-visible flex items-center justify-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          className="lg:col-span-5 overflow-visible flex items-center justify-center z-10"
+        >
           <HeroImageStack />
+        </motion.div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 select-none">
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            className="w-5 h-9 border-2 border-brand-text-secondary/30 rounded-full flex justify-center pt-1"
+          >
+            <div className="w-1.5 h-2 bg-brand-accent rounded-full" />
+          </motion.div>
         </div>
 
       </section>
 
+      {/* Stripe-style Trust Bar */}
+      <div className="w-full bg-brand-bg border-t border-b border-brand-border py-8 overflow-hidden select-none">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-wrap justify-between items-center gap-6 md:gap-8 text-brand-text-secondary">
+            {[
+              { icon: ShieldCheck, label: "Secure Payments" },
+              { icon: Download, label: "Instant Download" },
+              { icon: Sparkles, label: "Lifetime Access" },
+              { icon: BookOpen, label: "High Quality Books" },
+              { icon: Users, label: "Thousands of Readers" }
+            ].map((item, idx) => {
+              const Icon = item.icon;
+              return (
+                <div key={idx} className="flex items-center gap-2.5 min-w-[150px] md:min-w-0 flex-1 md:flex-none justify-center md:justify-start">
+                  <div className="h-8 w-8 rounded-lg bg-brand-accent/5 border border-brand-accent/10 flex items-center justify-center text-brand-accent shrink-0">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <span className="text-xs font-bold text-brand-text/80 tracking-tight whitespace-nowrap">{item.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* 2. RECENTLY ADDED */}
       {recentlyAdded.length > 0 && (
-        <div className="bg-brand-bg-secondary border-t border-brand-border py-8 md:py-12 transition-colors duration-300 scroll-mt-[76px]">
+        <div className="bg-brand-bg-secondary border-t border-brand-border py-20 md:py-28 transition-colors duration-300 scroll-mt-[76px]">
           <div className="max-w-7xl mx-auto px-6 w-full text-left">
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">New Arrivals</span>
-            <h2 className="text-3xl font-display font-black text-brand-text mt-3 mb-6">Recently Added Books</h2>
+            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-8 tracking-tight">Recently Added Books</h2>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               {recentlyAdded.map((book) => (
                 <BookCard key={book.id} book={book} />
               ))}
@@ -211,21 +257,21 @@ export const Landing = () => {
       )}
 
       {/* 4. VALUE PROPOSITION GRID (Replaces PricingSection) */}
-      <div className="bg-brand-bg border-t border-brand-border py-12 md:py-16 transition-colors duration-300 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Platform Value</span>
           </FadeUp>
           <FadeUp delay={0.05}>
-            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3" style={{ letterSpacing: "-0.02em" }}>
+            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 tracking-tight">
               Platform Benefits
             </h2>
-            <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 mb-8 max-w-md mx-auto font-semibold">
+            <p className="text-sm sm:text-base text-brand-text-secondary mt-3 mb-12 max-w-md mx-auto font-normal leading-relaxed">
               Enjoy 100% free access to all core features for our launching year. No subscriptions required.
             </p>
           </FadeUp>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
             <FadeUp delay={0.1}>
               <div className="p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
                 <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-6">
@@ -302,13 +348,13 @@ export const Landing = () => {
       </div>
 
       {/* 5. TRENDING CATEGORIES */}
-      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
-            <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase">Explore</span>
+            <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Explore</span>
           </FadeUp>
           <FadeUp delay={0.05}>
-            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-1 mb-8">
+            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-12 tracking-tight">
               Trending Categories
             </h2>
           </FadeUp>
@@ -317,15 +363,15 @@ export const Landing = () => {
       </div>
 
       {/* 6. BEST SELLERS */}
-      <div className="bg-brand-bg border-t border-brand-border py-16 md:py-20 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full">
           <div className="flex items-center justify-between mb-8">
             <div className="text-left">
               <FadeUp delay={0}>
-                <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase">Popular</span>
+                <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Popular</span>
               </FadeUp>
               <FadeUp delay={0.05}>
-                <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-1">
+                <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 tracking-tight">
                   Popular Books
                 </h2>
               </FadeUp>
@@ -423,13 +469,13 @@ export const Landing = () => {
       </div>
 
       {/* 7. TESTIMONIALS */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-16 md:py-20 transition-colors duration-300 scroll-mt-[76px]">
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-20 md:py-28 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center select-none">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Wall of Love</span>
           </FadeUp>
           <FadeUp delay={0.05}>
-            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-12">
+            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-12 tracking-tight">
               What Readers Say
             </h2>
           </FadeUp>
@@ -469,20 +515,40 @@ export const Landing = () => {
         </section>
       </div>
 
+      {/* CONFIDENT FINAL CTA SECTION */}
+      <div className="bg-brand-bg border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
+        <section className="max-w-4xl mx-auto px-6 w-full text-center">
+          <FadeUp delay={0.1}>
+            <h2 className="text-3xl sm:text-5xl font-display font-black text-brand-text leading-tight tracking-tight">
+              Start Reading India's Best Tech & Business Guides Today.
+            </h2>
+            <p className="text-sm sm:text-base text-brand-text-secondary mt-4 mb-8 max-w-xl mx-auto font-normal leading-relaxed">
+              Join thousands of learners in an open library with visual mind maps, flashcards, and dedicated AI study buddies. Completely free for our launching year.
+            </p>
+            <Link to="/marketplace" className="inline-block">
+              <Button variant="primary" size="lg" className="font-bold h-12 px-8 rounded-full shadow-brand hover:shadow-brand-hover">
+                Browse Library
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+          </FadeUp>
+        </section>
+      </div>
+
       {/* 8. NEWSLETTER JOIN */}
-      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-12 scroll-mt-[76px]">
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-20 md:py-28 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full select-none text-center">
           <FadeUp delay={0.1}>
-            <div className="bg-brand-card border border-brand-border rounded-[28px] py-8 px-6 md:py-10 md:px-12 text-center flex flex-col items-center gap-4 shadow-brand relative overflow-hidden">
+            <div className="bg-brand-card border border-brand-border rounded-[28px] py-10 px-6 md:py-14 md:px-12 text-center flex flex-col items-center gap-4 shadow-brand relative overflow-hidden">
               <div className="h-12 w-12 rounded-full bg-brand-bg-secondary border border-brand-border text-brand-text flex items-center justify-center shadow-sm">
                 <Mail className="h-5 w-5" />
               </div>
 
               <div className="max-w-md">
-                <h3 className="text-2xl sm:text-3xl font-display font-black text-brand-text leading-tight">
+                <h3 className="text-2xl sm:text-3xl font-display font-black text-brand-text leading-tight tracking-tight">
                   Get updates on new books.
                 </h3>
-                <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed font-semibold">
+                <p className="text-sm text-brand-text-secondary mt-2 leading-relaxed font-normal">
                   Curated summaries of India's best tech and business titles added to the open library. Zero spam.
                 </p>
               </div>

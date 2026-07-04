@@ -20,8 +20,8 @@ export const Input = React.forwardRef(({
         type={type}
         className={twMerge(
           clsx(
-            "flex w-full bg-white border border-brand-input-border px-4 py-3 text-sm rounded-brand-input transition-all placeholder:text-brand-text-secondary/50 focus:outline-none focus:border-black focus:ring-2 focus:ring-black/5 disabled:cursor-not-allowed disabled:opacity-50 text-black",
-            error && "border-red-500 focus:ring-red-500/10 focus:border-red-500",
+            "flex w-full bg-brand-bg-secondary border border-brand-input-border px-4 py-2.5 text-xs sm:text-sm rounded-brand-input transition-all placeholder:text-brand-text-secondary/50 focus:outline-none focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 disabled:cursor-not-allowed disabled:opacity-50 text-brand-text font-medium",
+            error && "border-brand-danger focus:ring-brand-danger/10 focus:border-brand-danger",
             className
           )
         )}

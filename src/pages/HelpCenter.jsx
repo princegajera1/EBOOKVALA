@@ -39,18 +39,18 @@ export const HelpCenter = () => {
   );
 
   return (
-    <div className="bg-brand-bg min-h-screen py-24 select-none text-left transition-colors duration-300">
+    <div className="bg-brand-bg min-h-screen py-20 md:py-28 select-none text-left transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-6">
         
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-16 md:mb-24">
           <span className="text-[10px] font-mono text-brand-text-secondary font-bold tracking-widest uppercase mb-3 block">
             Help Center
           </span>
           <h1 className="text-4xl sm:text-5xl font-display font-black text-brand-text leading-tight tracking-tight">
             Knowledge & Support
           </h1>
-          <p className="text-xs sm:text-sm text-brand-text-secondary mt-2 leading-relaxed max-w-lg mx-auto font-semibold">
+          <p className="text-sm text-brand-text-secondary mt-2 leading-relaxed max-w-lg mx-auto font-normal">
             Search our guides or browse categories below to find answers to common questions about EBOOKVALA.
           </p>
           
@@ -68,7 +68,7 @@ export const HelpCenter = () => {
         </div>
 
         {/* Topics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 md:mb-24">
           {filteredTopics.map((topic, idx) => {
             const Icon = topic.icon;
             return (
@@ -84,7 +84,7 @@ export const HelpCenter = () => {
                     <h3 className="text-base font-bold font-display">{topic.title}</h3>
                   </div>
                   
-                  <p className="text-xs text-brand-text-secondary leading-relaxed mb-6 font-semibold">
+                  <p className="text-sm text-brand-text-secondary leading-relaxed mb-6 font-normal">
                     {topic.desc}
                   </p>
 
@@ -118,7 +118,7 @@ export const HelpCenter = () => {
         </div>
 
         {/* Popular Guides */}
-        <div className="mb-16">
+        <div className="mb-16 md:mb-24">
           <h3 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-6 font-mono">Popular Guides</h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {[
@@ -131,7 +131,7 @@ export const HelpCenter = () => {
                 <div key={idx} className="border border-brand-border rounded-[20px] p-6 bg-brand-card shadow-brand text-left">
                   <GuideIcon className="h-5 w-5 text-brand-accent mb-3" />
                   <h4 className="text-xs font-bold text-brand-text mb-1.5">{guide.title}</h4>
-                  <p className="text-[11px] text-brand-text-secondary leading-relaxed font-semibold">{guide.desc}</p>
+                  <p className="text-xs text-brand-text-secondary leading-relaxed font-normal">{guide.desc}</p>
                 </div>
               );
             })}
@@ -142,7 +142,7 @@ export const HelpCenter = () => {
         <div className="border border-brand-border rounded-brand-card p-8 md:p-12 bg-brand-bg-secondary flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
           <div className="max-w-md">
             <h3 className="text-xl font-bold text-brand-text mb-2">Can't find what you need?</h3>
-            <p className="text-xs text-brand-text-secondary leading-relaxed font-semibold">
+            <p className="text-sm text-brand-text-secondary leading-relaxed font-normal">
               If you still have questions or need support, reach out to our customer support team directly.
             </p>
           </div>

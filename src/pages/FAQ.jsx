@@ -82,11 +82,11 @@ export const FAQ = () => {
   });
 
   return (
-    <div className="bg-brand-bg min-h-screen py-24 select-none text-left transition-colors duration-300">
+    <div className="bg-brand-bg min-h-screen py-20 md:py-28 select-none text-left transition-colors duration-300">
       <div className="max-w-3xl mx-auto px-6">
         
         {/* Header */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-16">
           <span className="text-[10px] font-mono text-brand-text-secondary font-bold tracking-widest uppercase mb-3 block">
             Frequently Asked Questions
           </span>
@@ -108,7 +108,7 @@ export const FAQ = () => {
         </div>
 
         {/* Category Tabs */}
-        <div className="flex gap-2 border-b border-brand-border pb-4 mb-8 overflow-x-auto no-scrollbar font-display">
+        <div className="flex gap-3 border-b border-brand-border pb-4 mb-10 overflow-x-auto no-scrollbar font-display">
           {["All", "General", "Reading", "Authors"].map((cat) => (
             <button
               key={cat}
@@ -129,7 +129,7 @@ export const FAQ = () => {
 
         {/* Accordions */}
         {faqList.length > 0 ? (
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             {faqList.map((item, idx) => {
               const isExpanded = expandedIndex === idx;
               return (
@@ -175,14 +175,14 @@ export const FAQ = () => {
         )}
 
         {/* Still Need Help */}
-        <div className="border border-brand-border rounded-brand-card p-8 bg-brand-bg-secondary mt-16 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
+        <div className="border border-brand-border rounded-brand-card p-8 bg-brand-bg-secondary mt-16 md:mt-24 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 shadow-sm">
           <div className="flex gap-4">
             <div className="h-10 w-10 rounded-full bg-brand-card border border-brand-border flex items-center justify-center text-brand-text shrink-0 shadow-sm">
               <MessageSquare className="h-4.5 w-4.5 text-brand-accent" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-brand-text mb-1">Still need help?</h3>
-              <p className="text-xs text-brand-text-secondary leading-relaxed font-semibold">
+              <p className="text-sm text-brand-text-secondary leading-relaxed font-normal">
                 Can't find the answers you are looking for? Contact support team directly.
               </p>
             </div>

@@ -12,20 +12,20 @@ export const Button = React.forwardRef(({
   ...props 
 }, ref) => {
   
-  const baseStyles = "inline-flex items-center justify-center font-sans font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
+  const baseStyles = "inline-flex items-center justify-center font-sans font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/50 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer";
   
   const variants = {
-    primary: "bg-black text-white hover:bg-zinc-900 border border-black shadow-sm",
-    secondary: "bg-white text-black border border-black hover:bg-zinc-50",
-    outline: "bg-white text-black border border-black hover:bg-zinc-50",
-    ghost: "bg-transparent text-black hover:bg-zinc-100/70",
-    danger: "bg-red-600 text-white hover:bg-red-750 border border-red-600"
+    primary: "bg-brand-primary text-brand-bg hover:bg-brand-primary-hover border border-brand-primary shadow-sm",
+    secondary: "bg-brand-bg-secondary text-brand-text border border-brand-border hover:bg-brand-bg",
+    outline: "bg-transparent text-brand-text border border-brand-border hover:bg-brand-bg-secondary",
+    ghost: "bg-transparent text-brand-text-secondary hover:text-brand-text hover:bg-brand-bg-secondary/70",
+    danger: "bg-brand-danger text-white hover:bg-brand-danger/90 border border-brand-danger"
   };
   
   const sizes = {
     sm: "h-9 px-4 text-xs rounded-brand-btn",
     md: "h-11 px-6 text-sm rounded-brand-btn",
-    lg: "h-13 px-8 text-base rounded-brand-btn",
+    lg: "h-12 px-8 text-sm sm:text-base rounded-brand-btn",
     icon: "h-11 w-11 rounded-brand-btn"
   };
 

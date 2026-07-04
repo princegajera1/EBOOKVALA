@@ -47,15 +47,15 @@ export const CategoriesSection = () => {
             }}
             transition={{ duration: 0.25, ease: "easeInOut" }}
             onClick={() => navigate(`/marketplace?category=${encodeURIComponent(cat.label)}`)}
-            className="flex flex-col items-center justify-center py-8 px-5 bg-brand-card border border-brand-border rounded-brand-card shadow-brand transition-all duration-250 cursor-pointer group w-full"
+            className="flex flex-col items-center justify-center py-8 px-5 bg-brand-card border border-brand-border rounded-brand-card shadow-brand transition-all duration-250 cursor-pointer group w-full focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none"
           >
             {/* Icon Container - 56x56px, circular, soft gray bg */}
-            <div className="w-14 h-14 rounded-full bg-brand-bg-secondary flex items-center justify-center mb-1 shrink-0 group-hover:scale-105 transition-transform duration-250">
-              <Icon className="h-5.5 w-5.5 text-brand-text" strokeWidth={2} />
+            <div className="w-14 h-14 rounded-full bg-brand-bg-secondary flex items-center justify-center mb-1 shrink-0 group-hover:bg-brand-accent/10 transition-colors duration-300">
+              <Icon className="h-5.5 w-5.5 text-brand-text group-hover:text-brand-accent group-hover:scale-110 transition-all duration-300" strokeWidth={2} />
             </div>
             
             {/* Category Label */}
-            <span className="text-[15px] font-semibold text-brand-text mt-4 text-center tracking-tight">
+            <span className="text-[15px] font-semibold text-brand-text mt-4 text-center tracking-tight group-hover:text-brand-accent transition-colors duration-300">
               {cat.label}
             </span>
 

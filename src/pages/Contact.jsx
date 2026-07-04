@@ -21,23 +21,23 @@ export const Contact = () => {
   };
 
   return (
-    <div className="bg-brand-bg min-h-screen py-16 select-none text-left transition-colors duration-300">
+    <div className="bg-brand-bg min-h-screen py-20 md:py-28 select-none text-left transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-6">
         
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-16">
           <span className="text-[10px] font-mono text-brand-text-secondary font-bold tracking-widest uppercase mb-3 block">
             Contact Support
           </span>
           <h1 className="text-4xl sm:text-5xl font-display font-bold text-brand-text leading-tight tracking-tight">
             We'd love to hear from you.
           </h1>
-          <p className="text-xs sm:text-sm text-brand-text-secondary mt-2 leading-relaxed max-w-xl font-semibold">
+          <p className="text-sm text-brand-text-secondary mt-2 leading-relaxed max-w-xl font-normal">
             Have a question about our books, interested in publishing with us, or need technical assistance? Our support team is here to help.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           
           {/* Left Column: Form (7 cols) */}
           <div className="lg:col-span-7 bg-brand-card border border-brand-border rounded-brand-card p-6 md:p-8 shadow-brand">
@@ -47,7 +47,7 @@ export const Contact = () => {
                   <CheckCircle2 className="h-6 w-6" />
                 </div>
                 <h3 className="text-xl font-bold text-brand-text">Message Sent Successfully</h3>
-                <p className="text-xs text-brand-text-secondary max-w-sm mx-auto leading-relaxed font-semibold">
+                <p className="text-sm text-brand-text-secondary max-w-sm mx-auto leading-relaxed font-normal">
                   Thank you for reaching out! A support representative has received your request and will respond within 24 business hours.
                 </p>
                 <Button 
@@ -162,7 +162,7 @@ export const Contact = () => {
             {/* FAQ Shortcut */}
             <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 flex flex-col gap-3 shadow-sm">
               <h3 className="text-sm font-bold text-brand-text">Looking for quick answers?</h3>
-              <p className="text-xs text-brand-text-secondary leading-relaxed font-semibold">
+              <p className="text-sm text-brand-text-secondary leading-relaxed font-normal">
                 Check our Frequently Asked Questions for instant help with downloads, payments, and account setup.
               </p>
               <Link to="/faq" className="text-xs text-brand-text hover:text-brand-accent font-bold flex items-center gap-1 mt-2 transition-colors">

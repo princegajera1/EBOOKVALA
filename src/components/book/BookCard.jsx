@@ -77,6 +77,40 @@ export const BookCard = ({ book, view = "grid" }) => {
     }
   };
 
+  // 3D tilt tracking and keyboard accessibility states/handlers
+  const [tilt, setTilt] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleMouseMove = (e) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const rotateY = ((x / rect.width) - 0.5) * 10; // Max 10 deg
+    const rotateX = (0.5 - (y / rect.height)) * 10;
+    setTilt({ x: rotateX, y: rotateY });
+  };
+
+  const handleMouseLeave = () => {
+    setTilt({ x: 0, y: 0 });
+    setIsHovered(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (
+      e.target.tagName === "BUTTON" ||
+      e.target.tagName === "A" ||
+      e.target.closest("button") ||
+      e.target.closest("a")
+    ) {
+      return;
+    }
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      navigate(`/book/${book.slug}`);
+    }
+  };
+
   const cardVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: { 
@@ -92,9 +126,11 @@ export const BookCard = ({ book, view = "grid" }) => {
       <>
         <motion.div
           variants={cardVariants}
+          onKeyDown={handleKeyDown}
+          tabIndex={0}
           whileHover={{ y: -4, boxShadow: "var(--shadow-brand-hover)" }}
           transition={{ duration: 0.25, ease: "easeInOut" }}
-          className="flex flex-col sm:flex-row gap-6 p-5 bg-brand-card border border-brand-border rounded-brand-card shadow-brand transition-all duration-300 group relative text-left"
+          className="flex flex-col sm:flex-row gap-6 p-5 bg-brand-card border border-brand-border rounded-brand-card shadow-brand focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none transition-all duration-300 group relative text-left"
         >
           {/* Cover */}
           <Link to={`/book/${book.slug}`} className="shrink-0">
@@ -236,9 +272,19 @@ export const BookCard = ({ book, view = "grid" }) => {
     <>
       <motion.div
         variants={cardVariants}
-        whileHover={{ y: -6, boxShadow: "var(--shadow-brand-hover)" }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className="flex flex-col bg-brand-card rounded-brand-card border border-brand-border shadow-brand transition-all duration-300 group overflow-hidden relative cursor-pointer text-left h-full"
+        onMouseMove={handleMouseMove}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={handleMouseLeave}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
+        animate={{
+          rotateX: isHovered ? tilt.x : 0,
+          rotateY: isHovered ? tilt.y : 0,
+          transformPerspective: 1000,
+          y: isHovered ? -6 : 0,
+        }}
+        transition={{ type: "spring", stiffness: 350, damping: 22 }}
+        className="flex flex-col bg-brand-card rounded-brand-card border border-brand-border shadow-brand focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none transition-all duration-300 group overflow-hidden relative cursor-pointer text-left h-full"
       >
         {/* Cover Image Container */}
         <Link to={`/book/${book.slug}`} className="relative aspect-[3/4] w-full bg-brand-bg overflow-hidden select-none block">
@@ -246,7 +292,7 @@ export const BookCard = ({ book, view = "grid" }) => {
             src={book.coverURL}
             alt={book.title}
             loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 rounded-t-brand-card"
+            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 rounded-t-brand-card"
           />
           
           {/* Heart Button Overlay */}

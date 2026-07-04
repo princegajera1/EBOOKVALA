@@ -244,16 +244,7 @@ export const Landing = () => {
           <HeroImageStack />
         </motion.div>
 
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-2 select-none">
-          <motion.div
-            animate={{ y: [0, 8, 0] }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            className="w-5 h-9 border-2 border-brand-text-secondary/30 rounded-full flex justify-center pt-1"
-          >
-            <div className="w-1.5 h-2 bg-brand-accent rounded-full" />
-          </motion.div>
-        </div>
+
 
       </section>
 

@@ -212,7 +212,4 @@ body {
   top: 0;
 }
 
-/* Images default to lazy loading via CSS hint */
-img {
-  content-visibility: auto;
-}
+

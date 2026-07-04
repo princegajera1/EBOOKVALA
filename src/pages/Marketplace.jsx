@@ -11,6 +11,7 @@ import { EmptyState } from "../components/ui/EmptyState";
 import { BookCardSkeleton } from "../components/ui/Skeleton";
 import { useAuth } from "../hooks/useAuth";
 import { Modal } from "../components/ui/Modal";
+import { SearchBox } from "../components/ui/SearchBox";
 
 export const Marketplace = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -361,66 +362,65 @@ export const Marketplace = () => {
             
             {/* Instant Search Bar */}
             <div ref={searchContainerRef} className="relative flex-grow max-w-md">
-              <input
-                type="text"
+              <SearchBox
+                size="md"
                 placeholder="Search by title, author, or tags..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 onFocus={() => setShowSuggestions(true)}
-                className="w-full bg-brand-bg-secondary border border-brand-border rounded-full py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:bg-brand-card focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 text-brand-text font-medium transition-all"
+                onClear={() => { setSearchQuery(""); setSuggestions([]); setShowSuggestions(false); }}
+                onSubmit={(e) => { e.preventDefault(); saveSearchQuery(searchQuery); setShowSuggestions(false); }}
+                shortcutHint={false}
+                aria-label="Search the library"
+                showSuggestions={showSuggestions && (searchQuery.trim().length > 0 || searchHistory.length > 0)}
+                suggestions={
+                  <div className="select-none">
+                    {/* Search History */}
+                    {searchHistory.length > 0 && !searchQuery.trim() && (
+                      <div className="mb-1">
+                        <div className="flex items-center justify-between px-3 py-1.5 text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider">
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Recent Searches</span>
+                          <button onClick={clearHistory} className="hover:text-brand-text transition-colors cursor-pointer font-mono text-[9px]">Clear</button>
+                        </div>
+                        {searchHistory.map((q, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => handleHistoryClick(q)}
+                            className="w-full text-left px-3 py-2 text-xs text-brand-text hover:bg-brand-bg-secondary rounded-xl transition-colors cursor-pointer truncate font-medium block"
+                          >
+                            {q}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Recommendations */}
+                    {suggestions.length > 0 && (
+                      <div>
+                        <div className="px-3 py-1.5 text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider flex items-center gap-1">
+                          <Sparkles className="h-3 w-3 text-brand-accent" /> Suggested eBooks
+                        </div>
+                        {suggestions.map((book) => (
+                          <button
+                            key={book.id}
+                            onClick={() => handleSuggestionClick(book.title)}
+                            className="w-full text-left px-3 py-2 text-xs text-brand-text hover:bg-brand-bg-secondary rounded-xl transition-colors cursor-pointer flex items-center justify-between font-medium"
+                          >
+                            <span className="truncate">{book.title}</span>
+                            <span className="text-[9px] text-brand-text-secondary/70 shrink-0 ml-2">by {book.authorName}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {searchQuery.trim() && suggestions.length === 0 && (
+                      <div className="px-3 py-3 text-xs text-brand-text-secondary italic text-center">
+                        No matching titles found.
+                      </div>
+                    )}
+                  </div>
+                }
               />
-              <Search className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-brand-text-secondary/60" />
-              
-              {/* Autocomplete suggestions popup */}
-              {showSuggestions && (searchQuery.trim() || searchHistory.length > 0) && (
-                <div className="absolute top-12 left-0 right-0 z-20 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-1.5 max-h-72 overflow-y-auto no-scrollbar">
-                  
-                  {/* Search History */}
-                  {searchHistory.length > 0 && !searchQuery.trim() && (
-                    <div className="mb-2">
-                      <div className="flex items-center justify-between px-3 py-1.5 text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider">
-                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> Recent Searches</span>
-                        <button onClick={clearHistory} className="hover:text-brand-text transition-colors cursor-pointer font-mono text-[9px]">Clear</button>
-                      </div>
-                      {searchHistory.map((q, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleHistoryClick(q)}
-                          className="w-full text-left px-3 py-2 text-xs text-brand-text hover:bg-brand-bg-secondary rounded-[10px] transition-colors cursor-pointer truncate font-medium block"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Recommendations */}
-                  {suggestions.length > 0 && (
-                    <div>
-                      <div className="px-3 py-1.5 text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider">
-                        Suggested eBooks
-                      </div>
-                      {suggestions.map((book) => (
-                        <button
-                          key={book.id}
-                          onClick={() => handleSuggestionClick(book.title)}
-                          className="w-full text-left px-3 py-2 text-xs text-brand-text hover:bg-brand-bg-secondary rounded-[10px] transition-colors cursor-pointer truncate flex items-center justify-between font-medium block"
-                        >
-                          <span>{book.title}</span>
-                          <span className="text-[9px] text-brand-text-secondary/70">by {book.authorName}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
-                  {searchQuery.trim() && suggestions.length === 0 && (
-                    <div className="px-3 py-2 text-xs text-brand-text-secondary italic">
-                      No matching titles found.
-                    </div>
-                  )}
-
-                </div>
-              )}
             </div>
 
             {/* Sorting and view options */}

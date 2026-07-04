@@ -36,7 +36,10 @@ export const SearchResults = () => {
 
   // Filter & Sort results when query or books change
   useEffect(() => {
-    if (!books.length) return;
+    if (!books.length) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     const timer = setTimeout(() => {

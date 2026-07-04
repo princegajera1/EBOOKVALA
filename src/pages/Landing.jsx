@@ -6,6 +6,7 @@ import {
   ShieldCheck, Search, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
+import { SearchBox } from "../components/ui/SearchBox";
 import { dbService } from "../services/db";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
@@ -188,21 +189,19 @@ export const Landing = () => {
           </div>
 
           {/* Embedded Hero Search */}
-          <form onSubmit={handleHeroSearch} className="w-full max-w-lg mt-1">
-            <div className="relative flex items-center p-1.5 rounded-2xl bg-brand-bg-secondary border border-brand-border shadow-brand focus-within:ring-4 focus-within:ring-brand-accent/10 focus-within:border-brand-accent transition-all duration-300">
-              <Search className="absolute left-4.5 h-4.5 w-4.5 text-brand-text-secondary/50" />
-              <input
-                type="text"
-                placeholder="Search tech, design, business books..."
-                value={heroSearchQuery}
-                onChange={(e) => setHeroSearchQuery(e.target.value)}
-                className="w-full bg-transparent border-none outline-none pl-11 pr-32 py-3 text-xs sm:text-sm font-semibold placeholder:text-brand-text-secondary/50 text-brand-text"
-              />
-              <Button type="submit" variant="primary" className="absolute right-1.5 h-10 px-5 text-xs font-bold rounded-xl shadow-sm">
-                Search
-              </Button>
-            </div>
-          </form>
+          <div className="w-full max-w-lg mt-1">
+            <SearchBox
+              size="lg"
+              showButton
+              buttonLabel="Search"
+              placeholder="Search tech, design, business books..."
+              value={heroSearchQuery}
+              onChange={(e) => setHeroSearchQuery(e.target.value)}
+              onSubmit={handleHeroSearch}
+              onClear={() => setHeroSearchQuery("")}
+              aria-label="Search hero"
+            />
+          </div>
 
           {/* Stat Numbers */}
           <div className="w-full mt-6 py-6 border-t border-brand-border flex flex-wrap gap-6 lg:gap-8 items-center select-none">
@@ -480,14 +479,14 @@ export const Landing = () => {
                           {rank.toString().padStart(2, "0")}
                         </span>
                         
-                        <Link to={`/book/${book.slug}`} className="shrink-0">
+                        <Link to={`/book/${book.slug || book.id}`} className="shrink-0">
                           <div className="h-16 w-12 bg-brand-bg-secondary border border-brand-border rounded-[8px] overflow-hidden shadow-sm">
                             <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
                           </div>
                         </Link>
  
                         <div className="min-w-0 text-left">
-                          <Link to={`/book/${book.slug}`} className="hover:text-brand-accent transition-colors">
+                          <Link to={`/book/${book.slug || book.id}`} className="hover:text-brand-accent transition-colors">
                             <h4 className="text-sm font-bold text-brand-text leading-snug truncate font-display">{book.title}</h4>
                           </Link>
                           <p className="text-[11px] text-brand-text-secondary mt-0.5 font-semibold truncate">by {book.authorName}</p>

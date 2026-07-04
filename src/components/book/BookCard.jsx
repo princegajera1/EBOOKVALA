@@ -107,7 +107,7 @@ export const BookCard = ({ book, view = "grid" }) => {
     }
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      navigate(`/book/${book.slug}`);
+      navigate(`/book/${book.slug || book.id}`);
     }
   };
 
@@ -133,7 +133,7 @@ export const BookCard = ({ book, view = "grid" }) => {
           className="flex flex-col sm:flex-row gap-6 p-5 bg-brand-card border border-brand-border rounded-brand-card shadow-brand focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none transition-all duration-300 group relative text-left"
         >
           {/* Cover */}
-          <Link to={`/book/${book.slug}`} className="shrink-0">
+          <Link to={`/book/${book.slug || book.id}`} className="shrink-0">
             <div className="relative aspect-[2/3] w-32 sm:w-40 bg-brand-bg border border-brand-border rounded-brand-img overflow-hidden shadow-sm">
               <img
                 src={book.coverURL}
@@ -170,7 +170,7 @@ export const BookCard = ({ book, view = "grid" }) => {
                 </button>
               </div>
               
-              <Link to={`/book/${book.slug}`} className="hover:text-brand-accent transition-colors">
+              <Link to={`/book/${book.slug || book.id}`} className="hover:text-brand-accent transition-colors">
                 <h4 className="text-[20px] font-display font-bold text-brand-text leading-snug line-clamp-2">
                   {book.title}
                 </h4>
@@ -288,7 +288,7 @@ export const BookCard = ({ book, view = "grid" }) => {
         className="flex flex-col bg-brand-card rounded-brand-card border border-brand-border shadow-brand focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none transition-all duration-300 group overflow-hidden relative cursor-pointer text-left h-full"
       >
         {/* Cover Image Container */}
-        <Link to={`/book/${book.slug}`} className="relative aspect-[3/4] w-full bg-brand-bg overflow-hidden select-none block">
+        <Link to={`/book/${book.slug || book.id}`} className="relative aspect-[3/4] w-full bg-brand-bg overflow-hidden select-none block">
           <img
             src={book.coverURL}
             alt={book.title}
@@ -379,7 +379,7 @@ export const BookCard = ({ book, view = "grid" }) => {
               </span>
             </div>
             
-            <Link to={`/book/${book.slug}`} className="hover:text-brand-accent transition-colors block">
+            <Link to={`/book/${book.slug || book.id}`} className="hover:text-brand-accent transition-colors block">
               <h4 className="text-sm font-bold text-brand-text leading-snug line-clamp-2 h-9 font-display">
                 {book.title}
               </h4>

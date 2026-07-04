@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Search, ChevronDown, ChevronUp, HelpCircle, MessageSquare, ArrowRight } from "lucide-react";
 import { Button } from "../components/ui/Button";
+import { SearchBox } from "../components/ui/SearchBox";
 
 const faqData = [
   {
@@ -95,15 +96,17 @@ export const FAQ = () => {
           </h1>
           
           {/* Search Bar */}
-          <div className="relative max-w-md mx-auto mt-6">
-            <input
-              type="text"
+          <div className="max-w-md mx-auto mt-6">
+            <SearchBox
+              size="md"
               placeholder="Search FAQ guides, topics, keys..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-brand-bg-secondary border border-brand-border rounded-full py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:bg-brand-card focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 text-brand-text font-medium transition-all"
+              onClear={() => setSearchQuery("")}
+              onSubmit={(e) => e.preventDefault()}
+              shortcutHint={false}
+              aria-label="Search frequently asked questions"
             />
-            <Search className="absolute left-3.5 top-3.5 h-3.5 w-3.5 text-brand-text-secondary/60" />
           </div>
         </div>
 

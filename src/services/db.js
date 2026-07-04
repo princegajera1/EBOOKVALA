@@ -281,7 +281,12 @@ export const dbService = {
     try {
       const q = query(collection(db, "books"), where("slug", "==", slug));
       const snap = await getDocs(q);
-      return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
+      if (!snap.empty) {
+        return { id: snap.docs[0].id, ...snap.docs[0].data() };
+      }
+      // Fallback: search by document ID
+      const docSnap = await getDoc(doc(db, "books", slug));
+      return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
     } catch (error) {
       console.error("Firestore getBookBySlug error:", error);
       return null;
@@ -291,8 +296,10 @@ export const dbService = {
   createBook: async (bookData) => {
     const newBookRef = doc(collection(db, "books"));
     const id = newBookRef.id;
+    const generatedSlug = bookData.title
+      ? bookData.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
+      : id;
     const newBook = {
-      id: id,
       rating: 0,
       reviewCount: 0,
       downloadCount: 0,
@@ -304,7 +311,9 @@ export const dbService = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       publishedAt: bookData.status === "published" ? new Date().toISOString() : null,
-      ...bookData
+      ...bookData,
+      id: id,
+      slug: bookData.slug || generatedSlug
     };
     await setDoc(newBookRef, newBook);
     return newBook;
@@ -389,6 +398,19 @@ export const dbService = {
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } catch (error) {
       console.error("Firestore getReviewsByBookId error:", error);
+      return [];
+    }
+  },
+
+  getReviewsByUserId: async (userId) => {
+    try {
+      const q = query(collection(db, "reviews"), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      return snap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } catch (error) {
+      console.error("Firestore getReviewsByUserId error:", error);
       return [];
     }
   },

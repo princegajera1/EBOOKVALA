@@ -25,6 +25,7 @@ export const ReaderDashboard = () => {
   const [purchasedBooks, setPurchasedBooks] = useState([]);
   const [wishlistBooks, setWishlistBooks] = useState([]);
   const [recommendedBooks, setRecommendedBooks] = useState([]);
+  const [userReviews, setUserReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Settings states
@@ -66,6 +67,14 @@ export const ReaderDashboard = () => {
           (uniqueCategories.length === 0 || b.categories.some(cat => uniqueCategories.includes(cat)))
         );
         setRecommendedBooks(recommendations.slice(0, 3));
+
+        // 4. Fetch reviews left by this user
+        try {
+          const reviews = await dbService.getReviewsByUserId(user.uid);
+          setUserReviews(reviews || []);
+        } catch (e) {
+          setUserReviews([]);
+        }
       } catch (err) {
         console.error("Error loading dashboard data:", err);
       } finally {
@@ -98,32 +107,123 @@ export const ReaderDashboard = () => {
     { id: "settings", label: "Settings", icon: Settings }
   ];
 
-  // Derive pages and details
-  const totalPages = Object.values(user?.readingProgress || {}).reduce((sum, p) => sum + p.currentPage, 0);
-  const activeStreak = user?.readingStreak || 3;
+  // ── Derive real reading stats from Firestore user data ────────────────────
+  const totalPages = Object.values(user?.readingProgress || {}).reduce(
+    (sum, p) => sum + (p.currentPage || 0),
+    0
+  );
+
+  // Compute real reading streak from readingProgress lastRead timestamps
+  const computeStreak = () => {
+    const progress = user?.readingProgress || {};
+    // Collect all unique calendar dates (YYYY-MM-DD) from lastRead timestamps
+    const readDates = new Set(
+      Object.values(progress)
+        .filter(p => p.lastRead)
+        .map(p => new Date(p.lastRead).toLocaleDateString("en-CA")) // en-CA → YYYY-MM-DD
+    );
+
+    let streak = 0;
+    const today = new Date();
+    for (let i = 0; i < 365; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() - i);
+      const key = d.toLocaleDateString("en-CA");
+      if (readDates.has(key)) {
+        streak++;
+      } else if (i > 0) {
+        // Allow today to be a miss (hasn't read today yet) only for i===0
+        break;
+      }
+    }
+    return streak;
+  };
+  const activeStreak = computeStreak();
+
+  // Compute which days of the current week had reading activity
+  const computeWeekDays = () => {
+    const progress = user?.readingProgress || {};
+    const readDates = new Set(
+      Object.values(progress)
+        .filter(p => p.lastRead)
+        .map(p => new Date(p.lastRead).toLocaleDateString("en-CA"))
+    );
+    const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const today = new Date();
+    // Build the 7-day window: Mon → Sun of the current week
+    const dayOfWeek = today.getDay(); // 0=Sun
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7)); // roll back to Monday
+    return ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((label, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return { day: label, read: readDates.has(d.toLocaleDateString("en-CA")) };
+    });
+  };
+  const WEEK_DAYS = computeWeekDays();
+
+  // Compute profile completion percentage based on actual fields
+  const computeProfileCompletion = () => {
+    const checks = [
+      !!user?.displayName,
+      !!user?.email,
+      !!user?.photoURL,
+      (user?.purchasedBooks?.length || 0) > 0,
+      (user?.wishlist?.length || 0) > 0,
+      activeStreak > 0,
+    ];
+    const filled = checks.filter(Boolean).length;
+    return Math.round((filled / checks.length) * 100);
+  };
+  const profileCompletion = computeProfileCompletion();
+
+  // Compute real achievements
+  const joinYear = user?.createdAt ? new Date(user.createdAt).getFullYear() : null;
+  const isEarlyAdopter = joinYear === 2025 || joinYear === 2026;
+  const isBookworm = (user?.purchasedBooks?.length || 0) >= 5;
+  const isCriticalReader = userReviews.length > 0;
+  const isConsistencyMaster = activeStreak >= 5;
+
+  const ACHIEVEMENTS = [
+    {
+      id: 1,
+      name: "Early Adopter",
+      desc: "Joined during the platform launch year",
+      date: isEarlyAdopter && user?.createdAt
+        ? new Date(user.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+        : "Pending",
+      unlocked: isEarlyAdopter
+    },
+    {
+      id: 2,
+      name: "Critical Reader",
+      desc: "Left a verified book review",
+      date: isCriticalReader
+        ? new Date(userReviews[0]?.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })
+        : "Pending",
+      unlocked: isCriticalReader
+    },
+    {
+      id: 3,
+      name: "Bookworm",
+      desc: "Added 5+ books to your library",
+      date: isBookworm ? "Achieved" : `${user?.purchasedBooks?.length || 0}/5 books`,
+      unlocked: isBookworm
+    },
+    {
+      id: 4,
+      name: "Consistency Master",
+      desc: "Maintain a 5-day reading streak",
+      date: isConsistencyMaster ? `${activeStreak}-day streak` : `${activeStreak}/5 days`,
+      unlocked: isConsistencyMaster
+    }
+  ];
 
   const stats = [
     { label: "Added Books", value: purchasedBooks.length, desc: "In library" },
     { label: "Currently Reading", value: Object.keys(user?.readingProgress || {}).length, desc: "Active titles" },
     { label: "Pages Read", value: totalPages, desc: "Lifetime stats" },
-    { label: "Reading Streak", value: `${activeStreak} Days`, desc: "Keep it burning!" }
-  ];
-
-  const MOCK_ACHIEVEMENTS = [
-    { id: 1, name: "Early Adopter", desc: "Joined during launching year", date: "Jul 2026", unlocked: true },
-    { id: 2, name: "Critical Reader", desc: "Left a verified book review", date: "Pending", unlocked: false },
-    { id: 3, name: "Bookworm", desc: "Added 5+ books to library", date: "Jul 2026", unlocked: true },
-    { id: 4, name: "Consistency Master", desc: "Maintain a 5-day streak", date: "Pending", unlocked: false }
-  ];
-
-  const WEEK_DAYS = [
-    { day: "Mon", read: true },
-    { day: "Tue", read: true },
-    { day: "Wed", read: true },
-    { day: "Thu", read: false },
-    { day: "Fri", read: false },
-    { day: "Sat", read: false },
-    { day: "Sun", read: false }
+    { label: "Reading Streak", value: `${activeStreak} ${activeStreak === 1 ? "Day" : "Days"}`, desc: activeStreak >= 5 ? "🔥 On fire!" : "Keep it burning!" }
   ];
 
   if (loading) {
@@ -167,10 +267,10 @@ export const ReaderDashboard = () => {
             <div className="w-full md:w-64 p-4 rounded-2xl bg-brand-card border border-brand-border shadow-sm flex flex-col gap-2">
               <div className="flex justify-between items-center text-[10px] font-bold text-brand-text">
                 <span>Profile Completion</span>
-                <span className="text-brand-accent">85%</span>
+                <span className="text-brand-accent">{profileCompletion}%</span>
               </div>
               <div className="h-2 bg-brand-bg-secondary rounded-full overflow-hidden border border-brand-border">
-                <div className="h-full bg-brand-accent rounded-full" style={{ width: "85%" }} />
+                <div className="h-full bg-brand-accent rounded-full" style={{ width: `${profileCompletion}%` }} />
               </div>
             </div>
           </div>
@@ -237,7 +337,7 @@ export const ReaderDashboard = () => {
                             <span>{percentage}%</span>
                           </div>
                           <ProgressBar value={progress.currentPage} max={book.pages || 100} size="sm" />
-                          <Link to={`/read/${book.slug}`} className="w-fit">
+                          <Link to={`/read/${book.slug || book.id}`} className="w-fit">
                             <Button 
                               variant="primary" 
                               size="sm" 
@@ -275,7 +375,7 @@ export const ReaderDashboard = () => {
                       </span>
                       
                       <Link 
-                        to={`/book/${rel.slug}`} 
+                        to={`/book/${rel.slug || rel.id}`} 
                         className="flex gap-4 p-4 border border-brand-border rounded-[16px] bg-brand-card hover:shadow-brand hover:-translate-y-0.5 transition-all duration-300 group block"
                       >
                         <div className="h-16 w-11 bg-brand-bg-secondary border border-brand-border rounded-[6px] overflow-hidden shrink-0 shadow-sm">
@@ -310,7 +410,7 @@ export const ReaderDashboard = () => {
               </div>
 
               <div className="border border-brand-border rounded-brand-card bg-brand-card shadow-brand divide-y divide-brand-border overflow-hidden">
-                {MOCK_ACHIEVEMENTS.map((ach) => (
+                {ACHIEVEMENTS.map((ach) => (
                   <div key={ach.id} className="p-4 hover:bg-brand-bg-secondary transition-colors text-left flex items-start gap-3">
                     <div className={`h-8.5 w-8.5 rounded-full flex items-center justify-center shrink-0 border transition-all ${
                       ach.unlocked 
@@ -370,7 +470,7 @@ export const ReaderDashboard = () => {
                     </div>
                     
                     <div className="flex flex-col gap-2">
-                      <Link to={`/read/${book.slug}`}>
+                      <Link to={`/read/${book.slug || book.id}`}>
                         <Button 
                           variant="primary" 
                           size="sm" 
@@ -379,7 +479,7 @@ export const ReaderDashboard = () => {
                           Read Now
                         </Button>
                       </Link>
-                      <a href={book.pdfURL} download={`${book.slug}.pdf`}>
+                      <a href={book.pdfURL} download={`${book.slug || book.id}.pdf`}>
                         <Button 
                           variant="outline" 
                           size="sm" 

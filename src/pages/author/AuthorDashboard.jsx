@@ -18,21 +18,20 @@ import { Modal } from "../../components/ui/Modal";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { toast } from "react-hot-toast";
 
-// Recharts simulated dataset (12 months)
-const CHART_DATA = [
-  { month: "Jul 25", downloads: 18, reads: 54 },
-  { month: "Aug 25", downloads: 22, reads: 66 },
-  { month: "Sep 25", downloads: 28, reads: 84 },
-  { month: "Oct 25", downloads: 24, reads: 72 },
-  { month: "Nov 25", downloads: 36, reads: 108 },
-  { month: "Dec 25", downloads: 42, reads: 126 },
-  { month: "Jan 26", downloads: 50, reads: 150 },
-  { month: "Feb 26", downloads: 44, reads: 132 },
-  { month: "Mar 26", downloads: 55, reads: 165 },
-  { month: "Apr 26", downloads: 62, reads: 186 },
-  { month: "May 26", downloads: 58, reads: 174 },
-  { month: "Jun 26", downloads: 68, reads: 204 }
-];
+// Build last-12-months chart bins (filled with 0s, will be populated from real orders)
+const buildEmptyChartBins = () => {
+  const bins = [];
+  const now = new Date();
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    bins.push({
+      month: d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" }),
+      downloads: 0,
+      sales: 0
+    });
+  }
+  return bins;
+};
 
 export const AuthorDashboard = () => {
   const { user, updateProfile } = useAuth();
@@ -96,8 +95,9 @@ export const AuthorDashboard = () => {
   const [allReviews, setAllReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Chart Metric Toggle
-  const [chartMetric, setChartMetric] = useState("downloads"); // downloads | reads
+  // Chart metric toggle + real data state
+  const [chartMetric, setChartMetric] = useState("downloads"); // downloads | sales
+  const [chartData, setChartData] = useState(buildEmptyChartBins());
 
   // Upload Wizard states
   const [wizardStep, setWizardStep] = useState(1);
@@ -146,6 +146,30 @@ export const AuthorDashboard = () => {
         reviewsList.push(...bookReviews.map(r => ({ ...r, bookTitle: b.title })));
       }
       setAllReviews(reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+
+      // Build real monthly chart from actual orders
+      const authorOrders = await dbService.getOrdersByAuthorId(user.uid);
+      const bins = buildEmptyChartBins();
+      authorOrders.forEach(order => {
+        const d = new Date(order.createdAt);
+        const label = d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
+        const bin = bins.find(b => b.month === label);
+        if (bin) {
+          bin.sales += 1;
+          // count each purchased unit as a download too
+          bin.downloads += 1;
+        }
+      });
+      // Also fold in book-level download counts for the current month
+      authorBooks.forEach(b => {
+        if (bins.length > 0) {
+          bins[bins.length - 1].downloads = Math.max(
+            bins[bins.length - 1].downloads,
+            b.downloadCount || 0
+          );
+        }
+      });
+      setChartData(bins);
     } catch (err) {
       console.error("Error loading author stats:", err);
     } finally {
@@ -175,7 +199,7 @@ export const AuthorDashboard = () => {
         categories: [], tags: [], language: "English", isbn: "",
         publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
         coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
-        pdfURL: "/demo-preview.pdf", fileSize: "8.5 MB", format: ["PDF"], status: "published"
+        pdfURL: "", fileSize: "", format: ["PDF"], status: "published"
       });
       setWizardStep(1);
       handleTabChange("books");
@@ -398,7 +422,7 @@ export const AuthorDashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-2 mt-3 select-none">
-                      <Link to={`/book/${book.slug}`} className="shrink-0">
+                      <Link to={`/book/${book.slug || book.id}`} className="shrink-0">
                         <Button variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3.5 border-brand-border text-brand-text hover:bg-brand-bg-secondary font-bold">
                           <Eye className="mr-1 h-3.5 w-3.5" /> View Detail
                         </Button>

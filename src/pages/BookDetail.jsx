@@ -286,7 +286,7 @@ export const BookDetail = () => {
                     </div>
                   </div>
                   
-                  <Link to={`/read/${book.slug}`} className="w-full">
+                  <Link to={`/read/${book.slug || book.id}`} className="w-full">
                     <Button variant="primary" className="w-full h-13 rounded-full font-bold text-sm bg-brand-success text-white shadow-sm flex items-center justify-center gap-2">
                       <BookOpen className="h-4.5 w-4.5" />
                       Read eBook Online
@@ -467,7 +467,7 @@ export const BookDetail = () => {
                         {relatedBooks.map((rel) => (
                           <Link 
                             key={rel.id} 
-                            to={`/book/${rel.slug}`} 
+                            to={`/book/${rel.slug || rel.id}`} 
                             className="flex gap-4 p-3.5 border border-brand-border rounded-[16px] bg-brand-card hover:shadow-brand hover:-translate-y-0.5 transition-all duration-300 group"
                           >
                             <div className="h-16 w-12 bg-brand-bg-secondary border border-brand-border rounded-[8px] overflow-hidden shrink-0 shadow-sm">

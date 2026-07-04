@@ -13,6 +13,7 @@ import { StatusBadge } from "../../components/ui/StatusBadge";
 import { Modal } from "../../components/ui/Modal";
 import { uploadFile } from "../../services/storage";
 import { toast } from "react-hot-toast";
+import { SearchBox } from "../../components/ui/SearchBox";
 
 // 30 Days eBook Downloads data (retains trend style visualizer)
 const DOWNLOADS_TREND = Array.from({ length: 30 }).map((_, i) => ({
@@ -474,14 +475,16 @@ export const AdminDashboard = () => {
               <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Audit, suspend, or modify roles of platform accounts.</p>
             </div>
             
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-brand-text-secondary/50" />
-              <input
-                type="text"
+            <div className="w-full sm:w-72">
+              <SearchBox
+                size="sm"
                 placeholder="Search name, email, or role..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-brand-card border border-brand-border rounded-full py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 text-brand-text font-medium"
+                onClear={() => setSearchQuery("")}
+                onSubmit={(e) => e.preventDefault()}
+                shortcutHint={false}
+                aria-label="Search users"
               />
             </div>
           </div>

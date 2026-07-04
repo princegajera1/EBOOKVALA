@@ -10,6 +10,7 @@ import { useApp } from "../../store/AppContext";
 import { useWishlist } from "../../hooks/useWishlist";
 import { dbService } from "../../services/db";
 import { Button } from "../ui/Button";
+import { SearchBox } from "../ui/SearchBox";
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated, theme, toggleTheme } = useApp();
@@ -234,65 +235,49 @@ export const Navbar = () => {
 
           {/* Right Column: Search & Actions */}
           <div className="flex items-center gap-6">
-            {/* Smart Search Bar */}
+            {/* Premium Smart Search Bar */}
             <div ref={searchContainerRef} className="hidden md:flex items-center relative w-64 max-w-[260px]">
-              <form onSubmit={handleSearchSubmit} className="w-full">
-                <div className="relative group">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Search books, authors..."
-                    value={searchQuery}
-                    onFocus={() => setShowSearchOverlay(true)}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-brand-bg-secondary border border-brand-border/60 hover:border-brand-border/90 hover:bg-brand-bg-secondary/75 pl-9 pr-8 py-2.5 text-xs rounded-full focus:outline-none focus:bg-brand-bg focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 transition-all placeholder:text-brand-text-secondary/55 text-brand-text font-medium"
-                  />
-                  <Search className="absolute left-3 top-3 h-3.5 w-3.5 text-brand-text-secondary/50 transition-colors group-focus-within:text-brand-accent" />
-                  <span className="absolute right-3.5 top-2.5 py-0.5 px-1.5 rounded bg-brand-bg border border-brand-border/80 text-[8.5px] font-bold text-brand-text-secondary/70 shadow-sm select-none pointer-events-none group-focus-within:opacity-0 transition-opacity duration-200">
-                    /
-                  </span>
-                </div>
-              </form>
-
-              {/* Smart Suggestions Overlay */}
-              <AnimatePresence>
-                {showSearchOverlay && (searchQuery.trim().length > 1 || suggestions.length > 0) && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-11 left-0 right-0 z-50 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-2 select-none"
-                  >
-                    {suggestions.length > 0 ? (
-                      <div className="flex flex-col gap-1">
-                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider px-2 py-1 flex items-center gap-1">
-                          <Sparkles className="h-3 w-3 text-brand-accent" /> Live Suggestions
-                        </p>
-                        {suggestions.map((book) => (
-                          <Link
-                            key={book.id}
-                            to={`/book/${book.slug}`}
-                            onClick={() => setShowSearchOverlay(false)}
-                            className="flex items-center gap-3 p-2 rounded-xl hover:bg-brand-bg-secondary transition-colors text-left"
-                          >
-                            <div className="h-10 w-7 rounded overflow-hidden bg-brand-bg border border-brand-border shrink-0">
-                              <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-bold text-brand-text truncate">{book.title}</p>
-                              <p className="text-[10px] text-brand-text-secondary truncate">by {book.authorName}</p>
-                            </div>
-                          </Link>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-4 text-center text-xs text-brand-text-secondary">
-                        No matching books found
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <SearchBox
+                inputRef={searchInputRef}
+                size="sm"
+                placeholder="Search books, authors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onSubmit={handleSearchSubmit}
+                onFocus={() => setShowSearchOverlay(true)}
+                onClear={() => { setSearchQuery(""); setShowSearchOverlay(false); }}
+                shortcutHint="/"
+                showSuggestions={showSearchOverlay && (searchQuery.trim().length > 1 || suggestions.length > 0)}
+                suggestions={
+                  suggestions.length > 0 ? (
+                    <div className="flex flex-col gap-1 select-none">
+                      <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider px-2 py-1 flex items-center gap-1">
+                        <Sparkles className="h-3 w-3 text-brand-accent" /> Live Suggestions
+                      </p>
+                      {suggestions.map((book) => (
+                        <Link
+                          key={book.id}
+                          to={`/book/${book.slug || book.id}`}
+                          onClick={() => { setShowSearchOverlay(false); setSearchQuery(""); }}
+                          className="flex items-center gap-3 p-2 rounded-xl hover:bg-brand-bg-secondary transition-colors text-left"
+                        >
+                          <div className="h-10 w-7 rounded-lg overflow-hidden bg-brand-bg border border-brand-border shrink-0">
+                            <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-brand-text truncate">{book.title}</p>
+                            <p className="text-[10px] text-brand-text-secondary truncate">by {book.authorName}</p>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="p-3 text-center text-xs text-brand-text-secondary font-medium">
+                      No matching books found
+                    </div>
+                  )
+                }
+              />
             </div>
 
             {/* Actions */}

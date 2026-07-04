@@ -142,7 +142,7 @@ export const Contact = () => {
                   <Mail className="h-4.5 w-4.5 text-brand-text shrink-0 mt-0.5" />
                   <div>
                     <p className="font-bold text-brand-text">Email Support</p>
-                    <p className="mt-0.5 font-normal">support@ebookvala.com</p>
+                    <p className="mt-0.5 font-normal">ebookvala.official@gmail.com</p>
                   </div>
                 </div>
  
@@ -150,7 +150,7 @@ export const Contact = () => {
                   <Phone className="h-4.5 w-4.5 text-brand-text shrink-0 mt-0.5" />
                   <div>
                     <p className="font-bold text-brand-text">Call Support</p>
-                    <p className="mt-0.5 font-normal">+91 98765 43210</p>
+                    <p className="mt-0.5 font-normal">+91 97270 31027</p>
                   </div>
                 </div>
  

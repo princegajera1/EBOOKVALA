@@ -12,12 +12,12 @@
   width: 100%;
   padding: 0.6rem 1.75rem;
   border-radius: 100px;
-  background-color: var(--base); /* Matches background baseColor variable */
+  background-color: color-mix(in srgb, var(--base) 85%, transparent); /* Premium semi-transparent backdrop */
   border: 1px solid var(--border);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.25);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  transition: background-color 0.3s, border-color 0.3s;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 
 /* Premium pill shape text-logo */
@@ -30,11 +30,11 @@
   cursor: pointer;
   padding: 0.5rem 1.25rem;
   border-radius: 100px;
-  background-color: var(--pill-bg); /* Rest pill background */
+  background-color: color-mix(in srgb, var(--pill-bg) 50%, transparent); /* Frosted pill bg */
   border: 1px solid var(--border);
   font-size: 0.85rem;
-  transition: transform 0.2s, border-color 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
 .pill-logo:hover {
@@ -65,7 +65,7 @@
   padding: 0.6rem 1.25rem;
   border-radius: 100px;
   border: 1px solid var(--border);
-  background-color: var(--pill-bg); /* Subtle Rest panel background */
+  background-color: color-mix(in srgb, var(--pill-bg) 50%, transparent); /* Frosted Rest panel background */
   color: var(--pill-text); /* Rest text color */
   text-decoration: none;
   font-family: var(--font-sans);
@@ -78,18 +78,18 @@
   user-select: none;
   white-space: nowrap; /* Prevents text wrap cutoffs */
   transition: color 0.2s, border-color 0.2s, background-color 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
 .pill:hover, .pill:focus {
   border-color: var(--accent);
 }
 
-/* Active indicator dot */
+/* Active indicator dot & text color */
 .pill.is-active {
   color: var(--accent) !important;
   border-color: var(--accent) !important;
-  background-color: var(--bg-secondary) !important;
+  background-color: color-mix(in srgb, var(--bg-secondary) 80%, transparent) !important;
 }
 
 .pill.is-active::after {
@@ -104,12 +104,12 @@
   background-color: var(--accent);
 }
 
-/* Circle animation containers */
+/* Circle animation containers - Fills with accent color */
 .hover-circle {
   position: absolute;
   left: 50%;
   border-radius: 50%;
-  background-color: var(--base); /* Expands using the baseColor, masking the rest background */
+  background-color: var(--accent); /* Brand blue accent color in both themes */
   pointer-events: none;
   z-index: 1;
 }
@@ -132,7 +132,7 @@
   position: absolute;
   left: 0;
   width: 100%;
-  color: var(--hover-text); /* Accent blue revealed on hover */
+  color: var(--hover-text); /* White text revealed on top of the blue hover-circle */
   font-weight: 700;
   white-space: nowrap;
 }

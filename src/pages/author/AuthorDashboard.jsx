@@ -665,11 +665,20 @@ export const AuthorDashboard = () => {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mt-3 select-none">
-                      <Link to={`/book/${book.id}`} className="shrink-0">
-                        <Button variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary">
-                          <Eye className="mr-1 h-3 w-3" /> Preview
-                        </Button>
-                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary"
+                        onClick={() => {
+                          if (book.pdfURL && book.pdfURL !== "/demo-preview.pdf") {
+                            window.open(book.pdfURL, "_blank", "noopener,noreferrer");
+                          } else {
+                            window.open(`/book/${book.id}`, "_blank", "noopener,noreferrer");
+                          }
+                        }}
+                      >
+                        <Eye className="mr-1 h-3 w-3" /> Preview
+                      </Button>
                       <Button onClick={() => handleEditBook(book)} variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary">
                         <Edit className="mr-1 h-3 w-3" /> Edit
                       </Button>

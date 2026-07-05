@@ -19,7 +19,6 @@ const PillNav = ({
 }) => {
   const circleRefs = useRef([]);
   const tlRefs = useRef([]);
-  const activeTweenRefs = useRef([]);
   const logoTweenRef = useRef(null);
   const navItemsRef = useRef(null);
   const logoRef = useRef(null);
@@ -75,27 +74,27 @@ const PillNav = ({
         const white = pill.querySelector('.pill-label-hover');
 
         tl = gsap.timeline({ paused: true });
-        tl.to(circle, { scale: 1.25, xPercent: -50, duration: 0.38, ease }, 0);
+        tl.to(circle, { scale: 1.25, xPercent: -50, duration: 0.38, ease: 'power2.out' }, 0);
         if (label) {
-          tl.fromTo(label, { y: 0 }, { y: -(h + 8), duration: 0.38, ease }, 0);
+          tl.fromTo(label, { y: 0 }, { y: -(h + 8), duration: 0.38, ease: 'power2.out' }, 0);
         }
         if (white) {
-          tl.fromTo(white, { y: h + 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.38, ease }, 0);
+          tl.fromTo(white, { y: h + 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.38, ease: 'power2.out' }, 0);
         }
         tlRefs.current[i] = tl;
       }
     }
 
-    if (!tl) return;
-    activeTweenRefs.current[i]?.kill();
-    activeTweenRefs.current[i] = tl.tweenTo(tl.duration(), { duration: 0.3, ease, overwrite: 'auto' });
+    if (tl) {
+      tl.play();
+    }
   };
 
   const handleLeave = i => {
     const tl = tlRefs.current[i];
-    if (!tl) return;
-    activeTweenRefs.current[i]?.kill();
-    activeTweenRefs.current[i] = tl.tweenTo(0, { duration: 0.2, ease, overwrite: 'auto' });
+    if (tl) {
+      tl.reverse();
+    }
   };
 
   const handleLogoEnter = () => {

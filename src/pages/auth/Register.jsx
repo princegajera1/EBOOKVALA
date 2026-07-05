@@ -86,8 +86,6 @@ AuthInput.displayName = "AuthInput";
 export const Register = () => {
   const { register: signUp, loading } = useAuth();
   const navigate = useNavigate();
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -134,10 +132,15 @@ export const Register = () => {
     setSubmitError("");
     const toastId = toast.loading("Creating account...");
     try {
-      setRegisteredEmail(data.email);
       await signUp(data.email, data.password, data.displayName, data.role);
-      setIsSuccess(true);
-      toast.success("Account created successfully! Check your inbox.", { id: toastId });
+      toast.success("Welcome to EBOOKVALA! 🎉", { id: toastId });
+      
+      // Auto-redirect to reader or author workspace instantly
+      if (data.role === "author") {
+        navigate("/author/dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       console.error("Registration error:", err);
       triggerShake();
@@ -151,33 +154,6 @@ export const Register = () => {
       toast.error(errMsg, { id: toastId });
     }
   };
-
-  if (isSuccess) {
-    return (
-      <AuthLayout>
-        <div className="flex flex-col gap-6 text-center select-none w-full max-w-sm mx-auto animate-fade-in">
-          <div className="h-14 w-14 rounded-full bg-brand-bg-secondary border border-brand-border text-brand-text flex items-center justify-center mx-auto mb-2 shadow-sm">
-            <Mail className="h-6 w-6 text-brand-accent" />
-          </div>
-          
-          <div>
-            <h2 className="text-3xl font-display font-black text-brand-text">Verify your email</h2>
-            <p className="text-xs text-brand-text-secondary mt-3 leading-relaxed max-w-xs mx-auto font-semibold">
-              We've sent a verification link to <span className="font-bold text-brand-text">{registeredEmail}</span>. Please verify your email to complete registration.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 mt-4 w-full">
-            <Link to="/login" className="w-full">
-              <Button variant="primary" className="w-full h-12 rounded-full text-xs font-bold shadow-sm">
-                Back to Sign In
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </AuthLayout>
-    );
-  }
 
   return (
     <AuthLayout>

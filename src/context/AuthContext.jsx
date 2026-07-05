@@ -152,13 +152,15 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Send verification email
-      await sendEmailVerification(firebaseUser);
+      // Send verification email (non-blocking, ignore errors on fake domains)
+      try {
+        await sendEmailVerification(firebaseUser);
+      } catch (verificationErr) {
+        console.warn("Failed to send verification email (non-blocking):", verificationErr);
+      }
 
-      // BUG 2 FIX: Sign out after signup (user must verify email first).
-      // Set flag BEFORE signOut so ProtectedRoute suppresses the "Please sign in" toast.
-      sessionStorage.setItem("logging_out", "true");
-      await signOut(auth);
+      // Sync profile into app state immediately to authenticate session
+      await syncUserProfile(firebaseUser);
 
       setLoading(false);
       return firebaseUser;
@@ -195,16 +197,7 @@ export const AuthProvider = ({ children }) => {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
-      // Check if email is verified (bypass for admin and .test domains)
-      const isTestEmail = email.toLowerCase().endsWith(".test");
-      if (email.toLowerCase() !== "admin@ebookvala.com" && !isTestEmail && !firebaseUser.emailVerified) {
-        const error = new Error("Please verify your email first. Check your inbox.");
-        error.code = "auth/email-not-verified";
-        sessionStorage.setItem("logging_out", "true");
-        await signOut(auth);
-        setLoading(false);
-        throw error;
-      }
+      // Check if email is verified (Bypassed for smooth onboarding and friction-free user login)
 
       // Verify user document exists in Firestore; auto-repair if missing
       const userDocSnap = await getDoc(doc(db, "users", firebaseUser.uid));

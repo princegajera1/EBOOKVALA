@@ -11,7 +11,10 @@ import {
   where, 
   orderBy, 
   limit, 
-  addDoc 
+  addDoc,
+  arrayUnion,
+  arrayRemove,
+  increment
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -316,6 +319,8 @@ export const dbService = {
       rating: 0,
       reviewCount: 0,
       downloadCount: 0,
+      readCount: 0,
+      bookmarkCount: 0,
       viewCount: 1,
       salesCount: 0,
       isFeatured: false,
@@ -329,6 +334,12 @@ export const dbService = {
       description: "",
       isbn: "",
       language: "English",
+      version: bookData.version || "1.0.0",
+      releaseDate: bookData.releaseDate || new Date().toISOString().split("T")[0],
+      visibility: bookData.visibility || "public",
+      genre: bookData.genre || "",
+      price: Number(bookData.price) || 0,
+      discount: Number(bookData.discount) || 0,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       publishedAt: bookData.status === "published" ? new Date().toISOString() : null,
@@ -731,5 +742,91 @@ export const dbService = {
   deleteCategory: async (id) => {
     await deleteDoc(doc(db, "categories", id));
     return true;
+  },
+
+  // FOLLOWERS
+  followAuthor: async (authorId, readerId, readerName, readerPhoto) => {
+    try {
+      const followRef = doc(db, "authors", authorId, "followers", readerId);
+      await setDoc(followRef, {
+        uid: readerId,
+        displayName: readerName || "Reader",
+        photoURL: readerPhoto || "",
+        followedAt: new Date().toISOString()
+      });
+      // Sync on author document array to keep compatibility
+      const authorRef = doc(db, "authors", authorId);
+      await updateDoc(authorRef, {
+        followers: arrayUnion(readerId)
+      });
+      return true;
+    } catch (err) {
+      console.error("Error following author:", err);
+      return false;
+    }
+  },
+
+  unfollowAuthor: async (authorId, readerId) => {
+    try {
+      const followRef = doc(db, "authors", authorId, "followers", readerId);
+      await deleteDoc(followRef);
+      // Sync on author document array
+      const authorRef = doc(db, "authors", authorId);
+      await updateDoc(authorRef, {
+        followers: arrayRemove(readerId)
+      });
+      return true;
+    } catch (err) {
+      console.error("Error unfollowing author:", err);
+      return false;
+    }
+  },
+
+  isFollowingAuthor: async (authorId, readerId) => {
+    if (!readerId) return false;
+    try {
+      const followSnap = await getDoc(doc(db, "authors", authorId, "followers", readerId));
+      return followSnap.exists();
+    } catch (err) {
+      console.error("Error checking follow status:", err);
+      return false;
+    }
+  },
+
+  getAuthorFollowers: async (authorId) => {
+    try {
+      const colRef = collection(db, "authors", authorId, "followers");
+      const snap = await getDocs(colRef);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      console.error("Error getting author followers:", err);
+      return [];
+    }
+  },
+
+  // BOOKMARKS
+  toggleBookBookmark: async (bookId, isAdding) => {
+    try {
+      const docRef = doc(db, "books", bookId);
+      await updateDoc(docRef, {
+        bookmarkCount: increment(isAdding ? 1 : -1)
+      });
+      return true;
+    } catch (err) {
+      console.error("Error toggling book bookmark count:", err);
+      return false;
+    }
+  },
+
+  // REVIEWS EXTRA
+  deleteReviewReply: async (reviewId) => {
+    try {
+      const docRef = doc(db, "reviews", reviewId);
+      await updateDoc(docRef, { authorReply: "" });
+      return true;
+    } catch (err) {
+      console.error("Error deleting review reply:", err);
+      return false;
+    }
   }
 };

@@ -32,6 +32,7 @@ export const BookDetail = () => {
   const [author, setAuthor] = useState(null);
   const [relatedBooks, setRelatedBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isFollowing, setIsFollowing] = useState(false);
 
   // Detail Tabs state: info | summary | flashcards | mindmap
   const [activeDetailTab, setActiveDetailTab] = useState("info");
@@ -77,6 +78,63 @@ export const BookDetail = () => {
     };
     loadBookData();
   }, [slug]);
+
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (user && author) {
+        const following = await dbService.isFollowingAuthor(author.uid, user.uid);
+        setIsFollowing(following);
+      }
+    };
+    checkFollowStatus();
+  }, [user, author]);
+
+  const handleFollowToggle = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    const toastId = toast.loading(isFollowing ? "Unfollowing..." : "Following...");
+    try {
+      if (isFollowing) {
+        const success = await dbService.unfollowAuthor(author.uid, user.uid);
+        if (success) {
+          setIsFollowing(false);
+          setAuthor(prev => ({
+            ...prev,
+            followers: (prev.followers || []).filter(id => id !== user.uid)
+          }));
+          toast.success("Unfollowed author", { id: toastId });
+        } else {
+          toast.error("Failed to unfollow", { id: toastId });
+        }
+      } else {
+        const success = await dbService.followAuthor(author.uid, user.uid, user.displayName, user.photoURL);
+        if (success) {
+          setIsFollowing(true);
+          setAuthor(prev => ({
+            ...prev,
+            followers: [...(prev.followers || []), user.uid]
+          }));
+          toast.success("Following author!", { id: toastId });
+        } else {
+          toast.error("Failed to follow", { id: toastId });
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("An error occurred", { id: toastId });
+    }
+  };
+
+  const handleDownload = async () => {
+    try {
+      await dbService.updateBook(book.id, { downloadCount: (book.downloadCount || 0) + 1 });
+      setBook(prev => ({ ...prev, downloadCount: (prev.downloadCount || 0) + 1 }));
+    } catch (err) {
+      console.error("Error updating download count:", err);
+    }
+  };
 
   if (loading) {
     return (
@@ -172,7 +230,7 @@ export const BookDetail = () => {
               </Button>
               
               {isPurchased && (
-                <a href={book.pdfURL} download={`${book.slug}.pdf`} className="w-full">
+                <a href={book.pdfURL} download={`${book.slug}.pdf`} className="w-full" onClick={handleDownload}>
                   <Button variant="primary" className="w-full h-12 rounded-full font-bold text-xs flex items-center justify-center gap-2 shadow-sm">
                     <Download className="h-4 w-4" />
                     Download PDF ({book.fileSize || "12MB"})
@@ -287,12 +345,12 @@ export const BookDetail = () => {
                     </div>
                   </div>
                   
-                  <a href={book.pdfURL} target="_blank" rel="noopener noreferrer" className="w-full">
+                  <Link to={`/read/${book.slug || book.id}`} className="w-full">
                     <Button variant="primary" className="w-full h-13 rounded-full font-bold text-sm bg-brand-success text-white shadow-sm flex items-center justify-center gap-2">
                       <BookOpen className="h-4.5 w-4.5" />
                       Read eBook Online
                     </Button>
-                  </a>
+                  </Link>
                 </div>
               )}
             </div>
@@ -449,14 +507,28 @@ export const BookDetail = () => {
                         </div>
                       </div>
                       <p className="text-xs text-brand-text-secondary leading-relaxed mb-5 font-normal">{author.bio}</p>
-                      <Button 
-                        onClick={() => navigate(`/marketplace?author=${encodeURIComponent(author.displayName)}`)}
-                        variant="secondary" 
-                        size="sm" 
-                        className="w-full rounded-full text-xs h-10 border-brand-border hover:bg-brand-bg-secondary"
-                      >
-                        View Profile
-                      </Button>
+                      <div className="flex flex-col gap-2 mt-4">
+                        <Button 
+                          onClick={handleFollowToggle}
+                          variant={isFollowing ? "outline" : "primary"} 
+                          size="sm" 
+                          className={`w-full rounded-full text-xs h-10 ${
+                            isFollowing 
+                              ? "border-brand-border text-brand-text hover:bg-brand-bg-secondary font-bold" 
+                              : "bg-brand-accent hover:opacity-90 text-white font-bold"
+                          }`}
+                        >
+                          {isFollowing ? "Unfollow" : "Follow Author"}
+                        </Button>
+                        <Button 
+                          onClick={() => navigate(`/marketplace?author=${encodeURIComponent(author.displayName)}`)}
+                          variant="secondary" 
+                          size="sm" 
+                          className="w-full rounded-full text-xs h-10 border-brand-border hover:bg-brand-bg-secondary font-bold"
+                        >
+                          View Profile
+                        </Button>
+                      </div>
                     </div>
                   )}
 

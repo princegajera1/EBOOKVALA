@@ -95,6 +95,9 @@ export const Reader = () => {
         setBook(found);
         setChapters(generateMockContent(found.title));
         
+        // Increment live read count in Firestore
+        dbService.updateBook(found.id, { readCount: (found.readCount || 0) + 1 });
+        
         // Load initial progress
         if (user?.readingProgress?.[found.id]) {
           const savedCh = user.readingProgress[found.id].currentPage - 1;

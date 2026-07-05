@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { toast } from "react-hot-toast";
+import { dbService } from "../services/db";
 
 const AppContext = createContext();
 
@@ -103,7 +104,8 @@ export const AppProvider = ({ children }) => {
     }
     
     let updatedWishlist;
-    if (wishlist.includes(bookId)) {
+    const isRemoving = wishlist.includes(bookId);
+    if (isRemoving) {
       updatedWishlist = wishlist.filter(id => id !== bookId);
       toast.success("Removed from wishlist.");
     } else {
@@ -114,6 +116,7 @@ export const AppProvider = ({ children }) => {
     setWishlist(updatedWishlist);
     try {
       await updateProfile({ wishlist: updatedWishlist });
+      await dbService.toggleBookBookmark(bookId, !isRemoving);
     } catch (err) {
       console.error("Failed to sync wishlist to Firestore:", err);
     }

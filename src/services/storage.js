@@ -39,3 +39,34 @@ export const uploadFile = async (bucket, folder, file) => {
 
   return urlData.publicUrl;
 };
+
+/**
+ * Deletes a file from Supabase Storage by its public URL.
+ * @param {string} publicUrl - The public URL of the file to delete
+ * @returns {Promise<boolean>} True if delete succeeded, false otherwise
+ */
+export const deleteFile = async (publicUrl) => {
+  if (!supabase) return false;
+  if (!publicUrl) return false;
+  
+  try {
+    // Parse the bucket and path from the publicUrl
+    // Typical format: https://[project-id].supabase.co/storage/v1/object/public/[bucket]/[path]
+    const urlParts = publicUrl.split("/storage/v1/object/public/");
+    if (urlParts.length < 2) return false;
+    
+    const pathParts = urlParts[1].split("/");
+    const bucket = pathParts[0];
+    const path = pathParts.slice(1).join("/");
+    
+    const { error } = await supabase.storage.from(bucket).remove([path]);
+    if (error) {
+      console.warn("Supabase Storage delete error:", error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn("Failed to delete file from Supabase storage:", err);
+    return false;
+  }
+};

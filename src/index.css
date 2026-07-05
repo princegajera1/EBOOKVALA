@@ -74,6 +74,18 @@
   
   --shadow-brand: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 8px -1px rgba(15, 23, 42, 0.03);
   --shadow-brand-hover: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+
+  --animate-marquee: marquee 35s linear infinite;
+  --animate-marquee-vertical: marquee-vertical 35s linear infinite;
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(calc(-100% - 1rem)); }
+  }
+  @keyframes marquee-vertical {
+    from { transform: translateY(0); }
+    to { transform: translateY(calc(-100% - 1rem)); }
+  }
 }
 
 /* Custom global styles to enforce the design system */

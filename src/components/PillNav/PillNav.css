@@ -10,133 +10,113 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 0.6rem 1.75rem;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+/* Two-tone text logo */
+.pill-logo-text {
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.pill-logo-text:hover {
+  transform: scale(1.02);
+}
+
+/* Center Pill shaped core menu */
+.pill-nav-center {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 0.55rem 1.75rem;
   border-radius: 100px;
-  background-color: color-mix(in srgb, var(--base) 85%, transparent); /* Premium semi-transparent backdrop */
+  background-color: color-mix(in srgb, var(--card) 85%, transparent);
   border: 1px solid var(--border);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
 
-/* Premium pill shape text-logo */
-.pill-logo {
+.pill-nav-link {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.825rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0.15rem 0.25rem;
+  position: relative;
+}
+
+.pill-nav-link:hover {
+  color: var(--accent);
+}
+
+.pill-nav-link.is-active {
+  color: var(--text);
+  font-weight: 700;
+}
+
+/* Right action triggers */
+.pill-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.pill-nav-right-link {
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.825rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  outline: none;
+}
+
+.pill-nav-right-link:hover {
+  color: var(--accent);
+}
+
+/* Register brand accent button */
+.pill-register-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  text-decoration: none;
-  outline: none;
-  cursor: pointer;
   padding: 0.5rem 1.25rem;
   border-radius: 100px;
-  background-color: color-mix(in srgb, var(--pill-bg) 50%, transparent); /* Frosted pill bg */
-  border: 1px solid var(--border);
-  font-size: 0.85rem;
-  transition: transform 0.2s, border-color 0.2s, background-color 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-}
-
-.pill-logo:hover {
-  transform: scale(1.03);
-  border-color: var(--accent);
-}
-
-.pill-nav-items {
-  display: flex;
-  align-items: center;
-}
-
-.pill-list {
-  display: flex;
-  align-items: center;
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  gap: 0.5rem;
-}
-
-/* Base pill styling with strict overflow containment and no-wrap configuration */
-.pill {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.6rem 1.25rem;
-  border-radius: 100px;
-  border: 1px solid var(--border);
-  background-color: color-mix(in srgb, var(--pill-bg) 50%, transparent); /* Frosted Rest panel background */
-  color: var(--pill-text); /* Rest text color */
-  text-decoration: none;
+  background-color: var(--accent);
+  color: #FFFFFF !important;
   font-family: var(--font-sans);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
-  overflow: hidden;
+  text-decoration: none;
+  transition: transform 0.2s, background-color 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
   outline: none;
   cursor: pointer;
-  user-select: none;
-  white-space: nowrap; /* Prevents text wrap cutoffs */
-  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
 }
 
-.pill:hover, .pill:focus {
-  border-color: var(--accent);
+.pill-register-btn:hover {
+  transform: scale(1.03);
+  background-color: color-mix(in srgb, var(--accent) 85%, black);
 }
 
-/* Active indicator dot & text color */
-.pill.is-active {
-  color: var(--accent) !important;
-  border-color: var(--accent) !important;
-  background-color: color-mix(in srgb, var(--bg-secondary) 80%, transparent) !important;
-}
-
-.pill.is-active::after {
-  content: '';
-  position: absolute;
-  bottom: 5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 3.5px;
-  height: 3.5px;
-  border-radius: 50%;
-  background-color: var(--accent);
-}
-
-/* Circle animation containers - Fills with accent color */
-.hover-circle {
-  position: absolute;
-  left: 50%;
-  border-radius: 50%;
-  background-color: var(--accent); /* Brand blue accent color in both themes */
-  pointer-events: none;
-  z-index: 1;
-}
-
-.label-stack {
-  position: relative;
-  display: inline-block;
-  overflow: hidden;
-  z-index: 2;
-  pointer-events: none;
-  white-space: nowrap; /* Prevents text cutoffs inside animation container */
-}
-
-.pill-label {
-  display: block;
-}
-
-.pill-label-hover {
-  position: absolute;
-  left: 0;
-  width: 100%;
-  color: var(--hover-text); /* White text revealed on top of the blue hover-circle */
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-/* Desktop-only visibility rules for responsive layout */
+/* Responsive visibility triggers */
 .desktop-only {
   display: none;
 }

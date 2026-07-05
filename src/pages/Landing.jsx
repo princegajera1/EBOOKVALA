@@ -14,6 +14,7 @@ import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { FadeUp } from "../components/common/FadeUp";
 import { BookCard } from "../components/book/BookCard";
 import { HeroImageStack } from "../components/common/HeroImageStack";
+import { Marquee } from "../components/ui/marquee";
 import princeAvatar from "../assets/testimonials/prince.png";
 import amaraAvatar from "../assets/testimonials/amara.png";
 import rohanAvatar from "../assets/testimonials/rohan.png";
@@ -543,10 +544,15 @@ export const Landing = () => {
             </h2>
           </FadeUp>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            {testimonialsData.map((t, idx) => (
-              <FadeUp key={idx} delay={idx * 0.08} className="flex">
-                <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-full hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 group">
+          <div className="relative w-full overflow-hidden py-4 flex flex-col gap-6">
+            {/* Left and Right Fade-out Gradient Overlays */}
+            <div className="absolute top-0 bottom-0 left-0 w-16 md:w-32 bg-gradient-to-r from-brand-bg-secondary to-transparent z-10 pointer-events-none" />
+            <div className="absolute top-0 bottom-0 right-0 w-16 md:w-32 bg-gradient-to-l from-brand-bg-secondary to-transparent z-10 pointer-events-none" />
+            
+            {/* Row 1: Left to right (Standard) */}
+            <Marquee pauseOnHover className="py-2" repeat={5}>
+              {testimonialsData.map((t, idx) => (
+                <div key={idx} className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover">
                   <div>
                     <div className="flex justify-between items-center mb-4">
                       <div className="flex gap-0.5">
@@ -572,8 +578,40 @@ export const Landing = () => {
                     </div>
                   </div>
                 </div>
-              </FadeUp>
-            ))}
+              ))}
+            </Marquee>
+
+            {/* Row 2: Right to left (Reverse) */}
+            <Marquee reverse pauseOnHover className="py-2" repeat={5}>
+              {[...testimonialsData].reverse().map((t, idx) => (
+                <div key={idx} className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover">
+                  <div>
+                    <div className="flex justify-between items-center mb-4">
+                      <div className="flex gap-0.5">
+                        {[...Array(t.rating)].map((_, i) => (
+                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                      <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
+                        {t.badge}
+                      </span>
+                    </div>
+                    <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6">
+                      "{t.quote}"
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
+                      <img src={t.image} alt={t.name} className="h-full w-full object-cover" />
+                    </div>
+                    <div>
+                      <h5 className="text-xs font-bold text-brand-text leading-none">{t.name}</h5>
+                      <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">{t.role} • {t.location}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </Marquee>
           </div>
         </section>
       </div>

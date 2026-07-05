@@ -258,7 +258,7 @@ export const Landing = () => {
           
           <div className="flex flex-wrap gap-4 mt-1">
             <Link to="/marketplace">
-              <Button variant="primary" size="lg" className="font-bold h-12 px-6 rounded-full border-brand-border text-white">
+              <Button variant="primary" size="lg" className="font-bold h-12 px-6 rounded-full">
                 Browse Library
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>

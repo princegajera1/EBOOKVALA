@@ -385,7 +385,7 @@ export const Landing = () => {
       )}
 
       {/* 4. VALUE PROPOSITION GRID (Replaces PricingSection) */}
-      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border pt-10 md:pt-14 pb-12 md:pb-16 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Platform Value</span>

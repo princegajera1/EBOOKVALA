@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { 
-  ArrowRight, Star, Mail, ChevronLeft, ChevronRight, 
-  ShieldCheck, Search, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles
+  ArrowRight, Star, Mail,
+  ShieldCheck, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { SearchBox } from "../components/ui/SearchBox";
@@ -151,13 +151,10 @@ const testimonialsData = [
 
 export const Landing = () => {
   const [featuredBooks, setFeaturedBooks] = useState([]);
-  const [bestSellers, setBestSellers] = useState([]);
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [heroSearchQuery, setHeroSearchQuery] = useState("");
   const [recentlyAdded, setRecentlyAdded] = useState([]);
-  
-  const [startIndex, setStartIndex] = useState(0);
   
   const carouselRef = useRef(null);
   const navigate = useNavigate();
@@ -168,11 +165,8 @@ export const Landing = () => {
       const published = allBooks.filter(b => b.status === "published");
       
       setFeaturedBooks(published.filter(b => b.isFeatured));
-      
-      const sortedBySales = [...published].sort((a, b) => b.salesCount - a.salesCount).slice(0, 9);
-      setBestSellers(sortedBySales);
 
-      // Recently added (sorted by date or ID decending)
+      // Recently added (sorted by date or ID descending)
       const sortedByDate = [...published].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 4);
       setRecentlyAdded(sortedByDate);
     };
@@ -490,111 +484,7 @@ export const Landing = () => {
         </section>
       </div>
 
-      {/* 6. BEST SELLERS */}
-      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
-        <section className="max-w-4xl mx-auto px-6 w-full">
-          <div className="flex items-center justify-between mb-8">
-            <div className="text-left">
-              <FadeUp delay={0}>
-                <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Popular</span>
-              </FadeUp>
-              <FadeUp delay={0.05}>
-                <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 tracking-tight">
-                  Popular Books
-                </h2>
-              </FadeUp>
-            </div>
-            
-            <div className="flex gap-2">
-              <button 
-                onClick={() => setStartIndex(prev => Math.max(0, prev - 3))}
-                disabled={startIndex === 0}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-brand-bg-secondary border border-brand-border text-brand-text hover:bg-brand-primary hover:text-brand-bg transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                aria-label="Previous best sellers"
-              >
-                <ChevronLeft className="h-4.5 w-4.5" />
-              </button>
-              <button 
-                onClick={() => setStartIndex(prev => Math.min(bestSellers.length - 3, prev + 3))}
-                disabled={startIndex + 3 >= bestSellers.length}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-brand-bg-secondary border border-brand-border text-brand-text hover:bg-brand-primary hover:text-brand-bg transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-                aria-label="Next best sellers"
-              >
-                <ChevronRight className="h-4.5 w-4.5" />
-              </button>
-            </div>
-          </div>
 
-          <div className="border border-brand-border rounded-brand-card shadow-brand overflow-hidden bg-brand-card p-2 flex flex-col gap-1.5 text-left">
-            <AnimatePresence mode="wait">
-              <motion.div 
-                key={startIndex}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                variants={{
-                  hidden: { opacity: 0 },
-                  visible: { 
-                    opacity: 1,
-                    transition: { staggerChildren: 0.05 }
-                  },
-                  exit: { opacity: 0 }
-                }}
-                className="flex flex-col gap-1.5"
-              >
-                {bestSellers.slice(startIndex, startIndex + 3).map((book, idx) => {
-                  const rank = startIndex + idx + 1;
-                  return (
-                    <motion.div 
-                      key={book.id}
-                      variants={{
-                        hidden: { opacity: 0, x: 20 },
-                        visible: { 
-                          opacity: 1, 
-                          x: 0, 
-                          transition: { 
-                            duration: 0.4, 
-                            ease: [0.16, 1, 0.3, 1],
-                            delay: idx * 0.05
-                          } 
-                        },
-                        exit: { opacity: 0, x: -20, transition: { duration: 0.3 } }
-                      }}
-                      className="flex items-center justify-between p-4 border-b border-brand-border last:border-0 hover:bg-brand-bg-secondary rounded-[12px] transition-all duration-200 group"
-                    >
-                      <div className="flex items-center gap-4 min-w-0">
-                        <span className="text-[20px] font-bold text-brand-text font-mono w-8 text-right shrink-0">
-                          {rank.toString().padStart(2, "0")}
-                        </span>
-                        
-                        <Link to={`/book/${book.slug || book.id}`} className="shrink-0">
-                          <div className="h-16 w-12 bg-brand-bg-secondary border border-brand-border rounded-[8px] overflow-hidden shadow-sm">
-                            <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
-                          </div>
-                        </Link>
- 
-                        <div className="min-w-0 text-left">
-                          <Link to={`/book/${book.slug || book.id}`} className="hover:text-brand-accent transition-colors">
-                            <h4 className="text-sm font-bold text-brand-text leading-snug truncate font-display">{book.title}</h4>
-                          </Link>
-                          <p className="text-[11px] text-brand-text-secondary mt-0.5 font-semibold truncate">by {book.authorName}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-6 shrink-0 font-sans">
-                        <span className="text-[10px] font-bold text-brand-success bg-brand-success/15 px-2.5 py-0.5 rounded-full select-none uppercase font-mono">
-                          Free Access
-                        </span>
-                      </div>
-
-                    </motion.div>
-                  );
-                })}
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </section>
-      </div>
 
       {/* 7. TESTIMONIALS */}
       <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">

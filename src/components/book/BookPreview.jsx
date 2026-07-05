@@ -1,17 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Minimize2, BookOpen } from "lucide-react";
 import { Button } from "../ui/Button";
 
-// Sample premium content to make the preview look extremely realistic and editorial
-const MOCK_CHAPTERS = [
-  { title: "Chapter 1: The Architecture of Scale", content: "Systems architecture is the art of defining the structure, behavior, and more views of a system. Scaling is not about adding more servers; it is about building systems that can handle growth gracefully. To build a system that scales, one must understand the bottleneck. Bottlenecks can occur at the database level, the network level, or the application level. In this chapter, we will explore the core concepts of high availability, horizontal scaling, and fault tolerance." },
-  { title: "1.1 High Availability and Redundancy", content: "High availability (HA) refers to a system that is continuously operational for a desirably long length of time. Redundancy is the duplication of critical components of a system with the intention of increasing reliability. By introducing redundancy, we ensure that if a single node fails, the traffic is seamlessly rerouted to a healthy node. We will examine active-passive and active-active configurations, and discuss how load balancers detect failures." },
-  { title: "1.2 Database Sharding", content: "As your user base grows, a single database node will eventually become the primary bottleneck. Sharding is a method for distributing a single dataset across multiple databases. Each shard is a separate database that contains a subset of the data. Sharding can be based on a hash of the user ID, geographical location, or range-based partitioning. We will walk through the complexities of cross-shard joins and transaction management." },
-  { title: "Chapter 2: The SaaS Distribution Engine", content: "If you build it, they will not come. Distribution is the single most important factor in the success of a SaaS business. Many founders focus solely on product engineering, neglecting the growth loops and acquisition channels that drive ARR. In this chapter, we will explore the mechanics of Product-Led Growth (PLG), customer acquisition costs (CAC), and lifetime value (LTV)." },
-  { title: "2.1 Product-Led Growth (PLG)", content: "Product-Led Growth is a business methodology in which user acquisition, expansion, conversion, and retention are all driven primarily by the product itself. It creates an efficient growth loop: a user signs up, experiences the 'Aha!' moment, shares the product, and invites other users. We will analyze the onboarding flows of Stripe and Linear, and learn how to optimize the time-to-value." },
-  { title: "2.2 Optimizing UI Visual Layouts", content: "Visual engineering is not a superficial overlay; it is a dynamic communication layer. By aligning your application with a strict design system—whether that is typography ratios, margins, or padding—you ensure that your experience scales in tandem with the value you deliver. We will look at visual hierarchy, modern color harmony grids, and how to execute spring transitions." }
-];
+// Dynamically generate chapters based on the book properties so every book has a unique preview
+const generateChapters = (book) => {
+  const title = book?.title || "eBook";
+  const subtitle = book?.subtitle || "Exploring the architecture and design patterns.";
+  const description = book?.description || "A premium digital publication.";
+  
+  return [
+    { 
+      title: `Chapter 1: The Foundations of ${title}`, 
+      content: `${description} By exploring the core structures and concepts within ${title}, readers gain direct, actionable insights into modern execution styles. In this chapter, we outline the primary methodologies, scoping mechanics, and strategic approaches.` 
+    },
+    { 
+      title: `1.1 Core Principles of ${title}`, 
+      content: `The baseline configurations of ${title} require strict validation. By decoupling dependencies and maintaining structured schemas, we command high performance. Let us examine how developers can analyze the parameters, define value matrices, and configure system metrics for ${title}.` 
+    },
+    { 
+      title: `1.2 Advanced Techniques`, 
+      content: `As we expand on the themes in ${title}, visual and architectural optimization keeps systems resilient. Spacing layouts, corner radiuses, and spring physics transitions combine to elevate the final product. We will discuss specific examples and deployment templates.` 
+    },
+    { 
+      title: `Chapter 2: Scaling ${title}`, 
+      content: `Scaling ${title} is both a mathematical science and an art form. In this chapter, we explore how PLG growth loops, acquisition tiers, and performance metrics are adjusted. We trace time-to-value optimization and visual hierarchy rules.` 
+    },
+    { 
+      title: `2.1 Growth & Acceleration`, 
+      content: `Acceleration loops within ${title} capitalize on user acquisition loops and retention strategies. Seamless onboarding flows reduce time-to-value friction. We will analyze conversion strategies and design user experience frameworks.` 
+    },
+    { 
+      title: `2.2 Visual and Technical Execution`, 
+      content: `${subtitle} Implementing premium layouts command spatial depth and micro-animations. Generous white space prevents visual fatigue, creating a conversation with the user. We finalize this preview with a checklist for building high-quality platforms.` 
+    }
+  ];
+};
 
 export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
   const [page, setPage] = useState(1);
@@ -20,6 +44,17 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
 
   const totalPages = 24; // Simulated preview length
   const maxAllowedPage = 15;
+  const chapters = generateChapters(book);
+
+  // Lock background scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   const handleNext = () => {
     if (page < totalPages) setPage(page + 1);
@@ -42,8 +77,8 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
   };
 
   const getPageContent = (pageNum) => {
-    const chapterIdx = Math.floor((pageNum - 1) / 3) % MOCK_CHAPTERS.length;
-    const chap = MOCK_CHAPTERS[chapterIdx];
+    const chapterIdx = Math.floor((pageNum - 1) / 3) % chapters.length;
+    const chap = chapters[chapterIdx];
     
     if ((pageNum - 1) % 3 === 0) {
       return (
@@ -92,7 +127,7 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
             <div className="flex items-center justify-between px-6 py-4 border-b border-brand-border select-none">
               <div className="flex items-center gap-4">
                 <h3 className="text-sm font-display font-bold text-brand-text truncate max-w-[200px] sm:max-w-xs">
-                  Preview: {book.title}
+                  Preview: {book?.title}
                 </h3>
                 <span className="text-[10px] font-semibold text-brand-accent bg-brand-accent/10 px-2.5 py-0.5 rounded-full">
                   First 15 Pages

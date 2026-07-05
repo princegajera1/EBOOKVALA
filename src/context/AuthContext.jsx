@@ -56,10 +56,9 @@ export const AuthProvider = ({ children }) => {
         return builtUser;
       } else {
         // BUG 6 FIX: Orphaned auth user (has Firebase Auth record but no Firestore doc).
-        // Do NOT silently log them in as a reader — set user to null and sign them out.
-        // This prevents stale/broken sessions from accumulating.
-        console.warn("Auth user exists but no Firestore profile found. Signing out orphaned session.");
-        await signOut(auth);
+        // Do NOT silently log them in as a reader — set user to null.
+        // DO NOT call signOut here, to allow new Google users to complete their profile setup.
+        console.warn("Auth user exists but no Firestore profile found yet.");
         setUser(null);
         return null;
       }

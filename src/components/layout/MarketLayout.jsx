@@ -66,9 +66,9 @@ export const MarketLayout = () => {
           logoAlt="EBOOKVALA" 
           items={navItems} 
           activeHref={location.pathname} 
-          baseColor="var(--text)"
-          pillColor="var(--card)"
-          pillTextColor="var(--text)"
+          baseColor="#0F0F14"
+          pillColor="#181822"
+          pillTextColor="#E9E9EF"
           hoveredPillTextColor="var(--accent)"
           initialLoadAnimation 
         />

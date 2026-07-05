@@ -287,12 +287,12 @@ export const BookDetail = () => {
                     </div>
                   </div>
                   
-                  <Link to={`/read/${book.slug || book.id}`} className="w-full">
+                  <a href={book.pdfURL} target="_blank" rel="noopener noreferrer" className="w-full">
                     <Button variant="primary" className="w-full h-13 rounded-full font-bold text-sm bg-brand-success text-white shadow-sm flex items-center justify-center gap-2">
                       <BookOpen className="h-4.5 w-4.5" />
                       Read eBook Online
                     </Button>
-                  </Link>
+                  </a>
                 </div>
               )}
             </div>

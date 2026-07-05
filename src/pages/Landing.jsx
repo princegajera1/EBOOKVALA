@@ -399,9 +399,9 @@ export const Landing = () => {
             </p>
           </FadeUp>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10">
-            <FadeUp delay={0.1}>
-              <div className="p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 items-stretch">
+            <FadeUp delay={0.1} className="h-full">
+              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
                 <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-6">
                   <Sparkles className="h-5.5 w-5.5" />
                 </div>
@@ -412,8 +412,8 @@ export const Landing = () => {
               </div>
             </FadeUp>
 
-            <FadeUp delay={0.16}>
-              <div className="p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
+            <FadeUp delay={0.16} className="h-full">
+              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
                 <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-6">
                   <BookOpen className="h-5.5 w-5.5" />
                 </div>
@@ -424,8 +424,8 @@ export const Landing = () => {
               </div>
             </FadeUp>
 
-            <FadeUp delay={0.22}>
-              <div className="p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
+            <FadeUp delay={0.22} className="h-full">
+              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
                 <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-6">
                   <Download className="h-5.5 w-5.5" />
                 </div>
@@ -436,8 +436,8 @@ export const Landing = () => {
               </div>
             </FadeUp>
 
-            <FadeUp delay={0.28}>
-              <div className="p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
+            <FadeUp delay={0.28} className="h-full">
+              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
                 <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-6">
                   <BrainCircuit className="h-5.5 w-5.5" />
                 </div>
@@ -448,8 +448,8 @@ export const Landing = () => {
               </div>
             </FadeUp>
 
-            <FadeUp delay={0.34}>
-              <div className="p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
+            <FadeUp delay={0.34} className="h-full">
+              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
                 <div className="h-12 w-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 mb-6">
                   <Users className="h-5.5 w-5.5" />
                 </div>
@@ -460,8 +460,8 @@ export const Landing = () => {
               </div>
             </FadeUp>
 
-            <FadeUp delay={0.4}>
-              <div className="p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
+            <FadeUp delay={0.4} className="h-full">
+              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
                 <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-6">
                   <BookMarked className="h-5.5 w-5.5" />
                 </div>

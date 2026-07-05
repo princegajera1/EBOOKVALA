@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './PillNav.css';
@@ -15,6 +15,22 @@ const PillNav = ({
   const logoRef = useRef(null);
   const centerRef = useRef(null);
   const rightRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    // Scroll event listener to toggle floating glassmorphic state
+    const handleScroll = () => {
+      if (window.scrollY > 30) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     // Clean initial load fade-in and slide-up animations
@@ -59,7 +75,7 @@ const PillNav = ({
 
   return (
     <div className={`pill-nav-container ${className}`}>
-      <nav className="pill-nav" aria-label="Primary">
+      <nav className={`pill-nav ${scrolled ? 'is-scrolled' : ''}`} aria-label="Primary">
         
         {/* Left: Two-tone premium text logo */}
         <div ref={logoRef}>

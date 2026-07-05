@@ -12,7 +12,9 @@
   width: 100%;
   padding: 0.5rem 1rem;
   background: transparent;
-  transition: all 0.3s ease;
+  border: 1px solid transparent;
+  border-radius: 100px;
+  transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Two-tone text logo */
@@ -41,7 +43,7 @@
   box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .pill-nav-link {
@@ -114,6 +116,30 @@
 .pill-register-btn:hover {
   transform: scale(1.03);
   background-color: color-mix(in srgb, var(--accent) 85%, black);
+}
+
+/* ============================================================
+   SCROLLED FLOATING PILL GLASSMORPHIC STATE
+============================================================ */
+.pill-nav.is-scrolled {
+  max-width: 960px;
+  margin: 0 auto;
+  background-color: color-mix(in srgb, var(--card) 75%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.15), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0.4rem 1.5rem;
+}
+
+/* Center items merge cleanly into the shared parent glass bar when scrolled */
+.pill-nav.is-scrolled .pill-nav-center {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0.25rem 0.5rem;
 }
 
 /* Responsive visibility triggers */

@@ -82,8 +82,72 @@ const testimonialsData = [
     rating: 5,
     badge: "Active Reader",
     quote: "The curated selection on EBOOKVALA is incredible. Instead of digging through thousands of low-quality files, I get access to high-quality, beautifully typeset guides on SaaS, design system architectures, and startup logic."
+  },
+  {
+    name: "Priya Sharma",
+    role: "Product Designer",
+    location: "Pune",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Priya",
+    rating: 5,
+    badge: "Active Reader",
+    quote: "The visual mind maps and outline generation on this platform are game-changers for visual learners. I can dissect complex design system guides in half the time compared to standard PDFs."
+  },
+  {
+    name: "Aarav Patel",
+    role: "Full Stack Dev",
+    location: "Vadodara",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Aarav",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "I was skeptical about another free eBook site, but EBOOKVALA delivers a truly premium experience. Zero ads, instant downloads, and the inline AI study assistant is shockingly good at explaining code snippets."
+  },
+  {
+    name: "Ananya Iyer",
+    role: "CS Student",
+    location: "Chennai",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Ananya",
+    rating: 5,
+    badge: "Active Reader",
+    quote: "Finding high-quality, up-to-date tech guides for my university projects used to be a hassle. EBOOKVALA's curated tech library and flashcards feature helped me ace my database systems finals!"
+  },
+  {
+    name: "Vikram Singh",
+    role: "SaaS Founder",
+    location: "Hyderabad",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Vikram",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "EBOOKVALA's selection of business playbooks is outstanding. The platform has helped my core team align on growth frameworks, and the mobile reading experience is incredibly clean during my daily commutes."
+  },
+  {
+    name: "Neha Gupta",
+    role: "Technical Writer",
+    location: "Noida",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Neha",
+    rating: 5,
+    badge: "Author Creator",
+    quote: "The uploading pipeline for authors is so intuitive. Supreme support, quick review times, and the analytics dashboard gives me deep insights into how readers interact with my tech guides."
+  },
+  {
+    name: "Kabir Malhotra",
+    role: "Backend Architect",
+    location: "Delhi",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Kabir",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "I love the clean, distraction-free reading canvas. The dark mode theme is easy on the eyes during late-night coding sessions, and the search indexing is blazing fast."
+  },
+  {
+    name: "Meera Nair",
+    role: "UX Researcher",
+    location: "Kochi",
+    image: "https://api.dicebear.com/9.x/avataaars/svg?seed=Meera",
+    rating: 5,
+    badge: "Active Reader",
+    quote: "The attention to typography and interface layout on EBOOKVALA is impressive. It makes reading dense software architecture papers a joy rather than a chore."
   }
 ];
+
 
 export const Landing = () => {
   const [featuredBooks, setFeaturedBooks] = useState([]);
@@ -177,7 +241,7 @@ export const Landing = () => {
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center lg:h-[calc(100vh-80px)] min-h-[calc(100vh-80px)] lg:min-h-0 pt-8 pb-16 lg:py-0 scroll-mt-20 overflow-hidden">
+      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center min-h-[calc(100vh-140px)] pt-12 pb-16 lg:pt-16 lg:pb-24 scroll-mt-20 overflow-hidden">
         
         {/* Left Content */}
         <motion.div 
@@ -551,7 +615,7 @@ export const Landing = () => {
             
             {/* Row 1: Left to right (Standard) */}
             <Marquee pauseOnHover className="py-2" repeat={5}>
-              {testimonialsData.map((t, idx) => (
+              {testimonialsData.slice(0, 5).map((t, idx) => (
                 <div key={idx} className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover">
                   <div>
                     <div className="flex justify-between items-center mb-4">
@@ -583,7 +647,7 @@ export const Landing = () => {
 
             {/* Row 2: Right to left (Reverse) */}
             <Marquee reverse pauseOnHover className="py-2" repeat={5}>
-              {[...testimonialsData].reverse().map((t, idx) => (
+              {testimonialsData.slice(5, 10).map((t, idx) => (
                 <div key={idx} className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover">
                   <div>
                     <div className="flex justify-between items-center mb-4">

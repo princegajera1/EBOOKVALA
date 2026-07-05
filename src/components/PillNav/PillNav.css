@@ -125,7 +125,6 @@
 
 .pill-label {
   display: block;
-  transition: transform 0.3s;
 }
 
 .pill-label-hover {

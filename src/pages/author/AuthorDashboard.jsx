@@ -728,7 +728,7 @@ export const AuthorDashboard = () => {
                 </Button>
                 <Button 
                   onClick={() => setWizardStep(4)} 
-                  disabled={uploadingCover || uploadingPdf || !newBook.coverURL || !newBook.pdfURL || newBook.pdfURL === "/demo-preview.pdf"}
+                  disabled={uploadingCover || uploadingPdf || !newBook.coverURL || !newBook.pdfURL}
                   variant="primary" 
                   className="rounded-full text-xs font-bold h-11 px-6 shadow-sm"
                 >

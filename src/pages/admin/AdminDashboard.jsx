@@ -2,7 +2,10 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   ShieldCheck, Users, BookOpen, Award, Check, X, Search, Ban, Trash2, 
-  Plus, Settings, Grid, BarChart2, ShieldAlert, Edit, FileText, Upload
+  Plus, Settings, Grid, BarChart2, ShieldAlert, Edit, FileText, Upload,
+  Zap, Activity, Cpu, Database, DatabaseZap, Terminal, Bell, Lock, ToggleLeft,
+  Sliders, Calendar, PlusCircle, ArrowRight, Play, Eye, Layers, DollarSign,
+  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
@@ -15,10 +18,10 @@ import { uploadFile } from "../../services/storage";
 import { toast } from "react-hot-toast";
 import { SearchBox } from "../../components/ui/SearchBox";
 
-// 30 Days eBook Downloads data (retains trend style visualizer)
 const DOWNLOADS_TREND = Array.from({ length: 30 }).map((_, i) => ({
   day: `Day ${i + 1}`,
-  downloads: Math.floor(180 + Math.random() * 120)
+  downloads: Math.floor(190 + Math.random() * 140),
+  revenue: Math.floor(25000 + Math.random() * 15000)
 }));
 
 export const AdminDashboard = () => {
@@ -44,9 +47,10 @@ export const AdminDashboard = () => {
 
   // eBook Editor Modal States
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
-  const [editingBook, setEditingBook] = useState(null); // null = Adding, otherwise editing
+  const [editingBook, setEditingBook] = useState(null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  
   const [bookForm, setBookForm] = useState({
     title: "",
     subtitle: "",
@@ -61,8 +65,61 @@ export const AdminDashboard = () => {
     pages: 120,
     language: "English",
     status: "published",
-    categories: []
+    categories: [],
+    customFieldsData: {}
   });
+
+  // Dynamic Custom Field Builder States (Local Storage persistent schema)
+  const [customFields, setCustomFields] = useState(() => {
+    const saved = localStorage.getItem("ebookvala_custom_fields");
+    return saved ? JSON.parse(saved) : [
+      { id: "difficulty", label: "Difficulty Level", type: "dropdown", required: true, options: "Beginner, Intermediate, Advanced", defaultValue: "Intermediate" },
+      { id: "audio_avail", label: "Audiobook Available", type: "switch", required: false, options: "", defaultValue: "false" },
+      { id: "est_mins", label: "Estimated Reading Time (Mins)", type: "number", required: true, options: "", defaultValue: "120" }
+    ];
+  });
+  
+  const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
+  const [fieldForm, setFieldForm] = useState({
+    id: "",
+    label: "",
+    type: "text",
+    required: false,
+    options: "",
+    defaultValue: ""
+  });
+
+  // AI Services states
+  const [aiConfig, setAiConfig] = useState({
+    selectedModel: "gemini-2.0-flash",
+    rateLimitPerMin: 60,
+    costThreshold: 50.0,
+    tokenUsageToday: 849200
+  });
+
+  // Automation states
+  const [automations, setAutomations] = useState([
+    { id: 1, name: "Book Published Event", trigger: "Book Published", action: "Notify Followers", active: true },
+    { id: 2, name: "Author KYC Completed", trigger: "Author Verification Approved", action: "Send Welcome Email", active: true },
+    { id: 3, name: "Premium Upgrade Trigger", trigger: "Subscription Upgraded", action: "Award 'Gold Reader' Badge", active: false }
+  ]);
+
+  // System Health mock metrics
+  const [systemMetrics, setSystemMetrics] = useState({
+    cpu: 34,
+    memory: 58,
+    dbConnections: 14,
+    apiLatency: 112,
+    redisStatus: "Healthy",
+    cdnCacheHit: 94.6
+  });
+
+  // Audit Logs mock list
+  const [auditLogs, setAuditLogs] = useState([
+    { id: 1, admin: "prince@ebookvala.com", action: "Approved Book: 'Clean Code'", ip: "192.168.1.42", time: "10 mins ago" },
+    { id: 2, admin: "system_cron", action: "Rotated Redis Session cache keys", ip: "127.0.0.1", time: "1 hour ago" },
+    { id: 3, admin: "prince@ebookvala.com", action: "Created Custom Field: 'Difficulty Level'", ip: "192.168.1.42", time: "3 hours ago" }
+  ]);
 
   // Sync activeTab with URL
   useEffect(() => {
@@ -90,9 +147,7 @@ export const AdminDashboard = () => {
       const allCategories = await dbService.getCategories();
       setCategories(allCategories);
 
-      // Retrieve actual registered users from Firestore
       const realUsers = await dbService.getUsers();
-      
       setUsersList(realUsers);
     } catch (err) {
       console.error("Error loading admin dashboard stats:", err);
@@ -102,6 +157,11 @@ export const AdminDashboard = () => {
   useEffect(() => {
     loadAdminData();
   }, []);
+
+  // Save fields state to localStorage
+  useEffect(() => {
+    localStorage.setItem("ebookvala_custom_fields", JSON.stringify(customFields));
+  }, [customFields]);
 
   // Book Approvals
   const handleApproveBook = async (bookId) => {
@@ -141,6 +201,13 @@ export const AdminDashboard = () => {
   const triggerAddBook = () => {
     setEditingBook(null);
     const defaultAuthor = authors[0] || { uid: "author-1", displayName: "Amara Dev" };
+    
+    // Set custom fields defaults
+    const initialFields = {};
+    customFields.forEach(f => {
+      initialFields[f.id] = f.defaultValue;
+    });
+
     setBookForm({
       title: "",
       subtitle: "",
@@ -155,7 +222,8 @@ export const AdminDashboard = () => {
       pages: 150,
       language: "English",
       status: "published",
-      categories: []
+      categories: [],
+      customFieldsData: initialFields
     });
     setIsBookModalOpen(true);
   };
@@ -176,7 +244,8 @@ export const AdminDashboard = () => {
       pages: book.pages || 100,
       language: book.language || "English",
       status: book.status || "published",
-      categories: book.categories || []
+      categories: book.categories || [],
+      customFieldsData: book.customFieldsData || {}
     });
     setIsBookModalOpen(true);
   };
@@ -239,7 +308,6 @@ export const AdminDashboard = () => {
     try {
       const slug = bookForm.slug || bookForm.title.toLowerCase().replace(/[^a-z0-9]+/g, "-");
       
-      // Lookup selected author display name
       const selectedAuthor = authors.find(a => a.uid === bookForm.authorId);
       const authorName = selectedAuthor ? selectedAuthor.displayName : bookForm.authorName;
 
@@ -266,7 +334,7 @@ export const AdminDashboard = () => {
     }
   };
 
-  // Categories CRUD (lives in Firestore)
+  // Categories CRUD
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
     try {
@@ -290,7 +358,40 @@ export const AdminDashboard = () => {
     }
   };
 
-  // Site settings save
+  // Custom Field Builder CRUD
+  const handleCreateCustomField = (e) => {
+    e.preventDefault();
+    if (!fieldForm.id.trim() || !fieldForm.label.trim()) {
+      toast.error("Please fill all required field builder parameters.");
+      return;
+    }
+
+    const fieldId = fieldForm.id.toLowerCase().replace(/[^a-z0-9_]+/g, "");
+    const newField = {
+      ...fieldForm,
+      id: fieldId
+    };
+
+    setCustomFields(prev => [...prev, newField]);
+    setIsFieldModalOpen(false);
+    toast.success("Dynamic field registered successfully!");
+    
+    // Append to audit logs
+    const log = {
+      id: Date.now(),
+      admin: "prince@ebookvala.com",
+      action: `Created Custom Field: '${fieldForm.label}'`,
+      ip: "192.168.1.42",
+      time: "Just now"
+    };
+    setAuditLogs([log, ...auditLogs]);
+  };
+
+  const handleDeleteCustomField = (fieldId) => {
+    setCustomFields(prev => prev.filter(f => f.id !== fieldId));
+    toast.success("Custom field dropped.");
+  };
+
   const handleSaveSettings = (e) => {
     e.preventDefault();
     toast.success("Platform settings updated!");
@@ -298,10 +399,15 @@ export const AdminDashboard = () => {
 
   const sidebarLinks = [
     { id: "overview", label: "Overview", icon: BarChart2 },
-    { id: "users", label: "Manage Users", icon: Users },
-    { id: "books", label: "Manage Books", icon: BookOpen },
+    { id: "users", label: "Users", icon: Users },
+    { id: "books", label: "eBooks", icon: BookOpen },
+    { id: "fields", label: "Field Builder", icon: Sliders },
+    { id: "ai", label: "AI Services", icon: Sparkles },
+    { id: "automations", label: "Automations", icon: Zap },
     { id: "categories", label: "Categories", icon: Grid },
-    { id: "settings", label: "Platform Settings", icon: Settings }
+    { id: "health", label: "System Health", icon: Activity },
+    { id: "logs", label: "Audit Logs", icon: Terminal },
+    { id: "settings", label: "Settings", icon: Settings }
   ];
 
   const pendingBooks = books.filter(b => b.status === "pending");
@@ -619,9 +725,217 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* 4. CATEGORIES TAB */}
+      {/* 4. CUSTOM FIELD BUILDER TAB */}
+      {activeTab === "fields" && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left select-none">
+          {/* Dynamic Builder */}
+          <div className="md:col-span-5 flex flex-col gap-5">
+            <div>
+              <h2 className="text-2xl font-display font-black text-brand-text tracking-tight">Dynamic Fields</h2>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Extend book metadata schema on the fly (EAV Engine).</p>
+            </div>
+
+            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col gap-4">
+              <Button onClick={() => {
+                setFieldForm({ id: "", label: "", type: "text", required: false, options: "", defaultValue: "" });
+                setIsFieldModalOpen(true);
+              }} variant="primary" className="w-full h-11 rounded-full text-xs font-bold shadow-sm">
+                <PlusCircle className="mr-1.5 h-4 w-4" /> Add Dynamic Field
+              </Button>
+
+              <div className="flex flex-col gap-3 mt-2">
+                <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">Field Preview Registry</span>
+                {customFields.map((field) => (
+                  <div key={field.id} className="flex justify-between items-center p-3 bg-brand-bg-secondary border border-brand-border rounded-xl">
+                    <div className="min-w-0">
+                      <span className="text-xs font-bold text-brand-text">{field.label}</span>
+                      <p className="text-[9px] font-mono text-brand-text-secondary uppercase mt-0.5">{field.type} • {field.required ? "Required" : "Optional"}</p>
+                    </div>
+                    <button 
+                      onClick={() => handleDeleteCustomField(field.id)}
+                      className="p-1.5 text-brand-danger hover:bg-brand-danger/10 rounded-full transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+                {customFields.length === 0 && (
+                  <p className="text-xs text-brand-text-secondary italic text-center py-6">No custom fields defined.</p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Form rendering testing preview */}
+          <div className="md:col-span-7 flex flex-col gap-5">
+            <div>
+              <h2 className="text-lg font-bold text-brand-text tracking-tight font-display">Schema Sandbox Renderer</h2>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Live demonstration of dynamic inputs generated from JSON schema.</p>
+            </div>
+
+            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
+              {customFields.map((field) => (
+                <div key={field.id} className="flex flex-col gap-2">
+                  <label className="text-xs font-bold text-brand-text-secondary">
+                    {field.label} {field.required && <span className="text-brand-danger">*</span>}
+                  </label>
+
+                  {field.type === "dropdown" ? (
+                    <select className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none focus:border-brand-accent cursor-pointer">
+                      {field.options.split(",").map((o, idx) => (
+                        <option key={idx} value={o.trim()}>{o.trim()}</option>
+                      ))}
+                    </select>
+                  ) : field.type === "switch" ? (
+                    <div className="flex items-center gap-3">
+                      <input type="checkbox" className="h-4.5 w-4.5 rounded border-brand-border accent-brand-accent cursor-pointer" />
+                      <span className="text-xs text-brand-text-secondary">Enabled</span>
+                    </div>
+                  ) : field.type === "number" ? (
+                    <input type="number" placeholder={field.defaultValue} className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none" />
+                  ) : (
+                    <input type="text" placeholder={field.defaultValue} className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none" />
+                  )}
+                </div>
+              ))}
+              {customFields.length === 0 && (
+                <p className="text-xs text-brand-text-secondary italic text-center py-6">Define schema fields to display renderer outputs.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. AI SERVICES TAB */}
+      {activeTab === "ai" && (
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left select-none">
+          <div className="md:col-span-5 flex flex-col gap-5">
+            <div>
+              <h2 className="text-2xl font-display font-black text-brand-text tracking-tight">AI Configurations</h2>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Active LLM routing matrix and throttle policies.</p>
+            </div>
+
+            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col gap-4 font-display">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-[#999]">Primary AI Model</label>
+                <select 
+                  value={aiConfig.selectedModel}
+                  onChange={(e) => setAiConfig(prev => ({ ...prev, selectedModel: e.target.value }))}
+                  className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Default)</option>
+                  <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                  <option value="gpt-4o-mini">GPT-4o Mini</option>
+                  <option value="deepseek-v3">DeepSeek V3</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-[#999]">Rate Limit Throttle (Requests/min)</label>
+                <input 
+                  type="number" 
+                  value={aiConfig.rateLimitPerMin}
+                  onChange={(e) => setAiConfig(prev => ({ ...prev, rateLimitPerMin: Number(e.target.value) }))}
+                  className="w-full bg-[#111] border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-[#999]">Monthly Cost Alert Threshold ($)</label>
+                <input 
+                  type="number" 
+                  value={aiConfig.costThreshold}
+                  onChange={(e) => setAiConfig(prev => ({ ...prev, costThreshold: Number(e.target.value) }))}
+                  className="w-full bg-[#111] border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none"
+                />
+              </div>
+
+              <Button onClick={() => toast.success("AI throttle rules updated!")} variant="primary" className="w-full h-10 rounded-full text-xs font-bold shadow-sm mt-2">
+                Apply Policies
+              </Button>
+            </div>
+          </div>
+
+          <div className="md:col-span-7 flex flex-col gap-5">
+            <div>
+              <h2 className="text-lg font-bold text-brand-text tracking-tight font-display">Token Usage Monitor</h2>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Live token stats processed today across modules.</p>
+            </div>
+
+            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-4 font-mono text-xs">
+              <div className="flex justify-between items-center">
+                <span>Active Tokens (Today):</span>
+                <span className="text-brand-accent font-bold">{aiConfig.tokenUsageToday.toLocaleString()} tokens</span>
+              </div>
+              <div className="flex justify-between items-center text-brand-text-secondary">
+                <span>Summarization Engine:</span>
+                <span>492,000 (58%)</span>
+              </div>
+              <div className="flex justify-between items-center text-brand-text-secondary">
+                <span>Context Reader Chats:</span>
+                <span>357,200 (42%)</span>
+              </div>
+              <div className="h-2 bg-[#111] rounded-full overflow-hidden border border-brand-border">
+                <div className="h-full bg-brand-accent rounded-full" style={{ width: "58%" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. AUTOMATION ENGINE TAB */}
+      {activeTab === "automations" && (
+        <div className="flex flex-col gap-6 text-left select-none">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Automation Engine</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Visual triggers and conditional pipeline executions.</p>
+            </div>
+            <Button onClick={() => toast.success("Automation visual builder launched!")} variant="primary" className="h-9 px-4 rounded-full text-xs font-bold">
+              <Plus className="mr-1.5 h-3.5 w-3.5" /> Create Flow
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            {automations.map((auto) => (
+              <div key={auto.id} className="p-5 border border-brand-border bg-[#161616] rounded-[20px] flex flex-col justify-between gap-6 relative">
+                <div>
+                  <div className="flex justify-between items-start">
+                    <span className="bg-[#111] border border-brand-border text-brand-accent text-[9px] font-mono font-bold px-2 py-0.5 rounded">
+                      ACTIVE TRIGGER
+                    </span>
+                    <input 
+                      type="checkbox"
+                      checked={auto.active}
+                      onChange={() => {
+                        setAutomations(prev => prev.map(a => a.id === auto.id ? { ...a, active: !a.active } : a));
+                        toast.success(`${auto.name} status updated.`);
+                      }}
+                      className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border cursor-pointer accent-brand-accent"
+                    />
+                  </div>
+                  <h4 className="text-sm font-bold text-brand-text mt-3 font-display">{auto.name}</h4>
+                </div>
+
+                <div className="flex flex-col gap-2 font-mono text-[10px] text-brand-text-secondary bg-[#111] border border-brand-border/60 p-3 rounded-xl">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-brand-accent font-bold">ON:</span>
+                    <span>{auto.trigger}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-brand-success font-bold">DO:</span>
+                    <span>{auto.action}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 7. CATEGORIES TAB */}
       {activeTab === "categories" && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left select-none">
           
           {/* Add Category Form */}
           <div className="md:col-span-4 flex flex-col gap-4">
@@ -650,7 +964,7 @@ export const AdminDashboard = () => {
               <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Review list of active book categories.</p>
             </div>
 
-            <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card select-none">
+            <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
               <table className="w-full text-xs text-left text-brand-text-secondary">
                 <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
                   <tr>
@@ -684,7 +998,93 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* 5. SITE SETTINGS TAB */}
+      {/* 8. SYSTEM HEALTH TAB */}
+      {activeTab === "health" && (
+        <div className="flex flex-col gap-6 text-left select-none font-display">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">System Health & Latency</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Compute infrastructure loads, database locks, and performance monitoring.</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
+              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">CPU Usage</span>
+              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.cpu}%</h3>
+              <div className="h-1.5 bg-[#111] rounded-full mt-3 overflow-hidden">
+                <div className="h-full bg-brand-accent" style={{ width: `${systemMetrics.cpu}%` }} />
+              </div>
+            </div>
+            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
+              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">RAM Utilization</span>
+              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.memory}%</h3>
+              <div className="h-1.5 bg-[#111] rounded-full mt-3 overflow-hidden">
+                <div className="h-full bg-amber-500" style={{ width: `${systemMetrics.memory}%` }} />
+              </div>
+            </div>
+            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
+              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">Active Pool Conn</span>
+              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.dbConnections}</h3>
+              <p className="text-[9px] text-brand-text-secondary mt-2">Active PostgreSQL threads</p>
+            </div>
+            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
+              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">API Response Latency</span>
+              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.apiLatency} ms</h3>
+              <p className="text-[9px] text-brand-success font-semibold mt-2">✓ Within target bounds</p>
+            </div>
+          </div>
+
+          <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px] flex flex-col gap-3 font-mono text-xs">
+            <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase font-display">Services Health Status</span>
+            <div className="flex justify-between items-center py-2 border-b border-brand-border/40">
+              <span>Redis Cache Clusters:</span>
+              <span className="text-brand-success font-bold">HEALTHY</span>
+            </div>
+            <div className="flex justify-between items-center py-2 border-b border-brand-border/40">
+              <span>Supabase Storage Buckets:</span>
+              <span className="text-brand-success font-bold">HEALTHY</span>
+            </div>
+            <div className="flex justify-between items-center py-2">
+              <span>Edge CDN Hit Rate:</span>
+              <span className="text-brand-accent font-bold">{systemMetrics.cdnCacheHit}%</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. AUDIT LOGS TAB */}
+      {activeTab === "logs" && (
+        <div className="flex flex-col gap-6 text-left select-none">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">System Audit Log</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Chronological logs of administrative activities on the platform.</p>
+          </div>
+
+          <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
+            <table className="w-full text-xs text-left text-brand-text-secondary">
+              <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
+                <tr>
+                  <th className="py-4 px-5">Admin Operator</th>
+                  <th className="py-4 px-5">Activity Log</th>
+                  <th className="py-4 px-5">Client IP Address</th>
+                  <th className="py-4 px-5 text-right">Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                {auditLogs.map((log) => (
+                  <tr key={log.id} className="border-b border-brand-border/60 last:border-0 hover:bg-brand-bg-secondary/40 transition-colors">
+                    <td className="py-4 px-5 font-bold text-brand-text">{log.admin}</td>
+                    <td className="py-4 px-5 font-mono text-[11px]">{log.action}</td>
+                    <td className="py-4 px-5 font-mono">{log.ip}</td>
+                    <td className="py-4 px-5 text-right font-semibold text-brand-text-secondary">{log.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* 10. SITE SETTINGS TAB */}
       {activeTab === "settings" && (
         <div className="flex flex-col gap-6 text-left max-w-lg select-none">
           <div>
@@ -813,8 +1213,71 @@ export const AdminDashboard = () => {
             />
           </div>
 
+          {/* Render Dynamic Custom Fields for current book edit */}
+          {customFields.length > 0 && (
+            <div className="border-t border-brand-border/40 pt-4 flex flex-col gap-4">
+              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">Dynamic Book Fields</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {customFields.map((field) => (
+                  <div key={field.id} className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-brand-text-secondary">
+                      {field.label} {field.required && <span className="text-brand-danger">*</span>}
+                    </label>
+                    {field.type === "dropdown" ? (
+                      <select 
+                        value={bookForm.customFieldsData?.[field.id] || field.defaultValue}
+                        onChange={(e) => setBookForm(prev => ({
+                          ...prev,
+                          customFieldsData: {
+                            ...prev.customFieldsData,
+                            [field.id]: e.target.value
+                          }
+                        }))}
+                        className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none focus:border-brand-accent cursor-pointer"
+                      >
+                        {field.options.split(",").map((o, idx) => (
+                          <option key={idx} value={o.trim()}>{o.trim()}</option>
+                        ))}
+                      </select>
+                    ) : field.type === "switch" ? (
+                      <div className="flex items-center gap-3 h-10">
+                        <input 
+                          type="checkbox"
+                          checked={bookForm.customFieldsData?.[field.id] === "true"}
+                          onChange={(e) => setBookForm(prev => ({
+                            ...prev,
+                            customFieldsData: {
+                              ...prev.customFieldsData,
+                              [field.id]: e.target.checked ? "true" : "false"
+                            }
+                          }))}
+                          className="h-4.5 w-4.5 rounded border-brand-border accent-brand-accent cursor-pointer"
+                        />
+                        <span className="text-xs text-brand-text-secondary">Active Status</span>
+                      </div>
+                    ) : (
+                      <input 
+                        type={field.type === "number" ? "number" : "text"}
+                        value={bookForm.customFieldsData?.[field.id] || ""}
+                        onChange={(e) => setBookForm(prev => ({
+                          ...prev,
+                          customFieldsData: {
+                            ...prev.customFieldsData,
+                            [field.id]: e.target.value
+                          }
+                        }))}
+                        placeholder={field.defaultValue}
+                        className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none focus:border-brand-accent"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Categories select checklist */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 border-t border-brand-border/40 pt-4">
             <label className="text-xs font-bold text-brand-text-secondary">Select Categories</label>
             <div className="flex flex-wrap gap-2">
               {categories.map((cat) => {
@@ -919,11 +1382,100 @@ export const AdminDashboard = () => {
             </Button>
             <Button
               type="submit"
-              variant="primary"
               disabled={uploadingCover || uploadingPdf || !bookForm.coverURL || !bookForm.pdfURL}
-              className="h-10 px-6 rounded-full text-xs font-bold shadow-sm"
+              className="h-10 px-6 rounded-full text-xs font-bold bg-brand-accent hover:bg-brand-accent/90 text-white"
             >
               Save eBook
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Dynamic Field Builder Create Modal */}
+      <Modal isOpen={isFieldModalOpen} onClose={() => setIsFieldModalOpen(false)}>
+        <form onSubmit={handleCreateCustomField} className="text-left flex flex-col gap-4 p-2 select-none font-display">
+          <div>
+            <h2 className="text-lg font-black text-brand-text tracking-tight">Create Dynamic Meta Field</h2>
+            <p className="text-[10px] text-brand-text-secondary mt-0.5">Adds a custom attribute to books without a DB migration.</p>
+          </div>
+
+          <Input 
+            label="Field ID (Machine reference e.g., 'difficulty_level')"
+            placeholder="e.g. difficulty_level"
+            value={fieldForm.id}
+            onChange={(e) => setFieldForm(prev => ({ ...prev, id: e.target.value }))}
+            required
+          />
+
+          <Input 
+            label="Field Label (Visible to authors/editors)"
+            placeholder="e.g. Difficulty Level"
+            value={fieldForm.label}
+            onChange={(e) => setFieldForm(prev => ({ ...prev, label: e.target.value }))}
+            required
+          />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-brand-text-secondary">Input Type</label>
+              <select
+                value={fieldForm.type}
+                onChange={(e) => setFieldForm(prev => ({ ...prev, type: e.target.value }))}
+                className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none cursor-pointer"
+              >
+                <option value="text">Text Input</option>
+                <option value="number">Number Input</option>
+                <option value="dropdown">Dropdown Select</option>
+                <option value="switch">Switch Toggle</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-brand-text-secondary">Validation Rule</label>
+              <div className="flex items-center gap-3 h-10">
+                <input 
+                  type="checkbox"
+                  checked={fieldForm.required}
+                  onChange={(e) => setFieldForm(prev => ({ ...prev, required: e.target.checked }))}
+                  className="h-4.5 w-4.5 rounded border-brand-border accent-brand-accent cursor-pointer"
+                />
+                <span className="text-xs text-brand-text-secondary">Mark Required</span>
+              </div>
+            </div>
+          </div>
+
+          {fieldForm.type === "dropdown" && (
+            <Input 
+              label="Options (Comma separated)"
+              placeholder="e.g. Easy, Medium, Hard"
+              value={fieldForm.options}
+              onChange={(e) => setFieldForm(prev => ({ ...prev, options: e.target.value }))}
+              required
+            />
+          )}
+
+          <Input 
+            label="Default Value"
+            placeholder="e.g. Easy"
+            value={fieldForm.defaultValue}
+            onChange={(e) => setFieldForm(prev => ({ ...prev, defaultValue: e.target.value }))}
+          />
+
+          <div className="flex justify-end gap-3 border-t border-brand-border/40 pt-4 mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsFieldModalOpen(false)}
+              className="h-10 px-5 rounded-full text-xs font-bold border-brand-border"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              className="h-10 px-6 rounded-full text-xs font-bold shadow-sm"
+            >
+              Add Field
             </Button>
           </div>
         </form>

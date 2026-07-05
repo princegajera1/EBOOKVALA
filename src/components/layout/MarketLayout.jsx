@@ -1,18 +1,97 @@
 import React from "react";
-import { Outlet, useLocation } from "react-router-dom";
-import { Navbar } from "../common/Navbar";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useApp } from "../../store/AppContext";
 import { Footer } from "../common/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 
+// New Responsive Navigation Components
+import PillNav from "../PillNav/PillNav";
+import StaggeredMenu from "../StaggeredMenu/StaggeredMenu";
+import MobileDockNav from "../Dock/MobileDockNav";
+
+// Brand Logo
+import logoImg from "../../assets/logo.png";
+
 export const MarketLayout = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout, isAuthenticated, theme, toggleTheme } = useApp();
+
+  const getDashboardLink = () => {
+    if (user?.role === "admin") return "/admin/dashboard";
+    if (user?.role === "author") return "/author/dashboard";
+    return "/dashboard";
+  };
+
+  const handleSignOut = () => {
+    logout();
+    const protectedPrefixes = ["/dashboard", "/author", "/admin"];
+    if (protectedPrefixes.some(prefix => location.pathname.startsWith(prefix))) {
+      navigate("/");
+    }
+  };
+
+  // Build nav items dynamically
+  const navItems = [
+    { label: "Home", href: "/" },
+    { label: "Explore Library", href: "/marketplace" },
+    { label: "About", href: "/about" },
+    { label: "FAQ", href: "/faq" },
+    { label: "Contact Us", href: "/contact" }
+  ];
+
+  if (isAuthenticated) {
+    navItems.push({ label: "Dashboard", href: getDashboardLink() });
+    navItems.push({ label: "Toggle Theme (" + (theme === "dark" ? "Light" : "Dark") + ")", href: "#", onClick: toggleTheme });
+    navItems.push({ label: "Log Out", href: "#", onClick: handleSignOut });
+  } else {
+    navItems.push({ label: "Toggle Theme (" + (theme === "dark" ? "Light" : "Dark") + ")", href: "#", onClick: toggleTheme });
+    navItems.push({ label: "Log In", href: "/login" });
+    navItems.push({ label: "Register", href: "/register" });
+  }
+
+  const socialLinks = [
+    { label: "X (Twitter)", link: "https://x.com" },
+    { label: "LinkedIn", link: "https://linkedin.com" },
+    { label: "GitHub", link: "https://github.com" }
+  ];
 
   return (
-    <div className="min-h-screen bg-brand-bg flex flex-col justify-between transition-colors duration-300">
-      <Navbar />
+    <div className="min-h-screen bg-brand-bg flex flex-col justify-between transition-colors duration-300 relative">
       
-      {/* Main Content Area */}
-      <main className="flex-grow pt-20 bg-brand-bg overflow-hidden">
+      {/* 1. PillNav (Desktop Navigation: >= 1024px) */}
+      <header className="fixed top-4 left-4 right-4 z-40 hidden lg:block max-w-6xl mx-auto w-[calc(100%-2rem)]">
+        <PillNav 
+          logo={logoImg} 
+          logoAlt="EBOOKVALA" 
+          items={navItems} 
+          activeHref={location.pathname} 
+          baseColor="var(--text)"
+          pillColor="var(--card)"
+          pillTextColor="var(--text)"
+          hoveredPillTextColor="var(--accent)"
+          initialLoadAnimation 
+        />
+      </header>
+
+      {/* 2. StaggeredMenu (Mobile + Tablet Drawer Navigation: < 1024px) */}
+      <div className="lg:hidden">
+        <StaggeredMenu 
+          isFixed 
+          items={navItems} 
+          socialItems={socialLinks} 
+          displaySocials 
+          position="right" 
+          accentColor="var(--accent)" 
+          logoUrl={logoImg} 
+        />
+      </div>
+
+      {/* 3. Mobile Dock Quick-nav Action Bar (Mobile Only: < 768px) */}
+      <MobileDockNav />
+      
+      {/* Main Content Area: Added extra padding-top to prevent overlaps with floating headers */}
+      <main className="flex-grow pt-24 lg:pt-32 bg-brand-bg overflow-hidden relative z-10">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}

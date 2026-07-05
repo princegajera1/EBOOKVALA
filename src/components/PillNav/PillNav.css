@@ -1,0 +1,120 @@
+.pill-nav-container {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+.pill-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 2rem;
+  border-radius: 100px;
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.pill-logo {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.pill-logo img {
+  max-height: 1.75rem;
+  object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.pill-logo:hover img {
+  transform: scale(1.05);
+}
+
+.pill-nav-items {
+  display: flex;
+  align-items: center;
+}
+
+.pill-list {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 0.5rem;
+}
+
+.pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.pill.is-active {
+  color: var(--accent) !important;
+  border-color: var(--border);
+  background-color: var(--bg-secondary);
+}
+
+.hover-circle {
+  position: absolute;
+  left: 50%;
+  border-radius: 50%;
+  background-color: var(--pill-bg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.label-stack {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pill-label {
+  display: block;
+  transition: transform 0.3s;
+}
+
+.pill-label-hover {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  color: var(--hover-text);
+  font-weight: 700;
+}
+
+/* Desktop-only visibility rules for responsive layout */
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .desktop-only {
+    display: flex;
+  }
+}

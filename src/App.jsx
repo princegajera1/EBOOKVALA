@@ -14,6 +14,7 @@ import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 import { AdminRoute } from "./components/layout/AdminRoute";
 import { GuestRoute } from "./components/layout/GuestRoute";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
+import ShapeGrid from "./components/ShapeGrid/ShapeGrid";
 
 // Critical pages — loaded eagerly (above the fold)
 import { Landing } from "./pages/Landing";
@@ -93,8 +94,21 @@ function App() {
         <AppProvider>
           <BrowserRouter>
             <ScrollToTop />
-            <Suspense fallback={<PageLoader />}>
-            <Routes>
+            
+            {/* Global ShapeGrid Background */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+              <ShapeGrid 
+                shape="hexagon" 
+                direction="diagonal" 
+                speed={0.3} 
+                squareSize={48} 
+                hoverTrailAmount={6} 
+              />
+            </div>
+            
+            <div className="relative z-10 min-h-screen">
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
               
               {/* Public Marketplace / Landing routes */}
               <Route element={<MarketLayout />}>
@@ -155,7 +169,8 @@ function App() {
               } />
 
             </Routes>
-            </Suspense>
+              </Suspense>
+            </div>
           </BrowserRouter>
         
         {/* Sleek, Minimal React Hot Toast */}

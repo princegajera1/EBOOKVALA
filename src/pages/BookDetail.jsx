@@ -61,11 +61,12 @@ export const BookDetail = () => {
 
         // Fetch related books
         const allBooks = await dbService.getBooks();
+        const bookCategories = Array.isArray(foundBook.categories) ? foundBook.categories : [];
         const related = allBooks.filter(
           (b) =>
             b.id !== foundBook.id &&
             b.status === "published" &&
-            b.categories.some((cat) => foundBook.categories.includes(cat))
+            (Array.isArray(b.categories) ? b.categories : []).some((cat) => bookCategories.includes(cat))
         );
         setRelatedBooks(related.slice(0, 3));
       } catch (err) {

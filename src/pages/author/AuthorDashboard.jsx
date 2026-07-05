@@ -422,7 +422,7 @@ export const AuthorDashboard = () => {
                     </div>
 
                     <div className="flex items-center gap-2 mt-3 select-none">
-                      <Link to={`/book/${book.slug || book.id}`} className="shrink-0">
+                      <Link to={`/book/${book.id}`} className="shrink-0">
                         <Button variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3.5 border-brand-border text-brand-text hover:bg-brand-bg-secondary font-bold">
                           <Eye className="mr-1 h-3.5 w-3.5" /> View Detail
                         </Button>

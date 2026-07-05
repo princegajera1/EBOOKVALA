@@ -257,8 +257,17 @@ export const dbService = {
     await ensureSeeded();
     try {
       const colRef = collection(db, "books");
-      const snap = await getDocs(query(colRef, orderBy("createdAt", "desc")));
-      return snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      try {
+        // Primary: orderBy query (requires Firestore index on createdAt)
+        const snap = await getDocs(query(colRef, orderBy("createdAt", "desc")));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      } catch (indexErr) {
+        // Fallback: fetch all docs and sort in-memory (if index missing)
+        console.warn("getBooks orderBy index missing, falling back to in-memory sort:", indexErr.code);
+        const snap = await getDocs(colRef);
+        const books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return books.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+      }
     } catch (error) {
       console.error("Firestore getBooks error:", error);
       return [];
@@ -279,14 +288,18 @@ export const dbService = {
   getBookBySlug: async (slug) => {
     await ensureSeeded();
     try {
+      // 1. First try: treat the param as a Firestore doc ID (most reliable, used by Author Dashboard)
+      const docSnap = await getDoc(doc(db, "books", slug));
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() };
+      }
+      // 2. Second try: query by slug field (for human-readable slug URLs)
       const q = query(collection(db, "books"), where("slug", "==", slug));
       const snap = await getDocs(q);
       if (!snap.empty) {
         return { id: snap.docs[0].id, ...snap.docs[0].data() };
       }
-      // Fallback: search by document ID
-      const docSnap = await getDoc(doc(db, "books", slug));
-      return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+      return null;
     } catch (error) {
       console.error("Firestore getBookBySlug error:", error);
       return null;
@@ -308,6 +321,14 @@ export const dbService = {
       isFeatured: false,
       isNew: true,
       isTrending: false,
+      // Always initialize array fields to prevent filter crashes
+      categories: [],
+      tags: [],
+      format: ["PDF"],
+      subtitle: "",
+      description: "",
+      isbn: "",
+      language: "English",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       publishedAt: bookData.status === "published" ? new Date().toISOString() : null,

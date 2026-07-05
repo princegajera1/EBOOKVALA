@@ -157,7 +157,7 @@ export const BookCard = ({ book, view = "grid" }) => {
             <div>
               <div className="flex items-center justify-between gap-4">
                 <span className="inline-block text-[10px] font-bold tracking-wider uppercase text-brand-accent mb-1 bg-brand-accent/10 px-2 py-0.5 rounded-full">
-                  {book.categories[0] || "eBook"}
+                  {(book.categories && book.categories[0]) || "eBook"}
                 </span>
                 
                 {/* Wishlist Button */}
@@ -373,7 +373,7 @@ export const BookCard = ({ book, view = "grid" }) => {
           <div>
             <div className="flex items-center justify-between mb-1">
               <span className="inline-block text-[9px] font-extrabold tracking-wider uppercase text-brand-accent">
-                {book.categories[0] || "eBook"}
+                {(book.categories && book.categories[0]) || "eBook"}
               </span>
               <span className="text-[9px] font-bold text-brand-text-secondary uppercase">
                 {book.language || "English"}

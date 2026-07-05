@@ -43,32 +43,38 @@ export const SearchResults = () => {
 
     setLoading(true);
     const timer = setTimeout(() => {
-      let filtered = [];
-      if (query.trim()) {
-        const lowerQuery = query.toLowerCase().trim();
-        filtered = books.filter(
-          (book) =>
-            book.title.toLowerCase().includes(lowerQuery) ||
-            book.subtitle.toLowerCase().includes(lowerQuery) ||
-            book.authorName.toLowerCase().includes(lowerQuery) ||
-            book.tags.some((tag) => tag.toLowerCase().includes(lowerQuery)) ||
-            book.categories.some((cat) => cat.toLowerCase().includes(lowerQuery))
-        );
-      } else {
-        filtered = [...books];
-      }
+      try {
+        let filtered = [];
+        if (query.trim()) {
+          const lowerQuery = query.toLowerCase().trim();
+          filtered = books.filter(
+            (book) =>
+              (book.title || "").toLowerCase().includes(lowerQuery) ||
+              (book.subtitle || "").toLowerCase().includes(lowerQuery) ||
+              (book.authorName || "").toLowerCase().includes(lowerQuery) ||
+              (book.tags || []).some((tag) => (tag || "").toLowerCase().includes(lowerQuery)) ||
+              (book.categories || []).some((cat) => (cat || "").toLowerCase().includes(lowerQuery))
+          );
+        } else {
+          filtered = [...books];
+        }
 
-      // Sort Results
-      if (sortBy === "newest") {
-        filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      } else if (sortBy === "popular") {
-        filtered.sort((a, b) => b.salesCount - a.salesCount);
-      } else if (sortBy === "rating") {
-        filtered.sort((a, b) => b.rating - a.rating);
-      }
+        // Sort Results
+        if (sortBy === "newest") {
+          filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (sortBy === "popular") {
+          filtered.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+        } else if (sortBy === "rating") {
+          filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        }
 
-      setSearchResults(filtered);
-      setLoading(false);
+        setSearchResults(filtered);
+      } catch (err) {
+        console.error("SearchResults filter error:", err);
+        setSearchResults(books);
+      } finally {
+        setLoading(false);
+      }
     }, 300);
 
     return () => clearTimeout(timer);

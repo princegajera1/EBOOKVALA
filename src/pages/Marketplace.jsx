@@ -65,7 +65,17 @@ export const Marketplace = () => {
     const loadBooks = async () => {
       try {
         const data = await dbService.getBooks();
-        const published = data.filter((b) => b.status === "published");
+        // Normalize all book objects to ensure arrays are always arrays
+        const normalized = data.map(b => ({
+          ...b,
+          categories: Array.isArray(b.categories) ? b.categories : [],
+          tags: Array.isArray(b.tags) ? b.tags : [],
+          format: Array.isArray(b.format) ? b.format : [],
+          subtitle: b.subtitle || "",
+          authorName: b.authorName || "",
+          title: b.title || "",
+        }));
+        const published = normalized.filter((b) => b.status === "published");
         setBooks(published);
         setFilteredBooks(published);
       } catch (err) {
@@ -81,55 +91,61 @@ export const Marketplace = () => {
   useEffect(() => {
     setLoading(true);
     const timer = setTimeout(() => {
-      let result = [...books];
+      try {
+        let result = [...books];
 
-      // Category filter
-      if (selectedCategories.length > 0) {
-        result = result.filter(book => 
-          book.categories.some(cat => selectedCategories.includes(cat))
-        );
+        // Category filter
+        if (selectedCategories.length > 0) {
+          result = result.filter(book => 
+            (book.categories || []).some(cat => selectedCategories.includes(cat))
+          );
+        }
+
+        // Language filter
+        if (selectedLanguages.length > 0) {
+          result = result.filter(book => selectedLanguages.includes(book.language));
+        }
+
+        // Rating filter
+        if (minRating > 0) {
+          result = result.filter(book => (book.rating || 0) >= minRating);
+        }
+
+        // Format filter
+        if (selectedFormats.length > 0) {
+          result = result.filter(book => 
+            (book.format || []).some(f => selectedFormats.includes(f))
+          );
+        }
+
+        // Search Query filter
+        if (searchQuery.trim()) {
+          const query = searchQuery.toLowerCase().trim();
+          result = result.filter(book => 
+            (book.title || "").toLowerCase().includes(query) ||
+            (book.subtitle || "").toLowerCase().includes(query) ||
+            (book.authorName || "").toLowerCase().includes(query) ||
+            (book.tags || []).some(t => (t || "").toLowerCase().includes(query))
+          );
+        }
+
+        // Sorting
+        if (sortBy === "newest") {
+          result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        } else if (sortBy === "best-selling") {
+          result.sort((a, b) => (b.salesCount || 0) - (a.salesCount || 0));
+        } else if (sortBy === "top-rated") {
+          result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        }
+
+        setFilteredBooks(result);
+        setVisibleCount(8);
+      } catch (filterErr) {
+        console.error("Filter pipeline error:", filterErr);
+        setFilteredBooks(books);
+      } finally {
+        setLoading(false);
       }
-
-      // Language filter
-      if (selectedLanguages.length > 0) {
-        result = result.filter(book => selectedLanguages.includes(book.language));
-      }
-
-      // Rating filter
-      if (minRating > 0) {
-        result = result.filter(book => book.rating >= minRating);
-      }
-
-      // Format filter
-      if (selectedFormats.length > 0) {
-        result = result.filter(book => 
-          book.format.some(f => selectedFormats.includes(f))
-        );
-      }
-
-      // Search Query filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase().trim();
-        result = result.filter(book => 
-          book.title.toLowerCase().includes(query) ||
-          book.subtitle.toLowerCase().includes(query) ||
-          book.authorName.toLowerCase().includes(query) ||
-          book.tags.some(t => t.toLowerCase().includes(query))
-        );
-      }
-
-      // Sorting
-      if (sortBy === "newest") {
-        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      } else if (sortBy === "best-selling") {
-        result.sort((a, b) => b.salesCount - a.salesCount);
-      } else if (sortBy === "top-rated") {
-        result.sort((a, b) => b.rating - a.rating);
-      }
-
-      setFilteredBooks(result);
-      setVisibleCount(8); // Reset pagination count on filter change
-      setLoading(false);
     }, 350);
 
     return () => clearTimeout(timer);

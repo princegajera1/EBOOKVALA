@@ -147,7 +147,7 @@ export const Login = () => {
     setSubmitError("");
     const toastId = toast.loading("Verifying credentials...");
     try {
-      const firebaseUser = await login(data.email, data.password);
+      const firebaseUser = await login(data.email, data.password, data.rememberMe);
       if (firebaseUser) {
         toast.success("Welcome back! 👋", { id: toastId });
         if (data.email.toLowerCase() === "admin@ebookvala.com") {

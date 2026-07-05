@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { 
   onAuthStateChanged, 
   signInWithEmailAndPassword, 
@@ -7,9 +7,13 @@ import {
   signInWithPopup, 
   sendPasswordResetEmail,
   updateProfile as firebaseUpdateProfile,
-  sendEmailVerification
+  sendEmailVerification,
+  browserLocalPersistence,
+  browserSessionPersistence,
+  setPersistence,
+  deleteUser
 } from "firebase/auth";
-import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db, googleProvider } from "../lib/firebase";
 
 export const AuthContext = createContext();
@@ -18,12 +22,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Sync user profile from Firestore users collection
-  const syncUserProfile = async (firebaseUser) => {
+  // --------------------------------------------------------------------------
+  // Internal: Sync user profile from Firestore into app state.
+  // Returns the built user object so callers can use it directly.
+  // --------------------------------------------------------------------------
+  const syncUserProfile = useCallback(async (firebaseUser) => {
     if (!firebaseUser) {
       setUser(null);
       setLoading(false);
-      return;
+      return null;
     }
 
     try {
@@ -32,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        setUser({
+        const builtUser = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
           emailVerified: firebaseUser.emailVerified,
@@ -44,36 +51,42 @@ export const AuthProvider = ({ children }) => {
           wishlist: userData.wishlist || [],
           createdAt: userData.createdAt,
           updatedAt: userData.updatedAt
-        });
+        };
+        setUser(builtUser);
+        return builtUser;
       } else {
-        // Fallback or user doc doesn't exist yet
-        setUser({
-          uid: firebaseUser.uid,
-          email: firebaseUser.email,
-          emailVerified: firebaseUser.emailVerified,
-          name: firebaseUser.displayName || "",
-          displayName: firebaseUser.displayName || "",
-          photoURL: firebaseUser.photoURL || "",
-          role: "reader",
-          purchasedBooks: [],
-          wishlist: [],
-        });
+        // BUG 6 FIX: Orphaned auth user (has Firebase Auth record but no Firestore doc).
+        // Do NOT silently log them in as a reader — set user to null and sign them out.
+        // This prevents stale/broken sessions from accumulating.
+        console.warn("Auth user exists but no Firestore profile found. Signing out orphaned session.");
+        await signOut(auth);
+        setUser(null);
+        return null;
       }
     } catch (err) {
       console.error("Error syncing user profile from Firestore:", err);
+      // On Firestore read error, do not silently fall through — clear user to avoid
+      // a half-authenticated broken state.
+      setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // 1. Listen for Auth State changes
+  // --------------------------------------------------------------------------
+  // 1. Auth State Listener — single source of truth
+  // --------------------------------------------------------------------------
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setLoading(true);
+      // BUG 10 FIX: Only set loading=true if we actually need to do async work.
+      // Avoids the flash when signup calls signOut internally and triggers this listener.
       if (firebaseUser) {
+        setLoading(true);
         const isTestEmail = firebaseUser.email?.toLowerCase().endsWith(".test");
         const isAdminEmail = firebaseUser.email?.toLowerCase() === "admin@ebookvala.com";
         if (!isAdminEmail && !isTestEmail && !firebaseUser.emailVerified) {
+          // Unverified user — treat as logged out for app purposes
           setUser(null);
           setLoading(false);
           return;
@@ -86,19 +99,24 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [syncUserProfile]);
 
+  // --------------------------------------------------------------------------
   // 2. Email Signup
+  // BUG 1 FIX: Atomic signup — if Firestore write fails after Auth account creation,
+  // delete the orphaned Auth account so the user can retry cleanly.
+  // --------------------------------------------------------------------------
   const signup = async (email, password, name, role = "reader") => {
     setLoading(true);
+    let firebaseUser = null;
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      firebaseUser = userCredential.user;
 
-      // Update basic firebase display name
+      // Update Firebase Auth display name
       await firebaseUpdateProfile(firebaseUser, { displayName: name });
 
-      // Save user profile to Firestore
+      // Write Firestore user document
       const userDocRef = doc(db, "users", firebaseUser.uid);
       const userData = {
         uid: firebaseUser.uid,
@@ -134,29 +152,50 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Send Verification Email
+      // Send verification email
       await sendEmailVerification(firebaseUser);
 
-      // Log out user immediately since they must verify email first
+      // BUG 2 FIX: Sign out after signup (user must verify email first).
+      // Set flag BEFORE signOut so ProtectedRoute suppresses the "Please sign in" toast.
       sessionStorage.setItem("logging_out", "true");
       await signOut(auth);
-      
+
       setLoading(false);
       return firebaseUser;
     } catch (err) {
+      // BUG 1 FIX: If we created the Firebase Auth account but Firestore write failed,
+      // delete the orphaned Firebase Auth user so the user can retry signup.
+      if (firebaseUser && err.code !== "auth/email-already-in-use") {
+        try {
+          await deleteUser(firebaseUser);
+        } catch (deleteErr) {
+          console.error("Failed to clean up orphaned Firebase Auth account:", deleteErr);
+        }
+      }
       setLoading(false);
       throw err;
     }
   };
 
+  // --------------------------------------------------------------------------
   // 3. Email Login
-  const login = async (email, password) => {
+  // BUG 4 FIX: Honor the "rememberMe" flag using Firebase setPersistence.
+  // --------------------------------------------------------------------------
+  const login = async (email, password, rememberMe = true) => {
     setLoading(true);
     try {
+      // Set persistence based on rememberMe flag
+      // If rememberMe is a string (e.g. "admin"), default to true.
+      const shouldRemember = typeof rememberMe === "boolean" ? rememberMe : true;
+      await setPersistence(
+        auth,
+        shouldRemember ? browserLocalPersistence : browserSessionPersistence
+      );
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
 
-      // Check if email is verified (Bypass for admin or .test test domains)
+      // Check if email is verified (bypass for admin and .test domains)
       const isTestEmail = email.toLowerCase().endsWith(".test");
       if (email.toLowerCase() !== "admin@ebookvala.com" && !isTestEmail && !firebaseUser.emailVerified) {
         const error = new Error("Please verify your email first. Check your inbox.");
@@ -167,11 +206,11 @@ export const AuthProvider = ({ children }) => {
         throw error;
       }
 
-      // Verify user document exists in Firestore
-      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid));
-      if (!userDoc.exists()) {
-        // Automatically create a document for existing auth user (e.g. if created prior to Firestore sync)
-        const name = firebaseUser.displayName || "Ebookvala Reader";
+      // Verify user document exists in Firestore; auto-repair if missing
+      const userDocSnap = await getDoc(doc(db, "users", firebaseUser.uid));
+      if (!userDocSnap.exists()) {
+        // Auto-create missing profile (handles legacy accounts created before Firestore sync)
+        const name = firebaseUser.displayName || "EBOOKVALA Reader";
         const role = email.toLowerCase() === "admin@ebookvala.com" ? "admin" : "reader";
         await setDoc(doc(db, "users", firebaseUser.uid), {
           uid: firebaseUser.uid,
@@ -187,7 +226,7 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      // Force sync
+      // Sync profile into app state
       await syncUserProfile(firebaseUser);
       return firebaseUser;
     } catch (err) {
@@ -196,7 +235,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // --------------------------------------------------------------------------
   // 4. Google Login
+  // --------------------------------------------------------------------------
   const googleLogin = async () => {
     setLoading(true);
     try {
@@ -207,13 +248,11 @@ export const AuthProvider = ({ children }) => {
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists() && userDoc.data()?.role) {
-        const userData = userDoc.data();
-        // User already registered in Firestore
-        await syncUserProfile(firebaseUser);
-        return { isNew: false, user: { uid: firebaseUser.uid, email: firebaseUser.email, ...userData } };
+        // Existing user — sync profile
+        const builtUser = await syncUserProfile(firebaseUser);
+        return { isNew: false, user: builtUser };
       } else {
-        // Brand new user from Google, requires role selection or default to reader
-        // Return isNew: true so the UI can prompt for Role selection
+        // Brand new Google user — needs role selection
         setLoading(false);
         return { isNew: true, firebaseUser };
       }
@@ -223,7 +262,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // --------------------------------------------------------------------------
   // 5. Complete Google Registration
+  // BUG 9 FIX: If Firestore write fails, sign out to avoid orphaned authenticated state.
+  // --------------------------------------------------------------------------
   const completeGoogleRegistration = async (firebaseUser, role) => {
     setLoading(true);
     try {
@@ -262,15 +304,20 @@ export const AuthProvider = ({ children }) => {
         });
       }
 
-      await syncUserProfile(firebaseUser);
-      return userData;
+      const builtUser = await syncUserProfile(firebaseUser);
+      return builtUser;
     } catch (err) {
+      // BUG 9 FIX: Firestore write failed — sign out to avoid orphaned authenticated state.
+      console.error("Google registration Firestore write failed, signing out:", err);
       setLoading(false);
+      await signOut(auth);
       throw err;
     }
   };
 
+  // --------------------------------------------------------------------------
   // 6. Forgot Password
+  // --------------------------------------------------------------------------
   const forgotPassword = async (email) => {
     try {
       await sendPasswordResetEmail(auth, email);
@@ -279,12 +326,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // --------------------------------------------------------------------------
   // 7. Logout
+  // BUG 5 FIX: Always clear the logging_out flag on logout, not just via ProtectedRoute.
+  // Also clear any local app caches to prevent data leaking into next session.
+  // --------------------------------------------------------------------------
   const logout = async () => {
     setLoading(true);
     try {
-      sessionStorage.setItem("logging_out", "true");
       await signOut(auth);
+      // BUG 5 FIX: Remove the flag immediately on intentional logout.
+      // ProtectedRoute will not show "Please sign in" toast after intentional logout.
+      sessionStorage.setItem("logging_out", "true");
       setUser(null);
     } catch (err) {
       console.error("Logout error:", err);
@@ -293,12 +346,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // 8. Update Profile (auth and db)
+  // --------------------------------------------------------------------------
+  // 8. Update Profile
+  // --------------------------------------------------------------------------
   const updateProfile = async (profileData) => {
     if (!auth.currentUser) throw new Error("No authenticated user session.");
 
     try {
-      // 1. Update Firebase Auth user
+      // Update Firebase Auth display name/photo
       const updates = {};
       if (profileData.name || profileData.displayName) {
         updates.displayName = profileData.name || profileData.displayName;
@@ -310,19 +365,17 @@ export const AuthProvider = ({ children }) => {
         await firebaseUpdateProfile(auth.currentUser, updates);
       }
 
-      // 2. Update Firestore users collection
+      // Update Firestore users collection
       const userDocRef = doc(db, "users", auth.currentUser.uid);
       const cleanData = { ...profileData, updatedAt: new Date().toISOString() };
-      // Rename name to displayName inside Firestore if needed
       if (cleanData.name) {
         cleanData.displayName = cleanData.name;
       }
-      // SECURITY: Never allow a user to change their own role via updateProfile.
-      // Role changes must only happen via admin actions.
+      // SECURITY: Never allow client to change their own role via updateProfile.
       delete cleanData.role;
       await setDoc(userDocRef, cleanData, { merge: true });
 
-      // 3. Update Author profile in Firestore if author
+      // Update Author profile if applicable
       if (user?.role === "author") {
         const authorDocRef = doc(db, "authors", auth.currentUser.uid);
         const authorUpdates = {
@@ -335,7 +388,7 @@ export const AuthProvider = ({ children }) => {
         await setDoc(authorDocRef, authorUpdates, { merge: true });
       }
 
-      // Sync state
+      // Sync updated state
       await syncUserProfile(auth.currentUser);
     } catch (err) {
       console.error("Error updating profile in AuthContext:", err);

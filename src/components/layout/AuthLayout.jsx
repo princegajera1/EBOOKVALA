@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Star, ShieldCheck, Download, Sparkles, BookOpen } from "lucide-react";
-import logoImg from "../../assets/logo.png";
+
 
 export const AuthLayout = ({ children }) => {
   return (
@@ -10,9 +10,8 @@ export const AuthLayout = ({ children }) => {
       
       {/* Left side: Premium Brand Editorial */}
       <div className="hidden md:flex md:w-1/2 bg-brand-bg-secondary border-r border-brand-border flex-col justify-between p-12 lg:p-16 text-left">
-        <Link to="/" className="text-xl font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md flex items-center gap-2">
-          <img src={logoImg} className="h-6 w-6 object-contain rounded-md" alt="Logo" />
-          <span>EBOOKVALA</span>
+        <Link to="/" className="text-xl font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md">
+          EBOOKVALA
         </Link>
 
         <div className="max-w-md my-auto flex flex-col gap-6">
@@ -59,9 +58,8 @@ export const AuthLayout = ({ children }) => {
       <div className="flex-1 flex flex-col justify-center bg-brand-bg px-6 py-12 md:px-12 lg:px-24 xl:px-32 relative">
         {/* Mobile Header */}
         <div className="absolute top-8 left-6 md:hidden">
-          <Link to="/" className="text-lg font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md flex items-center gap-2">
-            <img src={logoImg} className="h-6 w-6 object-contain rounded-md" alt="Logo" />
-            <span>EBOOKVALA</span>
+          <Link to="/" className="text-lg font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md">
+            EBOOKVALA
           </Link>
         </div>
 

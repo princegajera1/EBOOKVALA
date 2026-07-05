@@ -11,7 +11,6 @@ export const AppProvider = ({ children }) => {
     loading: authLoading, 
     isAuthenticated,
     login, 
-    loginWithGoogle, 
     logout, 
     register, 
     updateProfile 
@@ -137,7 +136,6 @@ export const AppProvider = ({ children }) => {
         toggleTheme,
         updateTheme,
         login,
-        loginWithGoogle,
         logout,
         register,
         updateProfile,

@@ -8,8 +8,6 @@ export const useAuth = () => {
     login, 
     signup, 
     logout, 
-    googleLogin, 
-    completeGoogleRegistration,
     forgotPassword, 
     updateProfile 
   } = useAuthContext();
@@ -25,9 +23,6 @@ export const useAuth = () => {
     signup,
     register: signup, // Backward-compatible alias
     logout,
-    googleLogin,
-    loginWithGoogle: googleLogin, // Backward-compatible alias
-    completeGoogleRegistration,
     forgotPassword,
     updateProfile
   };

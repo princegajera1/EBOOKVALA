@@ -4,7 +4,6 @@ import {
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
   signOut, 
-  signInWithPopup, 
   sendPasswordResetEmail,
   updateProfile as firebaseUpdateProfile,
   sendEmailVerification,
@@ -14,7 +13,7 @@ import {
   deleteUser
 } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db, googleProvider } from "../lib/firebase";
+import { auth, db } from "../lib/firebase";
 
 export const AuthContext = createContext();
 
@@ -219,88 +218,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // --------------------------------------------------------------------------
-  // 4. Google Login
-  // --------------------------------------------------------------------------
-  const googleLogin = async () => {
-    setLoading(true);
-    try {
-      const userCredential = await signInWithPopup(auth, googleProvider);
-      const firebaseUser = userCredential.user;
 
-      const userDocRef = doc(db, "users", firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
-
-      if (userDoc.exists() && userDoc.data()?.role) {
-        // Existing user — sync profile
-        const builtUser = await syncUserProfile(firebaseUser);
-        return { isNew: false, user: builtUser };
-      } else {
-        // Brand new Google user — needs role selection
-        setLoading(false);
-        return { isNew: true, firebaseUser };
-      }
-    } catch (err) {
-      setLoading(false);
-      throw err;
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // 5. Complete Google Registration
-  // BUG 9 FIX: If Firestore write fails, sign out to avoid orphaned authenticated state.
-  // --------------------------------------------------------------------------
-  const completeGoogleRegistration = async (firebaseUser, role) => {
-    setLoading(true);
-    try {
-      const userDocRef = doc(db, "users", firebaseUser.uid);
-      const name = firebaseUser.displayName || "Google Reader";
-      const userData = {
-        uid: firebaseUser.uid,
-        name: name,
-        displayName: name,
-        email: firebaseUser.email,
-        photoURL: firebaseUser.photoURL || "",
-        role: role,
-        purchasedBooks: [],
-        wishlist: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      await setDoc(userDocRef, userData);
-
-      if (role === "author") {
-        const authorDocRef = doc(db, "authors", firebaseUser.uid);
-        await setDoc(authorDocRef, {
-          uid: firebaseUser.uid,
-          displayName: name,
-          photoURL: firebaseUser.photoURL || "",
-          bio: `Hello! I am ${name}, an author on EBOOKVALA.`,
-          socialLinks: {},
-          isVerified: false,
-          verificationStatus: "unverified",
-          totalEarnings: 0,
-          availableBalance: 0,
-          pendingBalance: 0,
-          followers: [],
-          totalSales: 0,
-          createdAt: new Date().toISOString()
-        });
-      }
-
-      const builtUser = await syncUserProfile(firebaseUser);
-      return builtUser;
-    } catch (err) {
-      // BUG 9 FIX: Firestore write failed — sign out to avoid orphaned authenticated state.
-      console.error("Google registration Firestore write failed, signing out:", err);
-      setLoading(false);
-      await signOut(auth);
-      throw err;
-    }
-  };
-
-  // --------------------------------------------------------------------------
-  // 6. Forgot Password
   // --------------------------------------------------------------------------
   const forgotPassword = async (email) => {
     try {
@@ -389,8 +307,6 @@ export const AuthProvider = ({ children }) => {
         login,
         signup,
         logout,
-        googleLogin,
-        completeGoogleRegistration,
         forgotPassword,
         updateProfile,
       }}

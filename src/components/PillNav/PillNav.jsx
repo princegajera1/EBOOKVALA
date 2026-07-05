@@ -154,7 +154,7 @@ const PillNav = ({
         <div className="pill-nav-items desktop-only" ref={navItemsRef}>
           <ul className="pill-list" role="menubar">
             {items.map((item, i) => (
-              <li key={item.href || `item-${i}`} role="none">
+              <li key={item.label ? `nav-${item.label.replace(/\s+/g, '-').toLowerCase()}` : `item-${i}`} role="none">
                 {item.onClick ? (
                   <button
                     role="menuitem"

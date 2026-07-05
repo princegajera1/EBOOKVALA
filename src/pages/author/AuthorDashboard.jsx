@@ -840,21 +840,7 @@ export const AuthorDashboard = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Input
-                  label="Price (INR)"
-                  type="number"
-                  placeholder="0 for Free"
-                  value={newBook.price || 0}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, price: Number(e.target.value) }))}
-                />
-                <Input
-                  label="Discount (%)"
-                  type="number"
-                  placeholder="0 to 100"
-                  value={newBook.discount || 0}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, discount: Number(e.target.value) }))}
-                />
+              <div className="grid grid-cols-2 gap-4">
                 <Input
                   label="Release Date"
                   type="date"

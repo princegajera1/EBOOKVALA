@@ -1330,27 +1330,18 @@ export const AdminDashboard = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-brand-text-secondary">Assigned Author</label>
-              <select
-                value={bookForm.authorId}
-                onChange={(e) => setBookForm(prev => ({ ...prev, authorId: e.target.value }))}
-                className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none focus:border-brand-accent cursor-pointer"
-                required
-              >
-                {authors.map(a => (
-                  <option key={a.uid} value={a.uid}>{a.displayName}</option>
-                ))}
-              </select>
-            </div>
-            <Input
-              label="eBook Price (INR)"
-              type="number"
-              value={bookForm.price}
-              onChange={(e) => setBookForm(prev => ({ ...prev, price: e.target.value }))}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-brand-text-secondary">Assigned Author</label>
+            <select
+              value={bookForm.authorId}
+              onChange={(e) => setBookForm(prev => ({ ...prev, authorId: e.target.value }))}
+              className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none focus:border-brand-accent cursor-pointer"
               required
-            />
+            >
+              {authors.map(a => (
+                <option key={a.uid} value={a.uid}>{a.displayName}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

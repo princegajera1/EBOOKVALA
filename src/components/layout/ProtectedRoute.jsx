@@ -31,8 +31,16 @@ export const ProtectedRoute = ({ role, children }) => {
         }
         navigate("/login", { state: { from: location } });
       } else if (role && user?.role !== role) {
-        toast.error("Access denied");
-        navigate("/");
+        if (user?.role === "author") {
+          navigate("/author/dashboard", { replace: true });
+        } else if (user?.role === "admin") {
+          navigate("/admin/dashboard", { replace: true });
+        } else if (user?.role === "reader") {
+          navigate("/dashboard", { replace: true });
+        } else {
+          toast.error("Access denied");
+          navigate("/");
+        }
       }
     }
   }, [isAuthenticated, user, loading, navigate, role, location]);

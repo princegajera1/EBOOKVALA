@@ -83,14 +83,6 @@ export const AuthProvider = ({ children }) => {
       // Avoids the flash when signup calls signOut internally and triggers this listener.
       if (firebaseUser) {
         setLoading(true);
-        const isTestEmail = firebaseUser.email?.toLowerCase().endsWith(".test");
-        const isAdminEmail = firebaseUser.email?.toLowerCase() === "admin@ebookvala.com";
-        if (!isAdminEmail && !isTestEmail && !firebaseUser.emailVerified) {
-          // Unverified user — treat as logged out for app purposes
-          setUser(null);
-          setLoading(false);
-          return;
-        }
         await syncUserProfile(firebaseUser);
       } else {
         setUser(null);

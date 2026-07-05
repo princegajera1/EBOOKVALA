@@ -392,9 +392,29 @@ export const AdminDashboard = () => {
     toast.success("Custom field dropped.");
   };
 
-  const handleSaveSettings = (e) => {
-    e.preventDefault();
-    toast.success("Platform settings updated!");
+  // Live Visitors tracking state
+  const [visitorSearch, setVisitorSearch] = useState("");
+  const [visitorFilter, setVisitorFilter] = useState("all");
+  const [visitorLog, setVisitorLog] = useState([
+    { id: 1, user: "Rohan Gupta (rohan@test.com)", location: "Mumbai, India", device: "Chrome / Windows", entryPage: "/marketplace", duration: "18 mins", referrer: "Google Search", time: "Just now", status: "Active" },
+    { id: 2, user: "Guest User", location: "New York, USA", device: "Safari / iOS Mobile", entryPage: "/", duration: "2 mins", referrer: "Direct Traffic", time: "4 mins ago", status: "Active" },
+    { id: 3, user: "Guest User", location: "London, UK", device: "Firefox / macOS", entryPage: "/marketplace", duration: "12 mins", referrer: "Twitter/X Link", time: "15 mins ago", status: "Ended" },
+    { id: 4, user: "Aditi Sharma (aditi@test.com)", location: "Delhi, India", device: "Chrome / Android", entryPage: "/dashboard", duration: "45 mins", referrer: "Direct Traffic", time: "1 hour ago", status: "Ended" }
+  ]);
+
+  const handleExportCSV = () => {
+    const headers = ["User", "Location", "Device", "Entry Page", "Duration", "Referrer", "Status"];
+    const rows = visitorLog.map(v => [v.user, v.location, v.device, v.entryPage, v.duration, v.referrer, v.status]);
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${val}"`).join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `ebookvala_traffic_report_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Traffic log exported as CSV!");
   };
 
   const sidebarLinks = [
@@ -405,6 +425,7 @@ export const AdminDashboard = () => {
     { id: "ai", label: "AI Services", icon: Sparkles },
     { id: "automations", label: "Automations", icon: Zap },
     { id: "categories", label: "Categories", icon: Grid },
+    { id: "traffic", label: "Live Traffic", icon: Compass },
     { id: "health", label: "System Health", icon: Activity },
     { id: "logs", label: "Audit Logs", icon: Terminal },
     { id: "settings", label: "Settings", icon: Settings }
@@ -998,7 +1019,165 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* 8. SYSTEM HEALTH TAB */}
+      {/* 8. LIVE TRAFFIC & VISITORS TAB */}
+      {activeTab === "traffic" && (
+        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Live Traffic & Visitors</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Real-time user presence, active sessions, and signup growth metrics.</p>
+            </div>
+            <Button onClick={handleExportCSV} variant="outline" className="h-9 px-4 rounded-full text-xs font-bold border-brand-border text-brand-text">
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Export Logs CSV
+            </Button>
+          </div>
+
+          {/* Real-time counters & mini chart */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            
+            {/* Live Count Card */}
+            <div className="md:col-span-5 bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col justify-between gap-4 relative overflow-hidden">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-success opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-success"></span>
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest">Active Presence</span>
+                </div>
+                
+                <h3 className="text-4xl font-black text-brand-text mt-3">42 Users</h3>
+                <p className="text-xs text-brand-text-secondary mt-1">Logged In: 15 • Anonymous Guests: 27</p>
+              </div>
+
+              <div className="h-20 w-full mt-2 font-mono text-[9px] text-brand-text-secondary/70">
+                <span className="block mb-2">Live load index (last 60 mins)</span>
+                <div className="flex items-end gap-1.5 h-12">
+                  {[24, 28, 35, 30, 42, 38, 45, 42].map((h, i) => (
+                    <div key={i} className="flex-1 bg-brand-accent/20 rounded-t" style={{ height: `${(h / 50) * 100}%` }} title={`${h} users`} />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Growth & Source breakdown */}
+            <div className="md:col-span-7 bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col justify-between gap-4">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest">Registration Metrics</span>
+                <div className="grid grid-cols-3 gap-4 mt-3">
+                  <div>
+                    <h5 className="text-xs text-brand-text-secondary font-semibold">Total Accounts</h5>
+                    <p className="text-xl font-bold text-brand-text mt-1">{usersList.length}</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs text-brand-text-secondary font-semibold">Signups Today</h5>
+                    <p className="text-xl font-bold text-brand-success mt-1">+12</p>
+                  </div>
+                  <div>
+                    <h5 className="text-xs text-brand-text-secondary font-semibold">Weekly Growth</h5>
+                    <p className="text-xl font-bold text-brand-accent mt-1">+8.4%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px bg-brand-border/60" />
+
+              <div>
+                <span className="text-[9px] font-mono font-bold text-brand-text-secondary uppercase">Signup Funnel Drop-off Rate</span>
+                <div className="flex items-center gap-2 mt-2 select-none text-[10px]">
+                  <div className="flex-1 bg-brand-accent/10 border border-brand-accent/20 p-2 rounded text-center">
+                    <span className="block font-bold text-brand-accent">100%</span>
+                    <span className="text-brand-text-secondary mt-0.5 block">Visited Sign Up</span>
+                  </div>
+                  <ArrowRight className="h-3 w-3 text-brand-text-secondary shrink-0" />
+                  <div className="flex-1 bg-amber-500/10 border border-amber-500/20 p-2 rounded text-center">
+                    <span className="block font-bold text-amber-500">82%</span>
+                    <span className="text-brand-text-secondary mt-0.5 block">Started Form</span>
+                  </div>
+                  <ArrowRight className="h-3 w-3 text-brand-text-secondary shrink-0" />
+                  <div className="flex-1 bg-brand-success/10 border border-brand-success/20 p-2 rounded text-center">
+                    <span className="block font-bold text-brand-success">54%</span>
+                    <span className="text-brand-text-secondary mt-0.5 block">Completed Auth</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Visitor Log Table */}
+          <div className="flex flex-col gap-4 mt-2">
+            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center select-none font-display">
+              <h4 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Live Sessions Monitor</h4>
+              
+              <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
+                <input
+                  type="text"
+                  placeholder="Search user..."
+                  value={visitorSearch}
+                  onChange={(e) => setVisitorSearch(e.target.value)}
+                  className="bg-brand-card border border-brand-border px-3.5 py-1.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text placeholder:text-brand-text-secondary/40"
+                />
+                <select
+                  value={visitorFilter}
+                  onChange={(e) => setVisitorFilter(e.target.value)}
+                  className="bg-brand-card border border-brand-border px-3 py-1.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text cursor-pointer font-bold"
+                >
+                  <option value="all">All Traffic</option>
+                  <option value="user">Registered Users</option>
+                  <option value="guest">Anonymous Guests</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
+              <table className="w-full text-xs text-left text-brand-text-secondary">
+                <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
+                  <tr>
+                    <th className="py-4 px-5">Active User</th>
+                    <th className="py-4 px-5">Location</th>
+                    <th className="py-4 px-5">Device / Client</th>
+                    <th className="py-4 px-5">Entry Path</th>
+                    <th className="py-4 px-5">Referrer</th>
+                    <th className="py-4 px-5">Duration</th>
+                    <th className="py-4 px-5">Session Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visitorLog
+                    .filter(v => {
+                      const matchesSearch = v.user.toLowerCase().includes(visitorSearch.toLowerCase());
+                      const matchesFilter = visitorFilter === "all" 
+                        || (visitorFilter === "user" && v.user !== "Guest User")
+                        || (visitorFilter === "guest" && v.user === "Guest User");
+                      return matchesSearch && matchesFilter;
+                    })
+                    .map((v) => (
+                      <tr key={v.id} className="border-b border-brand-border/60 last:border-0 hover:bg-brand-bg-secondary/40 transition-colors">
+                        <td className="py-4 px-5 font-bold text-brand-text">{v.user}</td>
+                        <td className="py-4 px-5 font-semibold text-brand-text-secondary">{v.location}</td>
+                        <td className="py-4 px-5 font-mono text-[10.5px]">{v.device}</td>
+                        <td className="py-4 px-5 font-mono text-brand-accent">{v.entryPage}</td>
+                        <td className="py-4 px-5 font-semibold">{v.referrer}</td>
+                        <td className="py-4 px-5 font-mono font-bold text-brand-text">{v.duration}</td>
+                        <td className="py-4 px-5">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                            v.status === "Active" ? "bg-brand-success/15 text-brand-success" : "bg-[#111] text-brand-text-secondary/70 border border-brand-border"
+                          }`}>
+                            {v.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* 9. SYSTEM HEALTH TAB */}
       {activeTab === "health" && (
         <div className="flex flex-col gap-6 text-left select-none font-display">
           <div>

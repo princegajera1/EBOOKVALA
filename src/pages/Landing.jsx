@@ -399,74 +399,74 @@ export const Landing = () => {
             </p>
           </FadeUp>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             <FadeUp delay={0.1} className="h-full">
-              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
-                <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-6">
+              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-5 shrink-0">
                   <Sparkles className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-brand-text font-display">Free Forever (First Year)</h3>
-                <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 leading-relaxed">
+                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Free Forever (First Year)</h3>
+                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
                   Join during our initial release period and secure a full year of open library access completely free of charge. No hidden fees or plans.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.16} className="h-full">
-              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
-                <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-6">
+              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-5 shrink-0">
                   <BookOpen className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-brand-text font-display">Unlimited Reading</h3>
-                <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 leading-relaxed">
+                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Unlimited Reading</h3>
+                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
                   Read as many books as you want. Explore tech specifications, startup ARR roadmaps, and self-help classics from cover to cover without limits.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.22} className="h-full">
-              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
-                <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-6">
+              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-5 shrink-0">
                   <Download className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-brand-text font-display">Unlimited Downloads</h3>
-                <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 leading-relaxed">
-                  Keep your books stored locally. Instantly download PDF and EPUB files to access your reading material on your e-reader, phone, or laptop offline.
+                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Unlimited Downloads</h3>
+                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
+                  Keep your books stored locally. Instantly download PDF and EPUB files to access your reading material on any device, offline, anytime.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.28} className="h-full">
-              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
-                <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-6">
+              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-5 shrink-0">
                   <BrainCircuit className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-brand-text font-display">Unlimited AI Features</h3>
-                <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 leading-relaxed">
+                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Unlimited AI Features</h3>
+                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
                   Enhance your learning. Access floating AI assistants to explain complex lines, generate flashcards, construct study mind maps, and translate blocks.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.34} className="h-full">
-              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
-                <div className="h-12 w-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 mb-6">
+              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="h-12 w-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 mb-5 shrink-0">
                   <Users className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-brand-text font-display">Community Driven</h3>
-                <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 leading-relaxed">
+                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Community Driven</h3>
+                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
                   Connect directly with authors. Rate titles, publish helpful reviews, follow creators, and share curated collections with other readers in real time.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.4} className="h-full">
-              <div className="h-full p-8 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300">
-                <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-6">
+              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
+                <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-5 shrink-0">
                   <BookMarked className="h-5.5 w-5.5" />
                 </div>
-                <h3 className="text-lg font-bold text-brand-text font-display">Open Library</h3>
-                <p className="text-xs sm:text-sm text-brand-text-secondary mt-3 leading-relaxed">
+                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Open Library</h3>
+                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
                   Enjoy clean layouts without visual clutter, banner ads, paywall overlays, or upgrade request warnings. A workspace designed purely for readers.
                 </p>
               </div>

@@ -241,7 +241,7 @@ export const Landing = () => {
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
       {/* 1. PREMIUM HERO SECTION */}
-      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center min-h-[calc(100vh-160px)] pt-0 pb-16 lg:pt-0 lg:pb-24 scroll-mt-20 overflow-hidden">
+      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pt-4 pb-6 lg:pt-6 lg:pb-8 scroll-mt-20 overflow-hidden">
         
         {/* Left Content */}
         <motion.div 

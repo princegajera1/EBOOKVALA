@@ -343,33 +343,42 @@ export const StaggeredMenu = ({
         <div className="sm-panel-inner">
           <ul className="sm-panel-list" role="list" data-numbering={displayItemNumbering || undefined}>
             {items && items.length ? (
-              items.map((it, idx) => (
-                <li className="sm-panel-itemWrap" key={it.label + idx}>
-                  {it.onClick ? (
-                    <button 
-                      className="sm-panel-item text-left w-full cursor-pointer"
-                      onClick={() => {
-                        it.onClick();
-                        closeMenu();
-                      }}
-                      aria-label={it.ariaLabel}
-                      data-index={idx + 1}
-                    >
-                      <span className="sm-panel-itemLabel">{it.label}</span>
-                    </button>
-                  ) : (
-                    <a 
-                      className="sm-panel-item" 
-                      href={it.link} 
-                      onClick={closeMenu}
-                      aria-label={it.ariaLabel} 
-                      data-index={idx + 1}
-                    >
-                      <span className="sm-panel-itemLabel">{it.label}</span>
-                    </a>
-                  )}
-                </li>
-              ))
+              items.map((it, idx) => {
+                const IconComponent = it.icon;
+                return (
+                  <li className="sm-panel-itemWrap" key={it.label + idx}>
+                    {it.onClick ? (
+                      <button 
+                        className="sm-panel-item text-left w-full cursor-pointer"
+                        onClick={() => {
+                          it.onClick();
+                          closeMenu();
+                        }}
+                        aria-label={it.ariaLabel}
+                        data-index={idx + 1}
+                      >
+                        <span className="sm-panel-itemLabel flex items-center gap-2">
+                          {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
+                          <span>{it.label}</span>
+                        </span>
+                      </button>
+                    ) : (
+                      <a 
+                        className="sm-panel-item" 
+                        href={it.link} 
+                        onClick={closeMenu}
+                        aria-label={it.ariaLabel} 
+                        data-index={idx + 1}
+                      >
+                        <span className="sm-panel-itemLabel flex items-center gap-2">
+                          {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
+                          <span>{it.label}</span>
+                        </span>
+                      </a>
+                    )}
+                  </li>
+                );
+              })
             ) : (
               <li className="sm-panel-itemWrap" aria-hidden="true">
                 <span className="sm-panel-item"><span className="sm-panel-itemLabel">No items</span></span>

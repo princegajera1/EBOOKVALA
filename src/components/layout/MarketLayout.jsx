@@ -9,7 +9,7 @@ import PillNav from "../PillNav/PillNav";
 import StaggeredMenu from "../StaggeredMenu/StaggeredMenu";
 import MobileDockNav from "../Dock/MobileDockNav";
 
-// Brand Logo
+import { Sun, Moon } from "lucide-react";
 import logoImg from "../../assets/logo.png";
 
 export const MarketLayout = () => {
@@ -42,10 +42,22 @@ export const MarketLayout = () => {
 
   if (isAuthenticated) {
     navItems.push({ label: "Dashboard", href: getDashboardLink() });
-    navItems.push({ label: "Toggle Theme (" + (theme === "dark" ? "Light" : "Dark") + ")", href: "#", onClick: toggleTheme });
+    navItems.push({ 
+      label: "Toggle Theme", 
+      icon: theme === "dark" ? Sun : Moon, 
+      ariaLabel: "Toggle Theme", 
+      href: "#", 
+      onClick: toggleTheme 
+    });
     navItems.push({ label: "Log Out", href: "#", onClick: handleSignOut });
   } else {
-    navItems.push({ label: "Toggle Theme (" + (theme === "dark" ? "Light" : "Dark") + ")", href: "#", onClick: toggleTheme });
+    navItems.push({ 
+      label: "Toggle Theme", 
+      icon: theme === "dark" ? Sun : Moon, 
+      ariaLabel: "Toggle Theme", 
+      href: "#", 
+      onClick: toggleTheme 
+    });
     navItems.push({ label: "Log In", href: "/login" });
     navItems.push({ label: "Register", href: "/register" });
   }

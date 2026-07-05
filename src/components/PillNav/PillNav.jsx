@@ -141,36 +141,36 @@ const PillNav = ({
         <div className="pill-nav-right" ref={rightRef}>
           {rightItems.map((item, i) => {
             const isRegister = item.label === "Register";
+            const IconComponent = item.icon;
             const key = item.label ? `nav-right-${item.label.replace(/\s+/g, '-').toLowerCase()}` : `right-${i}`;
-            
             return (
               <div key={key} role="none">
                 {item.onClick ? (
                   <button
                     role="menuitem"
                     onClick={item.onClick}
-                    className="pill-nav-right-link"
+                    className={"pill-nav-right-link" + (IconComponent ? " flex items-center justify-center" : "")}
                     aria-label={item.ariaLabel || item.label}
                   >
-                    {item.label}
+                    {IconComponent ? <IconComponent className="h-4.5 w-4.5" /> : item.label}
                   </button>
                 ) : isRouterLink(item.href) ? (
                   <Link
                     role="menuitem"
                     to={item.href}
-                    className={isRegister ? "pill-register-btn" : "pill-nav-right-link"}
+                    className={isRegister ? "pill-register-btn" : "pill-nav-right-link" + (IconComponent ? " flex items-center justify-center" : "")}
                     aria-label={item.ariaLabel || item.label}
                   >
-                    {item.label}
+                    {IconComponent ? <IconComponent className="h-4.5 w-4.5" /> : item.label}
                   </Link>
                 ) : (
                   <a
                     role="menuitem"
                     href={item.href || '#'}
-                    className={isRegister ? "pill-register-btn" : "pill-nav-right-link"}
+                    className={isRegister ? "pill-register-btn" : "pill-nav-right-link" + (IconComponent ? " flex items-center justify-center" : "")}
                     aria-label={item.ariaLabel || item.label}
                   >
-                    {item.label}
+                    {IconComponent ? <IconComponent className="h-4.5 w-4.5" /> : item.label}
                   </a>
                 )}
               </div>

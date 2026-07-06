@@ -154,7 +154,7 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
   const modalElement = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-[6px] p-0 sm:p-4 select-none">
+        <div data-lenis-prevent className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-[6px] p-0 sm:p-4 select-none">
           
           {/* Modal Container */}
           <motion.div

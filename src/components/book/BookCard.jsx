@@ -141,14 +141,7 @@ export const BookCard = ({ book, view = "grid" }) => {
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-200">
-                <button 
-                  onClick={handlePreviewClick}
-                  className="p-3 rounded-full bg-white text-brand-primary shadow-md hover:scale-110 transition-transform cursor-pointer"
-                >
-                  <Eye className="h-5 w-5" />
-                </button>
-              </div>
+
             </div>
           </Link>
 
@@ -339,16 +332,7 @@ export const BookCard = ({ book, view = "grid" }) => {
             </button>
           )}
 
-          {/* Quick Preview Hover Overlay */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-2 transition-opacity duration-300 z-0">
-            <button 
-              onClick={handlePreviewClick}
-              className="px-4 py-2 text-[11px] font-bold rounded-full bg-white text-brand-primary shadow-lg hover:scale-105 transition-transform cursor-pointer flex items-center gap-1.5"
-            >
-              <Eye className="h-3.5 w-3.5" />
-              Quick Preview
-            </button>
-          </div>
+
 
           {/* AI description card reveal */}
           <AnimatePresence>

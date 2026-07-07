@@ -1054,7 +1054,7 @@ export const AuthorDashboard = () => {
 
       {/* 5. ANALYTICS TAB */}
       {activeTab === "analytics" && (
-        <Analytics />
+        <Analytics books={books} followers={followers} reviews={allReviews} />
       )}
 
       {/* 6. SETTINGS TAB */}

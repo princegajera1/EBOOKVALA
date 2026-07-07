@@ -19,7 +19,7 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { toast } from "react-hot-toast";
 
 import { LibraryManagement } from "./modules/LibraryManagement";
-import { BookBuilder } from "./modules/BookBuilder";
+
 import { ReviewCenter } from "./modules/ReviewCenter";
 import { Settings as SettingsPanel } from "./modules/Settings";
 import { Analytics } from "./modules/Analytics";
@@ -437,7 +437,7 @@ export const AuthorDashboard = () => {
   const sidebarLinks = [
     { id: "overview", label: "Dashboard", icon: BarChart2 },
     { id: "books", label: "My Books", icon: BookOpen },
-    { id: "builder", label: "Book Builder", icon: Edit },
+
     { id: "upload", label: "Publish", icon: Upload },
     { id: "analytics", label: "Analytics", icon: BarChart2 },
     { id: "reviews", label: "Reviews", icon: Star },
@@ -1047,10 +1047,7 @@ export const AuthorDashboard = () => {
           />
         )}
 
-      {/* BOOK BUILDER TAB */}
-      {activeTab === "builder" && (
-        <BookBuilder books={books} />
-      )}
+
 
       {/* 5. ANALYTICS TAB */}
       {activeTab === "analytics" && (

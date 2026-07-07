@@ -224,6 +224,33 @@ export const BookCard = ({ book, view = "grid" }) => {
               </span>
 
               <div className="flex items-center gap-2">
+                {book && (book.pdfURL || book.pdf_url) && (
+                  <Button 
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      try {
+                        await dbService.incrementBookDownloads(book.id);
+                        toast.success("Starting download...");
+                        const link = document.createElement("a");
+                        link.href = book.pdfURL || book.pdf_url;
+                        link.setAttribute("download", `${book.title}.pdf`);
+                        link.target = "_blank";
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } catch (err) {
+                        console.error("Error triggering download:", err);
+                        toast.error("Failed to download.");
+                      }
+                    }}
+                    variant="outline" 
+                    size="sm" 
+                    className="h-9 px-4 text-xs font-bold rounded-full text-brand-accent border-brand-accent/20 hover:bg-brand-accent/5 hover:border-brand-accent/30"
+                  >
+                    Download
+                  </Button>
+                )}
                 <Button 
                   onClick={handlePreviewClick}
                   variant="outline" 
@@ -412,6 +439,33 @@ export const BookCard = ({ book, view = "grid" }) => {
               Free
             </span>
             
+            {book && (book.pdfURL || book.pdf_url) && (
+              <button
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  try {
+                    await dbService.incrementBookDownloads(book.id);
+                    toast.success("Starting download...");
+                    const link = document.createElement("a");
+                    link.href = book.pdfURL || book.pdf_url;
+                    link.setAttribute("download", `${book.title}.pdf`);
+                    link.target = "_blank";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  } catch (err) {
+                    console.error("Error triggering download:", err);
+                    toast.error("Failed to download.");
+                  }
+                }}
+                className="text-xs text-brand-accent hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-accent/5 transition-colors"
+                title="Download eBook PDF"
+              >
+                Download
+              </button>
+            )}
+
             <Link to={`/read/${book.slug || book.id}`}>
               <button
                 className="text-xs text-brand-success hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-success/5 transition-colors"

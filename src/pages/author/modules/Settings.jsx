@@ -409,7 +409,7 @@ export const Settings = ({
           )}
 
           {/* TAB 3: LANGUAGES LOCALIZATION */}
-          {activeTab === "settings" && activeSubTab === "languages" && (
+          {activeSubTab === "languages" && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Localization Form */}

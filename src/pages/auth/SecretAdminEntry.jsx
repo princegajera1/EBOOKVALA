@@ -1,41 +1,103 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import {
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+} from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { auth, db } from "../../lib/firebase";
 
 // Read from env — not hardcoded in bundle
 const SECRET_PASSWORD = import.meta.env.VITE_SECRET_ADMIN_TOKEN || "";
+
+const ADMIN_EMAIL = "admin@ebookvala.com";
+const ADMIN_PASS = "admin0561";
 
 export const SecretAdminEntry = () => {
   const [value, setValue] = useState("");
   const [shake, setShake] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [statusMsg, setStatusMsg] = useState("");
   const inputRef = useRef(null);
   const navigate = useNavigate();
-
-  const { login } = useAuth();
-  const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg("");
-    if (value === SECRET_PASSWORD) {
-      setUnlocked(true);
-      try {
-        // Authenticate with real Firebase credentials
-        await login("admin@ebookvala.com", "admin0561");
-        setTimeout(() => navigate("/admin/dashboard"), 700);
-      } catch (err) {
-        setUnlocked(false);
-        setErrorMsg("Firebase admin auth failed. Check credentials.");
-        setShake(true);
-        setValue("");
-        setTimeout(() => setShake(false), 600);
-      }
-    } else {
+    setStatusMsg("");
+
+    if (value !== SECRET_PASSWORD) {
       setShake(true);
       setValue("");
       setTimeout(() => setShake(false), 600);
       if (inputRef.current) inputRef.current.focus();
+      return;
+    }
+
+    // Correct secret token — proceed
+    setUnlocked(true);
+    setStatusMsg("Verifying...");
+
+    try {
+      let firebaseUser = null;
+
+      // Step 1: Try to login first
+      try {
+        const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASS);
+        firebaseUser = cred.user;
+        setStatusMsg("Authenticated!");
+      } catch (loginErr) {
+        // If user doesn't exist, create them
+        if (
+          loginErr.code === "auth/user-not-found" ||
+          loginErr.code === "auth/invalid-credential" ||
+          loginErr.code === "auth/invalid-login-credentials"
+        ) {
+          setStatusMsg("First time setup — creating admin account...");
+          const cred = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASS);
+          firebaseUser = cred.user;
+          setStatusMsg("Admin account created!");
+        } else {
+          throw loginErr;
+        }
+      }
+
+      // Step 2: Ensure Firestore document exists with role: "admin"
+      const userDocRef = doc(db, "users", firebaseUser.uid);
+      const userDoc = await getDoc(userDocRef);
+      if (!userDoc.exists()) {
+        setStatusMsg("Setting up admin profile...");
+        await setDoc(userDocRef, {
+          uid: firebaseUser.uid,
+          name: "Admin",
+          displayName: "Admin",
+          email: ADMIN_EMAIL,
+          photoURL: "",
+          role: "admin",
+          purchasedBooks: [],
+          wishlist: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      } else {
+        // Make sure role is admin even if doc exists
+        const data = userDoc.data();
+        if (data.role !== "admin") {
+          await setDoc(userDocRef, { role: "admin" }, { merge: true });
+        }
+      }
+
+      setStatusMsg("Access Granted ✓");
+      setTimeout(() => navigate("/admin/dashboard"), 800);
+    } catch (err) {
+      console.error("Admin auth error:", err);
+      setUnlocked(false);
+      setErrorMsg(`Auth failed: ${err.message}`);
+      setShake(true);
+      setValue("");
+      setTimeout(() => setShake(false), 600);
+      setStatusMsg("");
     }
   };
 
@@ -93,6 +155,7 @@ export const SecretAdminEntry = () => {
           placeholder="Password"
           autoFocus
           maxLength={20}
+          disabled={unlocked}
           style={{
             background: "var(--card, #161616)",
             border: `1.5px solid ${shake ? "#ef4444" : "var(--border, #2a2a2a)"}`,
@@ -108,17 +171,25 @@ export const SecretAdminEntry = () => {
             transition: "border 0.2s, transform 0.1s",
             transform: shake ? "translateX(-6px)" : "none",
             animation: shake ? "shake 0.4s ease" : "none",
+            opacity: unlocked ? 0.5 : 1,
           }}
         />
 
+        {statusMsg && (
+          <div style={{ color: "#22c55e", fontSize: "11px", fontWeight: "600", marginTop: "-8px" }}>
+            {statusMsg}
+          </div>
+        )}
+
         {errorMsg && (
-          <div style={{ color: "#ef4444", fontSize: "11px", fontWeight: "600", marginTop: "-8px" }}>
+          <div style={{ color: "#ef4444", fontSize: "11px", fontWeight: "600", marginTop: "-8px", maxWidth: "260px", textAlign: "center" }}>
             {errorMsg}
           </div>
         )}
 
         <button
           type="submit"
+          disabled={unlocked}
           style={{
             background: unlocked ? "#16a34a" : "var(--primary, #7c3aed)",
             color: "#fff",
@@ -127,9 +198,10 @@ export const SecretAdminEntry = () => {
             padding: "10px 36px",
             fontWeight: 700,
             fontSize: "13px",
-            cursor: "pointer",
+            cursor: unlocked ? "not-allowed" : "pointer",
             transition: "all 0.2s",
             letterSpacing: "0.04em",
+            opacity: unlocked ? 0.7 : 1,
           }}
         >
           {unlocked ? "Opening..." : "Enter"}

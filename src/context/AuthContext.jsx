@@ -184,16 +184,31 @@ export const AuthProvider = ({ children }) => {
         shouldRemember ? browserLocalPersistence : browserSessionPersistence
       );
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
+      let firebaseUser = null;
 
-      // Check if email is verified (Bypassed for smooth onboarding and friction-free user login)
+      // Try login; if admin account doesn't exist yet, auto-create it.
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        firebaseUser = userCredential.user;
+      } catch (loginErr) {
+        const isNotFound =
+          loginErr.code === "auth/user-not-found" ||
+          loginErr.code === "auth/invalid-credential" ||
+          loginErr.code === "auth/invalid-login-credentials";
+        if (isNotFound && email.toLowerCase() === "admin@ebookvala.com") {
+          // First-time setup: create the admin Firebase Auth account
+          const newCred = await createUserWithEmailAndPassword(auth, email, password);
+          firebaseUser = newCred.user;
+        } else {
+          throw loginErr;
+        }
+      }
 
-      // Verify user document exists in Firestore; auto-repair if missing
+      // Ensure Firestore user document exists BEFORE syncUserProfile is called
+      // (avoids race condition where onAuthStateChanged fires with no doc yet)
       const userDocSnap = await getDoc(doc(db, "users", firebaseUser.uid));
       if (!userDocSnap.exists()) {
-        // Auto-create missing profile (handles legacy accounts created before Firestore sync)
-        const name = firebaseUser.displayName || "EBOOKVALA Reader";
+        const name = firebaseUser.displayName || (email.toLowerCase() === "admin@ebookvala.com" ? "Admin" : "EBOOKVALA Reader");
         const role = email.toLowerCase() === "admin@ebookvala.com" ? "admin" : "reader";
         await setDoc(doc(db, "users", firebaseUser.uid), {
           uid: firebaseUser.uid,

@@ -1,11 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
-import { auth, db } from "../../lib/firebase";
+import { useAuth } from "../../hooks/useAuth";
 
 // Read from env — not hardcoded in bundle
 const SECRET_PASSWORD = import.meta.env.VITE_SECRET_ADMIN_TOKEN || "";
@@ -21,6 +16,7 @@ export const SecretAdminEntry = () => {
   const [statusMsg, setStatusMsg] = useState("");
   const inputRef = useRef(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,61 +31,17 @@ export const SecretAdminEntry = () => {
       return;
     }
 
-    // Correct secret token — proceed
     setUnlocked(true);
     setStatusMsg("Verifying...");
 
     try {
-      let firebaseUser = null;
-
-      // Step 1: Try to login first
-      try {
-        const cred = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASS);
-        firebaseUser = cred.user;
-        setStatusMsg("Authenticated!");
-      } catch (loginErr) {
-        // If user doesn't exist, create them
-        if (
-          loginErr.code === "auth/user-not-found" ||
-          loginErr.code === "auth/invalid-credential" ||
-          loginErr.code === "auth/invalid-login-credentials"
-        ) {
-          setStatusMsg("First time setup — creating admin account...");
-          const cred = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASS);
-          firebaseUser = cred.user;
-          setStatusMsg("Admin account created!");
-        } else {
-          throw loginErr;
-        }
-      }
-
-      // Step 2: Ensure Firestore document exists with role: "admin"
-      const userDocRef = doc(db, "users", firebaseUser.uid);
-      const userDoc = await getDoc(userDocRef);
-      if (!userDoc.exists()) {
-        setStatusMsg("Setting up admin profile...");
-        await setDoc(userDocRef, {
-          uid: firebaseUser.uid,
-          name: "Admin",
-          displayName: "Admin",
-          email: ADMIN_EMAIL,
-          photoURL: "",
-          role: "admin",
-          purchasedBooks: [],
-          wishlist: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        });
-      } else {
-        // Make sure role is admin even if doc exists
-        const data = userDoc.data();
-        if (data.role !== "admin") {
-          await setDoc(userDocRef, { role: "admin" }, { merge: true });
-        }
-      }
-
+      // AuthContext.login() handles:
+      // 1. Auto-create admin Firebase Auth account if missing
+      // 2. Auto-create Firestore doc with role:"admin" if missing
+      // 3. syncUserProfile so isAdmin becomes true
+      await login(ADMIN_EMAIL, ADMIN_PASS, "admin");
       setStatusMsg("Access Granted ✓");
-      setTimeout(() => navigate("/admin/dashboard"), 800);
+      setTimeout(() => navigate("/admin/dashboard"), 700);
     } catch (err) {
       console.error("Admin auth error:", err);
       setUnlocked(false);

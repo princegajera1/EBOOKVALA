@@ -297,20 +297,7 @@ export const LibraryManagement = ({
                     >
                       <Pin className="h-3.5 w-3.5" />
                     </Button>
-                    <Button 
-                      onClick={() => {
-                        if (book.pdfURL && book.pdfURL !== "/demo-preview.pdf") {
-                          window.open(book.pdfURL, "_blank", "noopener,noreferrer");
-                        } else {
-                          window.open(`/book/${book.id}`, "_blank", "noopener,noreferrer");
-                        }
-                      }}
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7.5 rounded-full text-[10px] px-2.5 font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary cursor-pointer"
-                    >
-                      <Eye className="mr-1 h-3 w-3" /> Preview
-                    </Button>
+
                     <Button 
                       onClick={() => navigate(`/read/${book.slug || book.id}`)}
                       variant="outline" 

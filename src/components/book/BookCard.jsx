@@ -233,7 +233,7 @@ export const BookCard = ({ book, view = "grid" }) => {
                   Preview
                 </Button>
                 {isAdded ? (
-                  <Link to={`/dashboard`}>
+                  <Link to={`/read/${book.slug || book.id}`}>
                     <Button 
                       variant="secondary" 
                       size="sm" 
@@ -424,7 +424,7 @@ export const BookCard = ({ book, view = "grid" }) => {
             </span>
             
             {isAdded ? (
-              <Link to={`/dashboard`}>
+              <Link to={`/read/${book.slug || book.id}`}>
                 <button
                   className="text-xs text-brand-success hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-success/5 transition-colors"
                 >

@@ -53,7 +53,7 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
       <Sidebar links={links} activeTab={activeTab} onTabChange={onTabChange} />
 
       {/* Main Panel */}
-      <main className="flex-grow h-screen overflow-y-auto bg-brand-bg-secondary p-6 md:p-8">
+      <main data-lenis-prevent className="flex-grow h-screen overflow-y-auto bg-brand-bg-secondary p-6 md:p-8">
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, y: 10 }}

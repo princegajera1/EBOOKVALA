@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { 
   BarChart2, BookOpen, Upload, Star, Users, Settings,
   ArrowRight, ArrowLeft, Sparkles, Check, CheckCircle2, 
-  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye 
+  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages 
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
@@ -17,6 +17,15 @@ import { ProgressBar } from "../../components/ui/ProgressBar";
 import { Modal } from "../../components/ui/Modal";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { toast } from "react-hot-toast";
+
+import { LibraryManagement } from "./modules/LibraryManagement";
+import { BookBuilder } from "./modules/BookBuilder";
+import { ReviewCenter } from "./modules/ReviewCenter";
+import { SeoCenter } from "./modules/SeoCenter";
+import { MultiLanguage } from "./modules/MultiLanguage";
+import { TeamWorkspace } from "./modules/TeamWorkspace";
+import { NotificationCenter } from "./modules/NotificationCenter";
+import { ProfessionalSettings } from "./modules/ProfessionalSettings";
 
 // Build last-12-months chart bins (filled with 0s, will be populated from real orders)
 const buildEmptyChartBins = () => {
@@ -438,8 +447,13 @@ export const AuthorDashboard = () => {
   const sidebarLinks = [
     { id: "overview", label: "Overview", icon: BarChart2 },
     { id: "books", label: "My Books", icon: BookOpen },
+    { id: "builder", label: "Book Builder", icon: Edit },
     { id: "upload", label: "Publish eBook", icon: Upload },
     { id: "reviews", label: "Reader Reviews", icon: Star },
+    { id: "seo", label: "SEO Center", icon: Globe },
+    { id: "languages", label: "Multi Language", icon: Languages },
+    { id: "team", label: "Team Workspace", icon: Users },
+    { id: "notifications", label: "Notifications", icon: AlertCircle },
     { id: "followers", label: "Followers", icon: Users },
     { id: "settings", label: "Author Settings", icon: Settings }
   ];
@@ -603,116 +617,18 @@ export const AuthorDashboard = () => {
 
         </div>
       )}
-
-      {/* 2. MY BOOKS TAB */}
+      {/* 2. MY BOOKS TAB (Library Management) */}
       {activeTab === "books" && (
-        <div className="flex flex-col gap-6 text-left">
-          <div className="flex justify-between items-center select-none font-display">
-            <div>
-              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">My Publications</h1>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Manage, update, and monitor your books catalog.</p>
-            </div>
-            <Button onClick={() => handleTabChange("upload")} variant="primary" className="h-10 rounded-full text-xs font-bold px-5 shadow-sm">
-              <Upload className="mr-1.5 h-3.5 w-3.5" /> Upload eBook
-            </Button>
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {Array.from({ length: 4 }).map((_, idx) => (
-                <div key={idx} className="animate-pulse flex gap-4 p-4 border border-brand-border rounded-[20px] bg-brand-card shadow-brand">
-                  <div className="h-32 w-21.5 bg-brand-border/45 rounded-[10px] shrink-0" />
-                  <div className="flex-grow flex flex-col justify-between py-1">
-                    <div>
-                      <div className="h-4.5 w-1/2 bg-brand-border/60 rounded mb-2" />
-                      <div className="h-3.5 w-3/4 bg-brand-border/30 rounded" />
-                    </div>
-                    <div className="h-3 w-1/3 bg-brand-border/30 rounded mt-3" />
-                    <div className="flex gap-2 mt-4">
-                      <div className="h-8 w-20 bg-brand-border/45 rounded-full" />
-                      <div className="h-8 w-20 bg-brand-border/45 rounded-full" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : books.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {books.map((book) => (
-                <div key={book.id} className="flex gap-4 p-4 border border-brand-border rounded-[20px] bg-brand-card shadow-brand relative group">
-                  
-                  <div className="h-32 w-21.5 bg-brand-bg-secondary border border-brand-border/40 rounded-[10px] overflow-hidden shrink-0 select-none shadow-sm">
-                    <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
-                  </div>
-                  
-                  <div className="flex-grow flex flex-col justify-between py-0.5 min-w-0">
-                    <div>
-                      <div className="flex justify-between items-start gap-2 select-none">
-                        <h4 className="text-sm font-bold text-brand-text truncate leading-snug font-display">{book.title}</h4>
-                        <StatusBadge status={book.status} />
-                      </div>
-                      <p className="text-xs text-brand-text-secondary mt-0.5 truncate">{book.subtitle || "No subtitle provided."}</p>
-                      
-                      <div className="flex flex-wrap gap-2.5 mt-2.5 text-[10px] font-bold font-mono text-brand-text-secondary select-none uppercase tracking-wider">
-                        <span>Price: <strong className="text-brand-text">{book.price > 0 ? `₹${book.price}` : "Free"}</strong></span>
-                        <span>•</span>
-                        <span>Downloads: <strong className="text-brand-text">{book.downloadCount || 0}</strong></span>
-                        <span>•</span>
-                        <span>Reads: <strong className="text-brand-text">{book.readCount || 0}</strong></span>
-                        <span>•</span>
-                        <span>Bookmarks: <strong className="text-brand-text">{book.bookmarkCount || 0}</strong></span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2 mt-3 select-none">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary"
-                        onClick={() => {
-                          if (book.pdfURL && book.pdfURL !== "/demo-preview.pdf") {
-                            window.open(book.pdfURL, "_blank", "noopener,noreferrer");
-                          } else {
-                            window.open(`/book/${book.id}`, "_blank", "noopener,noreferrer");
-                          }
-                        }}
-                      >
-                        <Eye className="mr-1 h-3 w-3" /> Preview
-                      </Button>
-                      <Button onClick={() => handleEditBook(book)} variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary">
-                        <Edit className="mr-1 h-3 w-3" /> Edit
-                      </Button>
-                      <Button onClick={() => handleDuplicateBook(book)} variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary">
-                        Duplicate
-                      </Button>
-                      {book.status !== "published" && (
-                        <Button onClick={() => handleQuickPublish(book.id)} variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-accent hover:bg-brand-accent/5">
-                          Publish
-                        </Button>
-                      )}
-                      {book.status !== "archived" && (
-                        <Button onClick={() => handleQuickArchive(book.id)} variant="outline" size="sm" className="h-8 rounded-full text-[10px] px-3 font-bold border-brand-border text-brand-text-secondary hover:bg-brand-bg-secondary">
-                          Archive
-                        </Button>
-                      )}
-                      <Button onClick={() => setBookToDelete(book)} variant="ghost" size="sm" className="h-8 rounded-full text-[10px] text-brand-danger hover:bg-brand-danger/5 px-3 font-bold">
-                        <Trash2 className="mr-1 h-3 w-3" /> Delete
-                      </Button>
-                    </div>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState 
-              title="No Publications Yet"
-              description="You haven't uploaded any eBooks. Share your knowledge with EBOOKVALA readers today."
-              actionLabel="Upload Your First Book"
-              onAction={() => handleTabChange("upload")}
-            />
-          )}
-        </div>
+        <LibraryManagement
+          books={books}
+          onEditBook={handleEditBook}
+          onDuplicateBook={handleDuplicateBook}
+          onDeleteBook={(book) => setBookToDelete(book)}
+          onUpdateBookStatus={async (bookId, status) => {
+            await dbService.updateBook(bookId, { status });
+          }}
+          onRefresh={loadAuthorData}
+        />
       )}
 
       {/* 3. UPLOAD BOOK WIZARD */}
@@ -1100,162 +1016,16 @@ export const AuthorDashboard = () => {
         </div>
       )}
 
-      {/* 4. READER REVIEWS */}
-      {activeTab === "reviews" && (
-        <div className="flex flex-col gap-6 text-left">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Reader Reviews</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Incoming reviews from readers on your published books.</p>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 select-none font-display">
-            <input
-              type="text"
-              placeholder="Search reviews..."
-              value={reviewSearchQuery}
-              onChange={(e) => setReviewSearchQuery(e.target.value)}
-              className="bg-brand-card border border-brand-border px-4 py-2.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text placeholder:text-brand-text-secondary/50"
-            />
-            <select
-              value={reviewRatingFilter}
-              onChange={(e) => setReviewRatingFilter(e.target.value)}
-              className="bg-brand-card border border-brand-border px-4 py-2.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text cursor-pointer font-bold"
-            >
-              <option value="all">All Ratings</option>
-              <option value="5">5 Stars</option>
-              <option value="4">4 Stars</option>
-              <option value="3">3 Stars</option>
-              <option value="2">2 Stars</option>
-              <option value="1">1 Star</option>
-            </select>
-            <select
-              value={reviewBookFilter}
-              onChange={(e) => setReviewBookFilter(e.target.value)}
-              className="bg-brand-card border border-brand-border px-4 py-2.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text cursor-pointer font-bold"
-            >
-              <option value="all">All Books</option>
-              {books.map(b => (
-                <option key={b.id} value={b.id}>{b.title}</option>
-              ))}
-            </select>
-          </div>
-
-          {loading ? (
-            <div className="flex flex-col gap-4">
-              {Array.from({ length: 3 }).map((_, idx) => (
-                <div key={idx} className="animate-pulse border border-brand-border bg-brand-card rounded-[20px] p-5 shadow-brand flex flex-col gap-4">
-                  <div className="flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-brand-border/45" />
-                      <div>
-                        <div className="h-3.5 w-20 bg-brand-border/60 rounded mb-2" />
-                        <div className="h-3 w-28 bg-brand-border/30 rounded" />
-                      </div>
-                    </div>
-                    <div className="h-3.5 w-12 bg-brand-border/45 rounded" />
-                  </div>
-                  <div className="h-3.5 w-full bg-brand-border/30 rounded" />
-                  <div className="h-3.5 w-4/5 bg-brand-border/30 rounded" />
-                </div>
-              ))}
-            </div>
-          ) : (() => {
-            const filteredReviews = allReviews.filter(rev => {
-              const matchesSearch = rev.text.toLowerCase().includes(reviewSearchQuery.toLowerCase()) || 
-                                    rev.readerName.toLowerCase().includes(reviewSearchQuery.toLowerCase());
-              const matchesRating = reviewRatingFilter === "all" || rev.rating === Number(reviewRatingFilter);
-              const matchesBook = reviewBookFilter === "all" || rev.bookId === reviewBookFilter;
-              return matchesSearch && matchesRating && matchesBook;
-            });
-
-            return filteredReviews.length > 0 ? (
-              <div className="flex flex-col gap-4">
-                {filteredReviews.map((rev) => (
-                  <div key={rev.id} className="border border-brand-border bg-brand-card rounded-[20px] p-5 shadow-brand">
-                    <div className="flex justify-between items-start select-none font-display">
-                      <div>
-                        <h5 className="text-xs font-bold text-brand-text">{rev.readerName}</h5>
-                        <p className="text-[11px] text-brand-text-secondary mt-0.5 font-semibold">Reviewed: <span className="font-bold text-brand-accent">{rev.bookTitle}</span></p>
-                        <div className="flex gap-0.5 mt-1.5">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <Star 
-                              key={i} 
-                              className={`h-3.5 w-3.5 ${
-                                i < rev.rating 
-                                  ? "fill-amber-400 text-amber-400" 
-                                  : "text-brand-border"
-                              }`} 
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-mono text-brand-text-secondary">
-                        {new Date(rev.createdAt).toLocaleDateString()}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-brand-text-secondary leading-relaxed mt-4 font-normal">
-                      "{rev.text}"
-                    </p>
-
-                    {/* Reply Action */}
-                    {rev.authorReply ? (
-                      <div className="mt-4 p-4 border-l-2 border-brand-accent bg-brand-bg-secondary/60 rounded-r-[12px] flex justify-between items-start">
-                        <div className="flex flex-col gap-1 text-left">
-                          <span className="text-[10px] font-bold text-brand-accent uppercase tracking-widest select-none font-mono">Your Reply:</span>
-                          <p className="text-xs text-brand-text-secondary italic">"{rev.authorReply}"</p>
-                        </div>
-                        <button
-                          onClick={() => handleDeleteReply(rev.id)}
-                          className="text-brand-danger hover:bg-brand-danger/10 p-1.5 rounded-full select-none transition-colors ml-2"
-                          title="Delete Reply"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="mt-4 pt-4 border-t border-brand-border/40 select-none text-left">
-                        {replyReviewId === rev.id ? (
-                          <div className="flex gap-2">
-                            <input
-                              type="text"
-                              placeholder="Type your reply to this review..."
-                              value={replyText}
-                              onChange={(e) => setReplyText(e.target.value)}
-                              className="flex-1 bg-brand-bg-secondary border border-brand-border/60 px-4 py-2 text-xs rounded-[12px] focus:outline-none text-brand-text placeholder:text-brand-text-secondary/50"
-                            />
-                            <Button 
-                              onClick={() => handleReviewReply(rev.id)}
-                              variant="primary" 
-                              size="sm" 
-                              className="h-9 px-4 rounded-[12px] text-xs font-bold"
-                            >
-                              <Send className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setReplyReviewId(rev.id)}
-                            className="text-xs font-bold text-brand-accent hover:underline cursor-pointer"
-                          >
-                            Reply to this review
-                          </button>
-                        )}
-                      </div>
-                    )}
-
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 border border-dashed border-brand-border rounded-[20px] text-xs text-brand-text-secondary bg-brand-card font-semibold select-none">
-                No reviews found matching your search.
-              </div>
-            );
-          })()}
-        </div>
-      )}
+        {/* 4. READER REVIEWS (Review & Reader Center) */}
+        {activeTab === "reviews" && (
+          <ReviewCenter
+            books={books}
+            reviews={allReviews}
+            onReplyToReview={handleReviewReply}
+            onDeleteReply={handleDeleteReply}
+            onRefresh={loadAuthorData}
+          />
+        )}
 
       {/* 5. FOLLOWERS TAB */}
       {activeTab === "followers" && (
@@ -1324,31 +1094,40 @@ export const AuthorDashboard = () => {
         </div>
       )}
 
+      {/* BOOK BUILDER TAB */}
+      {activeTab === "builder" && (
+        <BookBuilder books={books} />
+      )}
+
+      {/* SEO CENTER TAB */}
+      {activeTab === "seo" && (
+        <SeoCenter books={books} />
+      )}
+
+      {/* MULTI LANGUAGE TAB */}
+      {activeTab === "languages" && (
+        <MultiLanguage books={books} />
+      )}
+
+      {/* TEAM WORKSPACE TAB */}
+      {activeTab === "team" && (
+        <TeamWorkspace />
+      )}
+
+      {/* NOTIFICATION CENTER TAB */}
+      {activeTab === "notifications" && (
+        <NotificationCenter />
+      )}
+
       {/* 6. SETTINGS TAB */}
       {activeTab === "settings" && (
-        <div className="flex flex-col gap-6 text-left max-w-lg">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Author Settings</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Manage your public bio details and custom profiles.</p>
-          </div>
-
-          <form onSubmit={(e) => { e.preventDefault(); toast.success("Author settings updated!"); }} className="flex flex-col gap-5 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand">
-            <Input
-              label="Author Bio"
-              placeholder="e.g. Tech founder & interface developer"
-              value={authorProfile?.bio || ""}
-              onChange={(e) => setAuthorProfile(prev => ({ ...prev, bio: e.target.value }))}
-            />
-            <Input
-              label="Profile Photo URL"
-              value={authorProfile?.photoURL || ""}
-              onChange={(e) => setAuthorProfile(prev => ({ ...prev, photoURL: e.target.value }))}
-            />
-            <Button type="submit" variant="primary" className="h-11 w-full sm:w-fit mt-2 rounded-full text-xs font-bold px-6 shadow-sm">
-              Save Author Settings
-            </Button>
-          </form>
-        </div>
+        <ProfessionalSettings
+          authorProfile={authorProfile}
+          onSaveProfile={async (updatedProfile) => {
+            setAuthorProfile(updatedProfile);
+            await dbService.updateAuthor(user.uid, updatedProfile);
+          }}
+        />
       )}
 
       {/* Delete Confirmation Modal */}

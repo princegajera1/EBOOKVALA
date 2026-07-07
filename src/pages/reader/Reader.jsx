@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, ChevronRight, Settings, Maximize, Minimize, Bookmark, 
   Highlighter, PenTool, BrainCircuit, Volume2, VolumeX, Languages, 
-  HelpCircle, Send, Sparkles, LogOut, ArrowLeft, RefreshCw
+  HelpCircle, Send, Sparkles, LogOut, ArrowLeft, RefreshCw, FileText, BookOpen
 } from "lucide-react";
 import { dbService } from "../../services/db";
 import { useAuth } from "../../hooks/useAuth";
@@ -47,6 +47,7 @@ export const Reader = () => {
   const [book, setBook] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState("pdf"); // default to pdf mode
 
   // Reader Settings
   const [readerTheme, setReaderTheme] = useState("sepia"); // light | dark | sepia
@@ -94,6 +95,13 @@ export const Reader = () => {
         }
         setBook(found);
         setChapters(generateMockContent(found.title));
+        
+        const fileUrl = found.pdfURL || found.pdf_url;
+        if (!fileUrl || fileUrl.trim() === "") {
+          setViewMode("text");
+        } else {
+          setViewMode("pdf");
+        }
         
         // Increment live read count in Firestore
         dbService.updateBook(found.id, { readCount: (found.readCount || 0) + 1 });
@@ -305,14 +313,28 @@ export const Reader = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Toggle PDF/Text view modes */}
+          {book && (
+            <button
+              onClick={() => setViewMode(prev => prev === "pdf" ? "text" : "pdf")}
+              className="p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold text-brand-text"
+              title={viewMode === "pdf" ? "Switch to Reflowable Text Mode" : "Switch to PDF Book Mode"}
+            >
+              {viewMode === "pdf" ? <BookOpen className="h-4.5 w-4.5 text-brand-accent animate-pulse" /> : <FileText className="h-4.5 w-4.5" />}
+              <span className="hidden md:inline">{viewMode === "pdf" ? "Read Text" : "View PDF"}</span>
+            </button>
+          )}
+
           {/* Audio controls */}
-          <button
-            onClick={toggleSpeech}
-            className="p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
-            title="Read Chapter Aloud"
-          >
-            {isSpeaking ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
-          </button>
+          {viewMode === "text" && (
+            <button
+              onClick={toggleSpeech}
+              className="p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+              title="Read Chapter Aloud"
+            >
+              {isSpeaking ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
+            </button>
+          )}
 
           {/* AI Helper Toggle */}
           <button
@@ -327,91 +349,93 @@ export const Reader = () => {
           </button>
 
           {/* Reader settings dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
-              className="p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
-              title="Reader Configurations"
-            >
-              <Settings className="h-4.5 w-4.5" />
-            </button>
+          {viewMode === "text" && (
+            <div className="relative">
+              <button
+                onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
+                className="p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
+                title="Reader Configurations"
+              >
+                <Settings className="h-4.5 w-4.5" />
+              </button>
 
-            <AnimatePresence>
-              {showSettingsDropdown && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setShowSettingsDropdown(false)} />
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    className="absolute right-0 mt-2.5 w-64 z-50 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-4 text-brand-text flex flex-col gap-4 text-left"
-                  >
-                    <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono">Reader Settings</p>
-                    
-                    {/* Theme selector */}
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-[10px] font-bold">Theme background</span>
-                      <div className="grid grid-cols-3 gap-1 text-center text-[10px] font-bold">
-                        {["light", "sepia", "dark"].map((t) => (
-                          <button
-                            key={t}
-                            onClick={() => setReaderTheme(t)}
-                            className={`py-1.5 rounded-lg border capitalize cursor-pointer ${
-                              readerTheme === t 
-                                ? "border-brand-accent bg-brand-bg-secondary text-brand-accent" 
-                                : "border-brand-border hover:bg-brand-bg-secondary"
-                            }`}
+              <AnimatePresence>
+                {showSettingsDropdown && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setShowSettingsDropdown(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      className="absolute right-0 mt-2.5 w-64 z-50 bg-brand-card border border-brand-border rounded-brand-card shadow-brand-hover p-4 text-brand-text flex flex-col gap-4 text-left"
+                    >
+                      <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono">Reader Settings</p>
+                      
+                      {/* Theme selector */}
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold">Theme background</span>
+                        <div className="grid grid-cols-3 gap-1 text-center text-[10px] font-bold">
+                          {["light", "sepia", "dark"].map((t) => (
+                            <button
+                              key={t}
+                              onClick={() => setReaderTheme(t)}
+                              className={`py-1.5 rounded-lg border capitalize cursor-pointer ${
+                                readerTheme === t 
+                                  ? "border-brand-accent bg-brand-bg-secondary text-brand-accent" 
+                                  : "border-brand-border hover:bg-brand-bg-secondary"
+                              }`}
+                            >
+                              {t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Font selector */}
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold">Typography Scale</span>
+                        <div className="grid grid-cols-3 gap-1 text-center text-[10px] font-bold">
+                          {["sans", "serif", "mono"].map((f) => (
+                            <button
+                              key={f}
+                              onClick={() => setFontFamily(f)}
+                              className={`py-1.5 rounded-lg border capitalize cursor-pointer ${
+                                fontFamily === f 
+                                  ? "border-brand-accent bg-brand-bg-secondary text-brand-accent" 
+                                  : "border-brand-border hover:bg-brand-bg-secondary"
+                              }`}
+                            >
+                              {f}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Size selector */}
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold">Text Size</span>
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => setFontSize(Math.max(12, fontSize - 2))}
+                            className="w-7 h-7 rounded border border-brand-border flex items-center justify-center font-bold text-xs hover:bg-brand-bg-secondary cursor-pointer"
                           >
-                            {t}
+                            A-
                           </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Font selector */}
-                    <div className="flex flex-col gap-1.5">
-                      <span className="text-[10px] font-bold">Typography Scale</span>
-                      <div className="grid grid-cols-3 gap-1 text-center text-[10px] font-bold">
-                        {["sans", "serif", "mono"].map((f) => (
-                          <button
-                            key={f}
-                            onClick={() => setFontFamily(f)}
-                            className={`py-1.5 rounded-lg border capitalize cursor-pointer ${
-                              fontFamily === f 
-                                ? "border-brand-accent bg-brand-bg-secondary text-brand-accent" 
-                                : "border-brand-border hover:bg-brand-bg-secondary"
-                            }`}
+                          <span className="text-xs font-mono font-bold">{fontSize}px</span>
+                          <button 
+                            onClick={() => setFontSize(Math.min(24, fontSize + 2))}
+                            className="w-7 h-7 rounded border border-brand-border flex items-center justify-center font-bold text-xs hover:bg-brand-bg-secondary cursor-pointer"
                           >
-                            {f}
+                            A+
                           </button>
-                        ))}
+                        </div>
                       </div>
-                    </div>
-
-                    {/* Size selector */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold">Text Size</span>
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={() => setFontSize(Math.max(12, fontSize - 2))}
-                          className="w-7 h-7 rounded border border-brand-border flex items-center justify-center font-bold text-xs hover:bg-brand-bg-secondary cursor-pointer"
-                        >
-                          A-
-                        </button>
-                        <span className="text-xs font-mono font-bold">{fontSize}px</span>
-                        <button 
-                          onClick={() => setFontSize(Math.min(24, fontSize + 2))}
-                          className="w-7 h-7 rounded border border-brand-border flex items-center justify-center font-bold text-xs hover:bg-brand-bg-secondary cursor-pointer"
-                        >
-                          A+
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
 
           <button
             onClick={toggleFullscreen}
@@ -457,25 +481,63 @@ export const Reader = () => {
           )}
         </AnimatePresence>
 
-        {/* Text viewport */}
-        <div 
-          className="flex-grow overflow-y-auto py-12 flex justify-center"
-          onMouseUp={handleTextSelection}
-        >
-          <div className={`${margins[marginSize]} w-full flex flex-col gap-6 text-left`}>
-            <h2 className="text-2xl font-display font-black tracking-tight mb-4 border-b border-inherit pb-4">
-              {chapters[currentChapterIdx]?.chapter}
-            </h2>
+        {/* PDF / Text Viewport */}
+        {viewMode === "pdf" ? (
+          (() => {
+            const pdfUrl = book?.pdfURL || book?.pdf_url;
+            const isPdfValid = pdfUrl && pdfUrl.trim() !== "";
             
-            <div className={`flex flex-col gap-5 ${fontFamilies[fontFamily]} ${lineHeights[lineHeight]}`} style={{ fontSize: `${fontSize}px` }}>
-              {chapters[currentChapterIdx]?.paragraphs.map((para, pIdx) => (
-                <p key={pIdx} className="indent-4 text-justify font-medium leading-relaxed opacity-90">
-                  {para}
-                </p>
-              ))}
+            if (!isPdfValid) {
+              return (
+                <div className="flex-grow flex flex-col items-center justify-center p-8 bg-brand-bg-secondary text-brand-text select-none text-center">
+                  <div className="max-w-md p-8 rounded-[24px] border border-brand-border bg-brand-card shadow-brand flex flex-col items-center gap-4">
+                    <div className="h-14 w-14 rounded-full bg-brand-danger/10 border border-brand-danger/25 text-brand-danger flex items-center justify-center shadow-sm">
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-lg font-display font-black">File not available</h3>
+                    <p className="text-xs text-brand-text-secondary leading-relaxed max-w-xs">
+                      This eBook does not have a PDF document uploaded. Switch to <strong>Text Mode</strong> to read the text preview instead!
+                    </p>
+                    <Button onClick={() => setViewMode("text")} variant="primary" className="rounded-full text-xs font-bold px-6 h-10 shadow-sm mt-2">
+                      Switch to Text Mode
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+
+            return (
+              <div className="flex-grow relative bg-[#2a2a2e] flex items-stretch">
+                <iframe 
+                  src={pdfUrl} 
+                  className="w-full border-none" 
+                  title={book.title}
+                  style={{ minHeight: "calc(100vh - 64px)" }}
+                />
+              </div>
+            );
+          })()
+        ) : (
+          /* Text viewport */
+          <div 
+            className="flex-grow overflow-y-auto py-12 flex justify-center"
+            onMouseUp={handleTextSelection}
+          >
+            <div className={`${margins[marginSize]} w-full flex flex-col gap-6 text-left`}>
+              <h2 className="text-2xl font-display font-black tracking-tight mb-4 border-b border-inherit pb-4">
+                {chapters[currentChapterIdx]?.chapter}
+              </h2>
+              
+              <div className={`flex flex-col gap-5 ${fontFamilies[fontFamily]} ${lineHeights[lineHeight]}`} style={{ fontSize: `${fontSize}px` }}>
+                {chapters[currentChapterIdx]?.paragraphs.map((para, pIdx) => (
+                  <p key={pIdx} className="indent-4 text-justify font-medium leading-relaxed opacity-90">
+                    {para}
+                  </p>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* AI Tutor Chat Sidebar Drawer */}
         <AnimatePresence>
@@ -546,29 +608,31 @@ export const Reader = () => {
       </main>
 
       {/* Bottom Progress Navigation bar */}
-      <footer className="h-16 border-t border-inherit px-6 flex items-center justify-between select-none">
-        <button
-          onClick={() => handlePageTurn(currentChapterIdx - 1)}
-          disabled={currentChapterIdx === 0}
-          className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-        >
-          <ChevronLeft className="h-4.5 w-4.5" />
-          <span>Previous Chapter</span>
-        </button>
+      {viewMode === "text" && (
+        <footer className="h-16 border-t border-inherit px-6 flex items-center justify-between select-none">
+          <button
+            onClick={() => handlePageTurn(currentChapterIdx - 1)}
+            disabled={currentChapterIdx === 0}
+            className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <ChevronLeft className="h-4.5 w-4.5" />
+            <span>Previous Chapter</span>
+          </button>
 
-        <span className="text-xs font-mono font-bold opacity-80">
-          Chapter {currentChapterIdx + 1} of {chapters.length}
-        </span>
+          <span className="text-xs font-mono font-bold opacity-80">
+            Chapter {currentChapterIdx + 1} of {chapters.length}
+          </span>
 
-        <button
-          onClick={() => handlePageTurn(currentChapterIdx + 1)}
-          disabled={currentChapterIdx === chapters.length - 1}
-          className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-        >
-          <span>Next Chapter</span>
-          <ChevronRight className="h-4.5 w-4.5" />
-        </button>
-      </footer>
+          <button
+            onClick={() => handlePageTurn(currentChapterIdx + 1)}
+            disabled={currentChapterIdx === chapters.length - 1}
+            className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <span>Next Chapter</span>
+            <ChevronRight className="h-4.5 w-4.5" />
+          </button>
+        </footer>
+      )}
 
     </div>
   );

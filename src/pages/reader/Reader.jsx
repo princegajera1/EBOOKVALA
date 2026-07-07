@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, ChevronRight, Settings, Maximize, Minimize, Bookmark, 
   Highlighter, PenTool, BrainCircuit, Volume2, VolumeX, Languages, 
-  HelpCircle, Send, Sparkles, LogOut, ArrowLeft, RefreshCw, FileText, BookOpen
+  HelpCircle, Send, Sparkles, LogOut, ArrowLeft, RefreshCw, FileText, BookOpen, Download
 } from "lucide-react";
 import { dbService } from "../../services/db";
 import { useAuth } from "../../hooks/useAuth";
@@ -82,6 +82,40 @@ export const Reader = () => {
   // Text to Speech
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechUtteranceRef = useRef(null);
+
+  const handleDownloadBook = async () => {
+    if (!book) return;
+    const pdfUrl = book.pdfURL || book.pdf_url;
+    if (!pdfUrl || pdfUrl.trim() === "") {
+      toast.error("This book does not have a PDF document available for download.");
+      return;
+    }
+
+    try {
+      // Trigger database count increment
+      await dbService.incrementBookDownloads(book.id);
+      
+      // Update local state to immediately reflect incremented count if navigating back
+      setBook(prev => ({
+        ...prev,
+        downloadCount: (prev.downloadCount || 0) + 1
+      }));
+
+      toast.success("Starting download...");
+
+      // Download file action
+      const link = document.createElement("a");
+      link.href = pdfUrl;
+      link.setAttribute("download", `${book.title}.pdf`);
+      link.target = "_blank";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Error triggering download:", err);
+      toast.error("An error occurred while preparing your download.");
+    }
+  };
 
   useEffect(() => {
     const fetchBook = async () => {
@@ -401,6 +435,18 @@ export const Reader = () => {
                 )}
               </AnimatePresence>
             </div>
+          )}
+
+          {/* Download button */}
+          {book && (book.pdfURL || book.pdf_url) && (
+            <button
+              onClick={handleDownloadBook}
+              className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-brand-accent/10 hover:bg-brand-accent/25 border border-brand-accent/20 text-brand-accent transition-all cursor-pointer flex items-center gap-1.5"
+              title="Download PDF File"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span>Download</span>
+            </button>
           )}
 
           <button

@@ -818,6 +818,19 @@ export const dbService = {
     }
   },
 
+  incrementBookDownloads: async (bookId) => {
+    try {
+      const docRef = doc(db, "books", bookId);
+      await updateDoc(docRef, {
+        downloadCount: increment(1)
+      });
+      return true;
+    } catch (err) {
+      console.error("Error incrementing book downloads count:", err);
+      return false;
+    }
+  },
+
   // REVIEWS EXTRA
   deleteReviewReply: async (reviewId) => {
     try {

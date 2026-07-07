@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { 
   ArrowUp, ArrowDown, Copy, Lock, Unlock, Eye, EyeOff, Trash2, 
-  RotateCcw, Save, History, Redo2, Undo2, Plus, Sparkles, BookOpen
+  RotateCcw, Save, History, Redo2, Undo2, Plus, Sparkles, BookOpen, AlertCircle
 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { toast } from "react-hot-toast";

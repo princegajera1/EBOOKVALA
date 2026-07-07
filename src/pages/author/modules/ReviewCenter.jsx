@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { 
   Star, Search, Sparkles, AlertTriangle, MessageSquare, ThumbsUp, 
-  ThumbsDown, Pin, Heart, Send, Trash2, CheckCircle2, UserPlus, UserCheck
+  ThumbsDown, Pin, Heart, Send, Trash2, CheckCircle2, UserPlus, UserCheck, AlertCircle
 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { toast } from "react-hot-toast";

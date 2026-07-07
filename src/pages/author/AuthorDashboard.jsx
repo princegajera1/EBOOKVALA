@@ -21,11 +21,8 @@ import { toast } from "react-hot-toast";
 import { LibraryManagement } from "./modules/LibraryManagement";
 import { BookBuilder } from "./modules/BookBuilder";
 import { ReviewCenter } from "./modules/ReviewCenter";
-import { SeoCenter } from "./modules/SeoCenter";
-import { MultiLanguage } from "./modules/MultiLanguage";
-import { TeamWorkspace } from "./modules/TeamWorkspace";
-import { NotificationCenter } from "./modules/NotificationCenter";
-import { ProfessionalSettings } from "./modules/ProfessionalSettings";
+import { Settings as SettingsPanel } from "./modules/Settings";
+import { Analytics } from "./modules/Analytics";
 
 // Build last-12-months chart bins (filled with 0s, will be populated from real orders)
 const buildEmptyChartBins = () => {
@@ -131,7 +128,7 @@ export const AuthorDashboard = () => {
     publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
     coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
     pdfURL: "", fileSize: "", format: ["PDF"], status: "draft",
-    price: 0, discount: 0, version: "1.0.0", releaseDate: new Date().toISOString().split("T")[0],
+    version: "1.0.0", releaseDate: new Date().toISOString().split("T")[0],
     visibility: "public", genre: ""
   });
 
@@ -226,14 +223,7 @@ export const AuthorDashboard = () => {
       toast.error("Please select at least one category.");
       return;
     }
-    if (isNaN(newBook.price) || newBook.price < 0) {
-      toast.error("Please enter a valid price (>= 0).");
-      return;
-    }
-    if (isNaN(newBook.discount) || newBook.discount < 0 || newBook.discount > 100) {
-      toast.error("Please enter a valid discount percentage (0 to 100).");
-      return;
-    }
+
     if (isNaN(newBook.pages) || newBook.pages <= 0) {
       toast.error("Please enter a valid page count (> 0).");
       return;
@@ -445,17 +435,13 @@ export const AuthorDashboard = () => {
   };
 
   const sidebarLinks = [
-    { id: "overview", label: "Overview", icon: BarChart2 },
+    { id: "overview", label: "Dashboard", icon: BarChart2 },
     { id: "books", label: "My Books", icon: BookOpen },
     { id: "builder", label: "Book Builder", icon: Edit },
-    { id: "upload", label: "Publish eBook", icon: Upload },
-    { id: "reviews", label: "Reader Reviews", icon: Star },
-    { id: "seo", label: "SEO Center", icon: Globe },
-    { id: "languages", label: "Multi Language", icon: Languages },
-    { id: "team", label: "Team Workspace", icon: Users },
-    { id: "notifications", label: "Notifications", icon: AlertCircle },
-    { id: "followers", label: "Followers", icon: Users },
-    { id: "settings", label: "Author Settings", icon: Settings }
+    { id: "upload", label: "Publish", icon: Upload },
+    { id: "analytics", label: "Analytics", icon: BarChart2 },
+    { id: "reviews", label: "Reviews", icon: Star },
+    { id: "settings", label: "Settings", icon: Settings }
   ];
 
   // Derive metrics
@@ -472,15 +458,15 @@ export const AuthorDashboard = () => {
     : "N/A";
 
   const stats = [
+    { label: "Total Books", value: books.length, desc: "Total catalog size" },
     { label: "Published Books", value: publishedBooksCount, desc: "Live in library" },
     { label: "Draft Books", value: draftBooksCount, desc: "Saved drafts" },
     { label: "Downloads", value: totalDownloads.toLocaleString(), desc: "Total downloads" },
     { label: "Reads", value: totalReads.toLocaleString(), desc: "Total page reads" },
     { label: "Bookmarks", value: totalBookmarks.toLocaleString(), desc: "Added to wishlists" },
     { label: "Followers", value: totalFollowersCount.toLocaleString(), desc: "Total subscribers" },
-    { label: "Revenue (80% Cut)", value: `₹${totalRevenue.toLocaleString()}`, desc: "Earned from sales" },
-    { label: "Avg Rating", value: avgRating, desc: "Feedback score" },
-    { label: "Reviews Count", value: totalReviewsCount, desc: "Total reviews" }
+    { label: "Reviews", value: totalReviewsCount, desc: "Total reviews" },
+    { label: "Average Rating", value: avgRating, desc: "Feedback score" }
   ];
 
   if (!user) {
@@ -543,65 +529,99 @@ export const AuthorDashboard = () => {
             )}
           </div>
 
-          {/* Downloads AreaChart */}
-          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand text-left select-none">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 font-display">
-              <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Analytics Overview</h3>
-              
-              {/* Tab Selector */}
-              <div className="flex bg-brand-bg-secondary p-1 rounded-full border border-brand-border text-xs font-bold">
-                {["downloads", "reads"].map((m) => (
-                  <button
-                    key={m}
-                    onClick={() => setChartMetric(m)}
-                    className={`px-4 py-1.5 rounded-full capitalize transition-all cursor-pointer ${
-                      chartMetric === m 
-                        ? "bg-brand-bg text-brand-text shadow-sm" 
-                        : "text-brand-text-secondary hover:text-brand-text"
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
+          {/* Main Visual Panels Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch select-none">
+            
+            {/* Downloads AreaChart (Left 2 cols) */}
+            <div className="lg:col-span-2 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand text-left">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 font-display">
+                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Downloads & Reads</h3>
+                <div className="flex bg-brand-bg-secondary p-1 rounded-full border border-brand-border text-xs font-bold">
+                  {["downloads", "reads"].map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setChartMetric(m)}
+                      className={`px-4 py-1.5 rounded-full capitalize transition-all cursor-pointer ${
+                        chartMetric === m 
+                          ? "bg-brand-bg text-brand-text shadow-sm" 
+                          : "text-brand-text-secondary hover:text-brand-text"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="animate-pulse h-72 w-full bg-brand-border/20 rounded-[14px]" />
+              ) : (
+                <div className="h-72 w-full font-mono text-[10px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--color-brand-accent)" stopOpacity={0.12}/>
+                          <stop offset="95%" stopColor="var(--color-brand-accent)" stopOpacity={0.01}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--brand-border)" opacity={0.3} />
+                      <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                      <YAxis tickLine={false} axisLine={false} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: "var(--brand-card)", 
+                          borderColor: "var(--brand-border)",
+                          borderRadius: "12px",
+                          color: "var(--brand-text)",
+                          fontFamily: "var(--font-sans)"
+                        }} 
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey={chartMetric} 
+                        stroke="var(--color-brand-accent)" 
+                        strokeWidth={2.5}
+                        fillOpacity={1} 
+                        fill="url(#colorMetric)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity (Right 1 col) */}
+            <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand text-left flex flex-col gap-4">
+              <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono border-b border-brand-border/60 pb-2">Recent Activity</h3>
+              <div className="flex flex-col gap-4 overflow-y-auto max-h-[300px] pr-1">
+                {[
+                  { title: "Book published", time: "2 hours ago", desc: "Your book \"Designing for Scale\" is now live.", icon: CheckCircle2, color: "text-brand-success" },
+                  { title: "New review received", time: "5 hours ago", desc: "Rohan Patel rated \"Designing for Scale\" 5 stars.", icon: Star, color: "text-amber-500" },
+                  { title: "Bookmarked by reader", time: "Yesterday", desc: "A reader bookmarked \"Designing for Scale\".", icon: Bookmark, color: "text-brand-accent" },
+                  { title: "Book updated", time: "3 days ago", desc: "Version 1.0.2 draft is saved.", icon: Edit, color: "text-brand-text-secondary" },
+                  { title: "Draft saved", time: "5 days ago", desc: "Draft for chapter 3 completed.", icon: FileText, color: "text-brand-text-secondary" },
+                  { title: "SEO optimization improved", time: "1 week ago", desc: "SEO Meta tag scores calculated to 94%.", icon: Globe, color: "text-brand-accent" }
+                ].map((act, idx) => {
+                  const Icon = act.icon;
+                  return (
+                    <div key={idx} className="flex gap-3 text-xs leading-normal select-none">
+                      <div className={`mt-0.5 shrink-0 ${act.color}`}>
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div className="flex-grow">
+                        <div className="flex justify-between items-center gap-2">
+                          <p className="font-bold text-brand-text leading-none">{act.title}</p>
+                          <span className="text-[8px] font-mono text-brand-text-secondary uppercase tracking-wider font-bold shrink-0">{act.time}</span>
+                        </div>
+                        <p className="text-[10px] text-brand-text-secondary mt-1 font-medium">{act.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {loading ? (
-              <div className="animate-pulse h-80 w-full bg-brand-border/20 rounded-[14px]" />
-            ) : (
-              <div className="h-80 w-full font-mono text-[10px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="var(--color-brand-accent)" stopOpacity={0.12}/>
-                        <stop offset="95%" stopColor="var(--color-brand-accent)" stopOpacity={0.01}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--brand-border)" opacity={0.3} />
-                    <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                    <YAxis tickLine={false} axisLine={false} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: "var(--brand-card)", 
-                        borderColor: "var(--brand-border)",
-                        borderRadius: "12px",
-                        color: "var(--brand-text)",
-                        fontFamily: "var(--font-sans)"
-                      }} 
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey={chartMetric} 
-                      stroke="var(--color-brand-accent)" 
-                      strokeWidth={2.5}
-                      fillOpacity={1} 
-                      fill="url(#colorMetric)" 
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            )}
           </div>
 
           {/* Graceful zero-state on overview */}
@@ -974,7 +994,7 @@ export const AuthorDashboard = () => {
                       {newBook.categories[0] || "Uncategorized"}
                     </span>
                     <span className="bg-brand-success/15 border border-brand-success/25 text-brand-success text-[9px] font-bold rounded-full px-2.5 py-0.5 tracking-wider uppercase">
-                      {newBook.price > 0 ? `₹${newBook.price}` : "Free Library"}
+                      Free Library
                     </span>
                   </div>
                 </div>
@@ -1027,106 +1047,25 @@ export const AuthorDashboard = () => {
           />
         )}
 
-      {/* 5. FOLLOWERS TAB */}
-      {activeTab === "followers" && (
-        <div className="flex flex-col gap-6 text-left">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Author Followers</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Readers who have followed your profile.</p>
-          </div>
-
-          {/* Search Input */}
-          <div className="max-w-md select-none font-display">
-            <input
-              type="text"
-              placeholder="Search followers..."
-              value={followerSearchQuery}
-              onChange={(e) => setFollowerSearchQuery(e.target.value)}
-              className="w-full bg-brand-card border border-brand-border px-4 py-2.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text placeholder:text-brand-text-secondary/50"
-            />
-          </div>
-
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-              {Array.from({ length: 6 }).map((_, idx) => (
-                <div key={idx} className="animate-pulse flex items-center gap-3.5 p-4 border border-brand-border rounded-[20px] bg-brand-card shadow-brand">
-                  <div className="h-11 w-11 rounded-full bg-brand-border/45 shrink-0" />
-                  <div className="flex-grow">
-                    <div className="h-3.5 w-24 bg-brand-border/60 rounded mb-2" />
-                    <div className="h-3 w-16 bg-brand-border/30 rounded" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (() => {
-            const filteredFollowers = followers.filter(f => 
-              f.displayName.toLowerCase().includes(followerSearchQuery.toLowerCase())
-            );
-
-            return filteredFollowers.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                {filteredFollowers.map((follower) => (
-                  <div key={follower.id} className="flex items-center gap-3.5 p-4 border border-brand-border rounded-[20px] bg-brand-card shadow-brand">
-                    <div className="h-11 w-11 rounded-full border border-brand-border overflow-hidden bg-brand-bg-secondary shrink-0 select-none">
-                      {follower.photoURL ? (
-                        <img src={follower.photoURL} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center font-bold text-sm text-brand-text uppercase bg-brand-bg-secondary">
-                          {follower.displayName.substring(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-grow text-left">
-                      <h5 className="text-xs font-bold text-brand-text truncate leading-tight font-display">{follower.displayName}</h5>
-                      <p className="text-[9px] text-brand-text-secondary mt-1 font-mono uppercase tracking-wider">
-                        Since: {new Date(follower.followedAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-12 border border-dashed border-brand-border rounded-[20px] text-xs text-brand-text-secondary bg-brand-card font-semibold select-none">
-                No followers found.
-              </div>
-            );
-          })()}
-        </div>
-      )}
-
       {/* BOOK BUILDER TAB */}
       {activeTab === "builder" && (
         <BookBuilder books={books} />
       )}
 
-      {/* SEO CENTER TAB */}
-      {activeTab === "seo" && (
-        <SeoCenter books={books} />
-      )}
-
-      {/* MULTI LANGUAGE TAB */}
-      {activeTab === "languages" && (
-        <MultiLanguage books={books} />
-      )}
-
-      {/* TEAM WORKSPACE TAB */}
-      {activeTab === "team" && (
-        <TeamWorkspace />
-      )}
-
-      {/* NOTIFICATION CENTER TAB */}
-      {activeTab === "notifications" && (
-        <NotificationCenter />
+      {/* 5. ANALYTICS TAB */}
+      {activeTab === "analytics" && (
+        <Analytics />
       )}
 
       {/* 6. SETTINGS TAB */}
       {activeTab === "settings" && (
-        <ProfessionalSettings
+        <SettingsPanel
           authorProfile={authorProfile}
           onSaveProfile={async (updatedProfile) => {
             setAuthorProfile(updatedProfile);
             await dbService.updateAuthor(user.uid, updatedProfile);
           }}
+          books={books}
         />
       )}
 

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { 
   Eye, Edit, Trash2, Copy, FileText, CheckSquare, Square, 
-  Archive, Upload, Pin, ChevronRight, BookOpen, AlertCircle
+  Archive, Upload, Pin, ChevronRight, BookOpen, AlertCircle,
+  Search, ArrowUpDown, Filter, Star
 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
@@ -19,7 +20,9 @@ export const LibraryManagement = ({
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [selectedBookIds, setSelectedBookIds] = useState([]);
-  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("lastUpdated"); // lastUpdated | title | downloads | reads
+
   // Custom pinned state (stored in local storage as a mock user preference, or fallback to book property)
   const [pinnedBookIds, setPinnedBookIds] = useState(() => {
     try {
@@ -61,12 +64,31 @@ export const LibraryManagement = ({
     { id: "featured", label: "Featured" }
   ];
 
-  // Filter books based on status tab
+  // Filter books based on status tab & search query
   const filteredBooks = books.filter(b => {
-    if (selectedStatus === "all") return true;
-    if (selectedStatus === "pinned") return pinnedBookIds.includes(b.id);
-    if (selectedStatus === "featured") return b.isFeatured;
-    return b.status === selectedStatus;
+    // 1. Status Filter
+    let statusMatch = true;
+    if (selectedStatus === "pinned") statusMatch = pinnedBookIds.includes(b.id);
+    else if (selectedStatus === "featured") statusMatch = !!b.isFeatured;
+    else if (selectedStatus !== "all") statusMatch = b.status === selectedStatus;
+
+    // 2. Search query Match
+    let searchMatch = true;
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      searchMatch = b.title.toLowerCase().includes(q) || 
+                    (b.subtitle && b.subtitle.toLowerCase().includes(q)) ||
+                    (b.language && b.language.toLowerCase().includes(q));
+    }
+
+    return statusMatch && searchMatch;
+  }).sort((a, b) => {
+    // 3. Sort Order
+    if (sortBy === "title") return a.title.localeCompare(b.title);
+    if (sortBy === "downloads") return (b.downloadCount || 0) - (a.downloadCount || 0);
+    if (sortBy === "reads") return (b.readCount || 0) - (a.readCount || 0);
+    // default/lastUpdated
+    return new Date(b.releaseDate || b.createdAt || 0) - new Date(a.releaseDate || a.createdAt || 0);
   });
 
   // Checkbox handlers
@@ -144,16 +166,16 @@ export const LibraryManagement = ({
   };
 
   return (
-    <div className="flex flex-col gap-6 text-left">
+    <div className="flex flex-col gap-6 text-left select-none font-display">
       <div>
-        <h1 className="text-2xl font-display font-black text-brand-text">Library Management</h1>
+        <h1 className="text-2xl font-display font-black text-brand-text">Library Catalog</h1>
         <p className="text-xs text-brand-text-secondary mt-1 font-semibold">
-          Manage your publishing catalog, set visibility, drafts, and perform bulk operations.
+          Manage your publishing catalog, set visibility, drafts, and perform bulk operations on rows.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-brand-border select-none">
+      <div className="flex gap-1.5 overflow-x-auto pb-2 scrollbar-none border-b border-brand-border">
         {statuses.map((tab) => {
           const count = getCount(tab.id);
           const isActive = selectedStatus === tab.id;
@@ -179,6 +201,35 @@ export const LibraryManagement = ({
             </button>
           );
         })}
+      </div>
+
+      {/* Filters: Search & Sort Row */}
+      <div className="flex flex-col sm:flex-row items-center gap-3 w-full bg-brand-card border border-brand-border p-3 rounded-[20px] shadow-sm">
+        <div className="relative w-full sm:flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-brand-text-secondary opacity-60" />
+          <input
+            type="text"
+            placeholder="Search by title, subtitle, language..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-brand-bg border border-brand-border pl-10 pr-4 py-2 text-xs rounded-full focus:outline-none focus:border-brand-accent placeholder:text-brand-text-secondary/50 text-brand-text font-semibold"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto font-mono text-[10px] font-bold text-brand-text-secondary uppercase select-none">
+          <ArrowUpDown className="h-4 w-4 text-brand-text-secondary shrink-0" />
+          <span>Sort By</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="bg-brand-bg border border-brand-border px-3 py-1.5 text-[11px] rounded-full focus:outline-none focus:border-brand-accent text-brand-text font-bold cursor-pointer"
+          >
+            <option value="lastUpdated">Last Updated</option>
+            <option value="title">Title (A-Z)</option>
+            <option value="downloads">Downloads count</option>
+            <option value="reads">Reads count</option>
+          </select>
+        </div>
       </div>
 
       {/* Bulk Actions Floating Bar */}
@@ -218,133 +269,172 @@ export const LibraryManagement = ({
         </div>
       )}
 
-      {/* Grid Container */}
+      {/* SaaS Library Table */}
       {filteredBooks.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filteredBooks.map((book) => {
-            const isSelected = selectedBookIds.includes(book.id);
-            const isPinned = pinnedBookIds.includes(book.id);
-
-            return (
-              <div 
-                key={book.id} 
-                className={`relative flex flex-col bg-brand-card rounded-brand-card border shadow-brand transition-all duration-200 overflow-hidden ${
-                  isSelected ? "border-brand-accent bg-brand-accent/5 ring-1 ring-brand-accent" : "border-brand-border hover:border-brand-border-hover"
-                }`}
-              >
-                {/* Checkbox Overlay */}
-                <button 
-                  onClick={() => toggleSelectBook(book.id)}
-                  className="absolute top-3.5 left-3.5 z-10 p-1 rounded bg-black/40 text-white backdrop-blur-md border border-white/20 hover:scale-105 transition-transform"
-                >
-                  {isSelected ? (
-                    <CheckSquare className="h-4.5 w-4.5 text-brand-accent fill-brand-accent/20" />
-                  ) : (
-                    <Square className="h-4.5 w-4.5 opacity-80" />
-                  )}
-                </button>
-
-                {/* Pinned Ribbon */}
-                {isPinned && (
-                  <div className="absolute top-0 right-0 bg-brand-accent text-white px-3 py-1 rounded-bl-[12px] z-10 flex items-center gap-1 select-none">
-                    <Pin className="h-3 w-3 fill-white" />
-                    <span className="text-[9px] font-bold tracking-wider uppercase font-mono">Pinned</span>
-                  </div>
-                )}
-
-                {/* Cover & Body */}
-                <div className="flex gap-4 p-4">
-                  <div 
-                    onClick={() => navigate(`/book/${book.slug || book.id}`)}
-                    className="h-28 w-20 bg-brand-bg-secondary border border-brand-border rounded-[10px] overflow-hidden shrink-0 shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
-                  >
-                    <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
-                  </div>
+        <div className="bg-brand-card border border-brand-border rounded-[24px] shadow-sm overflow-hidden select-none">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-brand-border/60 text-brand-text-secondary font-bold uppercase tracking-wider font-mono text-[9px] bg-brand-bg-secondary/20">
+                  <th className="p-4 w-10 text-center">
+                    <button 
+                      onClick={toggleSelectAll}
+                      className="p-1 rounded hover:bg-black/5 text-brand-text"
+                    >
+                      {selectedBookIds.length === filteredBooks.length ? (
+                        <CheckSquare className="h-4.5 w-4.5 text-brand-accent" />
+                      ) : (
+                        <Square className="h-4.5 w-4.5 opacity-60" />
+                      )}
+                    </button>
+                  </th>
+                  <th className="p-4">Cover</th>
+                  <th className="p-4">Title & Description</th>
+                  <th className="p-4">Language</th>
+                  <th className="p-4">Status</th>
+                  <th className="p-4 text-right">Downloads</th>
+                  <th className="p-4 text-right">Reads</th>
+                  <th className="p-4 text-right">Bookmarks</th>
+                  <th className="p-4 text-center">Rating</th>
+                  <th className="p-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-brand-border/30 font-semibold text-brand-text-secondary">
+                {filteredBooks.map((book) => {
+                  const isSelected = selectedBookIds.includes(book.id);
+                  const isPinned = pinnedBookIds.includes(book.id);
                   
-                  <div className="flex-1 min-w-0 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-extrabold tracking-wider uppercase text-brand-accent">
-                          {(book.categories && book.categories[0]) || "eBook"}
-                        </span>
-                        <StatusBadge status={book.status} />
-                      </div>
-                      <h4 className="text-sm font-bold text-brand-text truncate leading-snug font-display mt-1.5">
-                        {book.title}
-                      </h4>
-                      <p className="text-xs text-brand-text-secondary truncate mt-0.5">{book.subtitle || "No subtitle."}</p>
-                    </div>
-
-                    <div className="flex gap-1.5 mt-2 flex-wrap text-[10px] font-bold font-mono text-brand-text-secondary uppercase select-none">
-                      <span>Price: <strong className="text-brand-text">{book.price > 0 ? `₹${book.price}` : "Free"}</strong></span>
-                      <span>•</span>
-                      <span>Reads: <strong className="text-brand-text">{book.readCount || 0}</strong></span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Action Footer */}
-                <div className="px-4 py-3 bg-brand-bg-secondary/40 border-t border-brand-border/60 flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex gap-1.5">
-                    <Button 
-                      onClick={() => togglePin(book.id)}
-                      variant="ghost" 
-                      size="sm" 
-                      className={`h-7.5 w-7.5 p-0 rounded-full cursor-pointer hover:bg-brand-bg-secondary ${
-                        isPinned ? "text-brand-accent" : "text-brand-text-secondary"
+                  return (
+                    <tr 
+                      key={book.id} 
+                      className={`hover:bg-brand-bg-secondary/15 transition-colors ${
+                        isSelected ? "bg-brand-accent/5" : ""
                       }`}
-                      title={isPinned ? "Unpin book" : "Pin book to dashboard"}
                     >
-                      <Pin className="h-3.5 w-3.5" />
-                    </Button>
+                      {/* Checkbox */}
+                      <td className="p-4 text-center">
+                        <button 
+                          onClick={() => toggleSelectBook(book.id)}
+                          className="p-1 rounded hover:bg-black/5 text-brand-text"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-4.5 w-4.5 text-brand-accent" />
+                          ) : (
+                            <Square className="h-4.5 w-4.5 opacity-60" />
+                          )}
+                        </button>
+                      </td>
 
-                    <Button 
-                      onClick={() => navigate(`/read/${book.slug || book.id}`)}
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7.5 rounded-full text-[10px] px-2.5 font-bold border-brand-border text-brand-accent hover:bg-brand-accent/5 cursor-pointer"
-                    >
-                      <BookOpen className="mr-1 h-3 w-3" /> Open
-                    </Button>
-                  </div>
+                      {/* Cover */}
+                      <td className="p-4">
+                        <div 
+                          onClick={() => navigate(`/book/${book.slug || book.id}`)}
+                          className="h-14 w-10 bg-brand-bg-secondary border border-brand-border/60 rounded-[6px] overflow-hidden shrink-0 shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
+                        >
+                          <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
+                        </div>
+                      </td>
 
-                  <div className="flex gap-1">
-                    <Button 
-                      onClick={() => onEditBook(book)} 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
-                    >
-                      <Edit className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button 
-                      onClick={() => onDuplicateBook(book)} 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
-                    >
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button 
-                      onClick={() => onDeleteBook(book)} 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7.5 w-7.5 p-0 rounded-full text-brand-danger hover:bg-brand-danger/10 cursor-pointer"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+                      {/* Title & Description */}
+                      <td className="p-4 max-w-[200px] lg:max-w-xs">
+                        <div className="flex items-center gap-1.5">
+                          {isPinned && <Pin className="h-3 w-3 text-brand-accent fill-brand-accent" />}
+                          <span className="text-xs font-bold text-brand-text truncate block">{book.title}</span>
+                        </div>
+                        <p className="text-[10px] text-brand-text-secondary truncate mt-0.5">{book.subtitle || book.description || "No description."}</p>
+                      </td>
+
+                      {/* Language */}
+                      <td className="p-4 font-mono text-[10px] text-brand-text">{book.language || "English"}</td>
+
+                      {/* Status */}
+                      <td className="p-4">
+                        <StatusBadge status={book.status} />
+                      </td>
+
+                      {/* Downloads */}
+                      <td className="p-4 text-right font-mono text-brand-text">{book.downloadCount || 0}</td>
+
+                      {/* Reads */}
+                      <td className="p-4 text-right font-mono text-brand-text">{book.readCount || 0}</td>
+
+                      {/* Bookmarks */}
+                      <td className="p-4 text-right font-mono">{book.bookmarkCount || 0}</td>
+
+                      {/* Rating */}
+                      <td className="p-4 text-center font-mono">
+                        <div className="flex items-center justify-center gap-0.5 text-amber-500 text-[10px] font-bold">
+                          <Star className="h-3 w-3 fill-amber-500" />
+                          <span>{book.rating ? book.rating.toFixed(1) : "—"}</span>
+                        </div>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button 
+                            onClick={() => togglePin(book.id)}
+                            variant="ghost" 
+                            size="sm" 
+                            className={`h-7.5 w-7.5 p-0 rounded-full cursor-pointer hover:bg-brand-bg-secondary ${
+                              isPinned ? "text-brand-accent" : "text-brand-text-secondary"
+                            }`}
+                            title={isPinned ? "Unpin book" : "Pin book to dashboard"}
+                          >
+                            <Pin className="h-3.5 w-3.5" />
+                          </Button>
+
+                          <Button 
+                            onClick={() => navigate(`/read/${book.slug || book.id}`)}
+                            variant="outline" 
+                            size="sm" 
+                            className="h-7.5 rounded-full text-[10px] px-2.5 font-bold border-brand-border text-brand-accent hover:bg-brand-accent/5 cursor-pointer flex items-center"
+                          >
+                            <BookOpen className="mr-1 h-3 w-3" /> Open
+                          </Button>
+
+                          <Button 
+                            onClick={() => onEditBook(book)} 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
+                            title="Edit metadata"
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button 
+                            onClick={() => onDuplicateBook(book)} 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
+                            title="Duplicate book"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button 
+                            onClick={() => onDeleteBook(book)} 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-danger hover:bg-brand-danger/10 cursor-pointer"
+                            title="Delete permanently"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <div className="text-center py-16 border border-dashed border-brand-border rounded-[20px] bg-brand-card p-6 select-none font-display">
           <AlertCircle className="mx-auto h-9 w-9 text-brand-text-secondary opacity-60 mb-3" />
           <h3 className="text-sm font-bold text-brand-text">No Books Found</h3>
           <p className="text-xs text-brand-text-secondary mt-1">There are no books in the selected status catalog tab.</p>
-          <Button onClick={() => setSelectedStatus("all")} variant="outline" className="mt-4 rounded-full text-xs font-bold px-5 h-9 border-brand-border">
+          <Button onClick={() => { setSelectedStatus("all"); setSearchQuery(""); }} variant="outline" className="mt-4 rounded-full text-xs font-bold px-5 h-9 border-brand-border">
             Clear Filter
           </Button>
         </div>
@@ -352,3 +442,4 @@ export const LibraryManagement = ({
     </div>
   );
 };
+export default LibraryManagement;

@@ -313,40 +313,6 @@ export const Reader = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Toggle PDF/Text view modes */}
-          {book && (
-            <button
-              onClick={() => setViewMode(prev => prev === "pdf" ? "text" : "pdf")}
-              className="p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold text-brand-text"
-              title={viewMode === "pdf" ? "Switch to Reflowable Text Mode" : "Switch to PDF Book Mode"}
-            >
-              {viewMode === "pdf" ? <BookOpen className="h-4.5 w-4.5 text-brand-accent animate-pulse" /> : <FileText className="h-4.5 w-4.5" />}
-              <span className="hidden md:inline">{viewMode === "pdf" ? "Read Text" : "View PDF"}</span>
-            </button>
-          )}
-
-          {/* Audio controls */}
-          {viewMode === "text" && (
-            <button
-              onClick={toggleSpeech}
-              className="p-2 rounded-full hover:bg-black/5 transition-colors cursor-pointer"
-              title="Read Chapter Aloud"
-            >
-              {isSpeaking ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
-            </button>
-          )}
-
-          {/* AI Helper Toggle */}
-          <button
-            onClick={() => setShowAiPanel(!showAiPanel)}
-            className={`p-2 rounded-full transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold ${
-              showAiPanel ? "bg-brand-accent/20 text-brand-accent" : "hover:bg-black/5"
-            }`}
-            title="AI Reading Companion"
-          >
-            <BrainCircuit className="h-4.5 w-4.5" />
-            <span className="hidden sm:inline">AI Tutor</span>
-          </button>
 
           {/* Reader settings dropdown */}
           {viewMode === "text" && (

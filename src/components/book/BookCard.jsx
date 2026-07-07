@@ -232,26 +232,15 @@ export const BookCard = ({ book, view = "grid" }) => {
                 >
                   Preview
                 </Button>
-                {isAdded ? (
-                  <Link to={`/read/${book.slug || book.id}`}>
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      className="h-9 px-4 text-xs font-bold rounded-full bg-brand-success/10 text-brand-success border-transparent"
-                    >
-                      Read Now
-                    </Button>
-                  </Link>
-                ) : (
-                  <Button 
-                    onClick={handleQuickAdd}
-                    variant="primary" 
-                    size="sm" 
-                    className="h-9 px-4 text-xs font-bold rounded-full"
-                  >
-                    Add to Library
-                  </Button>
-                )}
+                <Link to={`/read/${book.slug || book.id}`}>
+                   <Button 
+                     variant="primary" 
+                     size="sm" 
+                     className="h-9 px-4 text-xs font-bold rounded-full bg-brand-success/15 text-brand-success hover:bg-brand-success/25 border-transparent"
+                   >
+                     Read Now
+                   </Button>
+                 </Link>
               </div>
             </div>
           </div>
@@ -423,22 +412,13 @@ export const BookCard = ({ book, view = "grid" }) => {
               Free
             </span>
             
-            {isAdded ? (
-              <Link to={`/read/${book.slug || book.id}`}>
-                <button
-                  className="text-xs text-brand-success hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-success/5 transition-colors"
-                >
-                  Read Now
-                </button>
-              </Link>
-            ) : (
+            <Link to={`/read/${book.slug || book.id}`}>
               <button
-                onClick={handleQuickAdd}
-                className="text-xs text-brand-accent hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-accent/5 transition-colors"
+                className="text-xs text-brand-success hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-success/5 transition-colors"
               >
-                Add+
+                Read Now
               </button>
-            )}
+            </Link>
           </div>
         </div>
       </motion.div>

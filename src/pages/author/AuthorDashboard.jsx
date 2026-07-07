@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { 
   BarChart2, BookOpen, Upload, Star, Users, Settings,
   ArrowRight, ArrowLeft, Sparkles, Check, CheckCircle2, 
-  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages 
+  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages, Bookmark
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";

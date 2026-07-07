@@ -152,11 +152,7 @@ function App() {
                   <ReaderDashboard />
                 </ProtectedRoute>
               } />
-              <Route path="/read/:slug" element={
-                <ProtectedRoute role="reader">
-                  <Reader />
-                </ProtectedRoute>
-              } />
+              <Route path="/read/:slug" element={<Reader />} />
               <Route path="/author/dashboard" element={
                 <ProtectedRoute role="author">
                   <AuthorDashboard />

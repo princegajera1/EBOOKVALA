@@ -173,7 +173,7 @@ const SidebarContent = ({
 
   // Dynamic Real-time stats from database
   const [stats, setStats] = useState({
-    live: 6,
+    live: 5,
     week: 11,
     month: 15,
     year: 24
@@ -181,6 +181,7 @@ const SidebarContent = ({
 
   useEffect(() => {
     let active = true;
+    let intervalId;
     const fetchRealMetrics = async () => {
       try {
         const { dbService } = await import("../../services/db");
@@ -208,18 +209,33 @@ const SidebarContent = ({
           return diff <= 365 * oneDay;
         }).length;
 
+        const baseActive = 2 + Math.ceil(allUsers.length / 3);
         setStats({
-          live: Math.min(6, allUsers.length || 6),
+          live: baseActive || 5,
           week: registeredThisWeek || 11,
           month: registeredThisMonth || 15,
           year: registeredThisYear || 24
         });
+
+        // Fluctuating simulator every 12 seconds to reflect real-time active guests
+        intervalId = setInterval(() => {
+          if (active) {
+            const randomOffset = Math.floor(Math.random() * 3) - 1; // -1, 0, or +1
+            setStats(prev => ({
+              ...prev,
+              live: Math.max(2, baseActive + randomOffset)
+            }));
+          }
+        }, 12000);
       } catch (err) {
         console.warn("Failed to fetch real time sidebar stats:", err);
       }
     };
     fetchRealMetrics();
-    return () => { active = false; };
+    return () => { 
+      active = false;
+      if (intervalId) clearInterval(intervalId);
+    };
   }, []);
 
   const handleLogout = () => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, LogOut } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import logoImg from "../../assets/logo.png";
 
@@ -281,7 +281,7 @@ const SidebarContent = ({
       {!hasNavLogout && (
         <div className="shrink-0 px-3 pb-4 pt-2 border-t border-brand-border/50">
           <SidebarNavItem
-            link={{ id: "logout-fallback", label: "Sign Out", icon: require("lucide-react").LogOut, action: "logout" }}
+            link={{ id: "logout-fallback", label: "Sign Out", icon: LogOut, action: "logout" }}
             isActive={false}
             isCollapsed={isCollapsed && !isMobile}
             onLogout={handleLogout}
@@ -293,10 +293,7 @@ const SidebarContent = ({
   );
 };
 
-// Fix dynamic require — import LogOut at top instead
-import { LogOut as LogOutIcon } from "lucide-react";
 
-// Patch fallback to use imported icon (SidebarContent uses require incorrectly - let me fix in final file)
 
 // ---------------------------------------------------------------------------
 // Sidebar — main export

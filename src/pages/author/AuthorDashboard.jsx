@@ -440,7 +440,7 @@ export const AuthorDashboard = () => {
 
     { id: "upload", label: "Publish", icon: Upload },
     { id: "analytics", label: "Analytics", icon: BarChart2 },
-    { id: "reviews", label: "Reviews", icon: Star },
+    // { id: "reviews", label: "Reviews", icon: Star },
     { id: "settings", label: "Settings", icon: Settings }
   ];
 
@@ -1037,7 +1037,7 @@ export const AuthorDashboard = () => {
       )}
 
         {/* 4. READER REVIEWS (Review & Reader Center) */}
-        {activeTab === "reviews" && (
+        {/* {activeTab === "reviews" && (
           <ReviewCenter
             books={books}
             reviews={allReviews}
@@ -1045,7 +1045,7 @@ export const AuthorDashboard = () => {
             onDeleteReply={handleDeleteReply}
             onRefresh={loadAuthorData}
           />
-        )}
+        )} */}
 
 
 

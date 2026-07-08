@@ -276,6 +276,39 @@ const SidebarContent = ({
             />
           ))}
         </nav>
+
+        {/* Live Users Presence Widget */}
+        <div className="mt-6 border-t border-brand-border/30 pt-4">
+          {!isCollapsed || isMobile ? (
+            <div className="mx-1 p-3 bg-brand-bg-secondary/40 border border-brand-border/40 rounded-[14px] text-left select-none shadow-inner">
+              <div className="flex items-center gap-1.5">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-success"></span>
+                </span>
+                <span className="text-[10px] font-mono font-bold text-brand-success uppercase tracking-wider">Live Users: 8 Active</span>
+              </div>
+              <div className="mt-2.5 flex flex-col gap-1.5 text-[9px] font-semibold text-brand-text-secondary">
+                <div className="flex justify-between items-center border-b border-brand-border/10 pb-1">
+                  <span>This Week:</span>
+                  <span className="text-brand-text font-mono font-bold">+12 Users</span>
+                </div>
+                <div className="flex justify-between items-center border-b border-brand-border/10 pb-1">
+                  <span>This Month:</span>
+                  <span className="text-brand-text font-mono font-bold">+48 Users</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span>This Year:</span>
+                  <span className="text-brand-text font-mono font-bold">+286 Users</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mx-auto flex items-center justify-center h-7 w-7 rounded-full bg-brand-success/15 text-brand-success border border-brand-success/20 font-bold text-[10px]" title="8 Live Users">
+              8
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Legacy bottom logout — only when nav links don't include logout */}

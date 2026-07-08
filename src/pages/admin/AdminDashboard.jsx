@@ -115,6 +115,17 @@ export const AdminDashboard = () => {
     { id: "tick-3", subject: "Inappropriate review report", message: "A review on my book contains aggressive personal slurs.", email: "author.amara@gmail.com", userRole: "author", status: "closed", createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }
   ]);
 
+  // Authors Page States
+  const [filterAuthorStatus, setFilterAuthorStatus] = useState("all");
+  const [currentPageAuthors, setCurrentPageAuthors] = useState(1);
+  const [pageSizeAuthors, setPageSizeAuthors] = useState(5);
+
+  // Categories Page States
+  const [newCategorySlug, setNewCategorySlug] = useState("");
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [currentPageCategories, setCurrentPageCategories] = useState(1);
+  const [pageSizeCategories, setPageSizeCategories] = useState(5);
+
   // eBook Editor Modal States
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
@@ -1632,31 +1643,389 @@ export const AdminDashboard = () => {
 
 
 
-      {/* AUTHORS TAB PLACEHOLDER */}
-      {activeTab === "authors" && (
-        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Platform Authors</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Verification status and listings of contributors.</p>
-          </div>
-          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
-            Authors catalog view is being redesigned under Phase 2.
-          </div>
-        </div>
-      )}
+      {/* AUTHORS DIRECTORY TAB */}
+      {activeTab === "authors" && (() => {
+        const handleToggleVerification = async (authorUid, currentStatus) => {
+          try {
+            const nextStatus = currentStatus === "approved" ? "pending" : "approved";
+            await dbService.updateAuthor(authorUid, { verificationStatus: nextStatus });
+            setAuthors(prev => prev.map(a => a.uid === authorUid ? { ...a, verificationStatus: nextStatus } : a));
+            toast.success(`Verification status updated to ${nextStatus}.`);
+          } catch (e) {
+            toast.error("Failed to update status.");
+          }
+        };
 
-      {/* CATEGORIES TAB PLACEHOLDER */}
-      {activeTab === "categories" && (
-        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">eBook Categories</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Active genre categories config matrix.</p>
+        const handleDeleteAuthor = (authorUid) => {
+          setAuthors(prev => prev.filter(a => a.uid !== authorUid));
+          toast.success("Author entry removed from directory.");
+        };
+
+        const authorsFiltered = authors.filter(a => {
+          const matchesSearch = 
+            a.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            a.bio?.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchesStatus = filterAuthorStatus === "all" || a.verificationStatus === filterAuthorStatus;
+          return matchesSearch && matchesStatus;
+        });
+
+        const totalAuthorsCount = authorsFiltered.length;
+        const totalAuthorsPages = Math.ceil(totalAuthorsCount / pageSizeAuthors) || 1;
+        const indexOfLastAuthor = currentPageAuthors * pageSizeAuthors;
+        const indexOfFirstAuthor = indexOfLastAuthor - pageSizeAuthors;
+        const currentAuthors = authorsFiltered.slice(indexOfFirstAuthor, indexOfLastAuthor);
+
+        return (
+          <div className="flex flex-col gap-6 text-left animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Platform Authors</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Verification status and profiles listings of contributors.</p>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 w-full">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search authors, bios..."
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageAuthors(1); }}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                  />
+                </div>
+
+                <select
+                  value={filterAuthorStatus}
+                  onChange={(e) => { setFilterAuthorStatus(e.target.value); setCurrentPageAuthors(1); }}
+                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="all">All Verification Statuses</option>
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                </select>
+
+                {(searchQuery || filterAuthorStatus !== "all") && (
+                  <button
+                    onClick={() => { setSearchQuery(""); setFilterAuthorStatus("all"); setCurrentPageAuthors(1); }}
+                    className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Directory Table */}
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">Author Profile</th>
+                      <th className="py-4 px-5">Biography</th>
+                      <th className="py-4 px-5">Verification</th>
+                      <th className="py-4 px-5">Audience</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentAuthors.length > 0 ? (
+                      currentAuthors.map((a) => (
+                        <tr key={a.uid} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                          <td className="py-4 px-5">
+                            <div className="flex items-center gap-3">
+                              <img 
+                                src={a.photoURL || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop"} 
+                                alt={a.displayName} 
+                                className="h-9 w-9 rounded-full object-cover border border-brand-border"
+                              />
+                              <span className="font-bold text-brand-text font-display">{a.displayName}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-5 font-semibold text-brand-text-secondary max-w-[240px] truncate" title={a.bio}>{a.bio}</td>
+                          <td className="py-4 px-5">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                              a.verificationStatus === "approved" ? "bg-brand-success/15 text-brand-success" : "bg-brand-warning/15 text-brand-warning animate-pulse"
+                            }`}>
+                              {a.verificationStatus}
+                            </span>
+                          </td>
+                          <td className="py-4 px-5 font-mono font-bold text-brand-text">{(a.followers || []).length} followers</td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex gap-1.5 justify-end select-none">
+                              <button 
+                                onClick={() => handleToggleVerification(a.uid, a.verificationStatus)}
+                                className={`px-2.5 py-1.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors ${
+                                  a.verificationStatus === "approved"
+                                    ? "border border-brand-border text-brand-text hover:bg-brand-bg-secondary"
+                                    : "bg-brand-success/10 text-brand-success hover:bg-brand-success/20"
+                                }`}
+                              >
+                                {a.verificationStatus === "approved" ? "Revoke Verification" : "Approve Verification"}
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteAuthor(a.uid)}
+                                className="px-2.5 py-1.5 rounded-full bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20 text-[10px] font-bold cursor-pointer transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
+                          No authors in current view directory.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalAuthorsCount > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="text-brand-text-secondary">Rows per page:</span>
+                  <select
+                    value={pageSizeAuthors}
+                    onChange={(e) => { setPageSizeAuthors(Number(e.target.value)); setCurrentPageAuthors(1); }}
+                    className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
+                  >
+                    {[5, 10, 20].map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  <span className="text-brand-text-secondary/60 ml-2">
+                    Showing {indexOfFirstAuthor + 1} to {Math.min(indexOfLastAuthor, totalAuthorsCount)} of {totalAuthorsCount} contributors
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPageAuthors(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPageAuthors === 1}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &larr;
+                  </button>
+
+                  {Array.from({ length: totalAuthorsPages }).map((_, i) => {
+                    const pNum = i + 1;
+                    return (
+                      <button
+                        key={pNum}
+                        onClick={() => setCurrentPageAuthors(pNum)}
+                        className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
+                          currentPageAuthors === pNum
+                            ? "border-brand-accent bg-brand-accent text-brand-text"
+                            : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPageAuthors(prev => Math.min(prev + 1, totalAuthorsPages))}
+                    disabled={currentPageAuthors === totalAuthorsPages}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
-            Categories manager console is being redesigned under Phase 4.
+        );
+      })()}
+
+      {/* CATEGORIES MANAGEMENT TAB */}
+      {activeTab === "categories" && (() => {
+        const handleAddCategory = async (e) => {
+          e.preventDefault();
+          if (!newCategoryName.trim()) {
+            toast.error("Category name is required.");
+            return;
+          }
+          try {
+            const addedCat = await dbService.createCategory(newCategoryName.trim());
+            setCategories(prev => [...prev, addedCat]);
+            setNewCategoryName("");
+            toast.success("Category created successfully!");
+          } catch (err) {
+            toast.error("Failed to add category.");
+          }
+        };
+
+        const handleDeleteCategory = async (catId) => {
+          try {
+            await dbService.deleteCategory(catId);
+            setCategories(prev => prev.filter(c => c.id !== catId));
+            toast.success("Category deleted.");
+          } catch (err) {
+            toast.error("Failed to delete category.");
+          }
+        };
+
+        const categoriesFiltered = categories.filter(c => {
+          return c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                 c.slug.toLowerCase().includes(searchQuery.toLowerCase());
+        });
+
+        const totalCategoriesCount = categoriesFiltered.length;
+        const totalCategoriesPages = Math.ceil(totalCategoriesCount / pageSizeCategories) || 1;
+        const indexOfLastCategory = currentPageCategories * pageSizeCategories;
+        const indexOfFirstCategory = indexOfLastCategory - pageSizeCategories;
+        const currentCategories = categoriesFiltered.slice(indexOfFirstCategory, indexOfLastCategory);
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">eBook Categories</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Active genre categories config matrix.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Form creation */}
+              <form onSubmit={handleAddCategory} className="lg:col-span-5 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
+                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Create Category</h3>
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-brand-text-secondary uppercase">Category Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter category name (e.g. Technology)..."
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-[10px] px-3.5 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-medium"
+                  />
+                </div>
+
+                <Button type="submit" variant="primary" className="h-9 w-full rounded-full text-xs font-bold mt-2">
+                  Create Category Tag
+                </Button>
+              </form>
+
+              {/* Table view */}
+              <div className="lg:col-span-7 flex flex-col gap-4">
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search category tags..."
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageCategories(1); }}
+                    className="w-full h-9 bg-brand-card border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                  />
+                </div>
+
+                <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left text-brand-text-secondary">
+                      <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                        <tr>
+                          <th className="py-4 px-5">Name</th>
+                          <th className="py-4 px-5">Slug</th>
+                          <th className="py-4 px-5">Item Count</th>
+                          <th className="py-4 px-5 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {currentCategories.length > 0 ? (
+                          currentCategories.map((c) => (
+                            <tr key={c.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                              <td className="py-4 px-5 font-bold text-brand-text font-display">{c.name}</td>
+                              <td className="py-4 px-5 font-mono text-[10.5px]">{c.slug}</td>
+                              <td className="py-4 px-5 font-bold text-brand-text">{c.count || 0} books</td>
+                              <td className="py-4 px-5 text-right">
+                                <button 
+                                  onClick={() => handleDeleteCategory(c.id)}
+                                  className="px-2.5 py-1.5 rounded-full bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20 text-[10px] font-bold cursor-pointer transition-colors"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={4} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
+                              No categories configured.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Pagination Controls */}
+                {totalCategoriesCount > 0 && (
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-brand-text-secondary">Rows per page:</span>
+                      <select
+                        value={pageSizeCategories}
+                        onChange={(e) => { setPageSizeCategories(Number(e.target.value)); setCurrentPageCategories(1); }}
+                        className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
+                      >
+                        {[5, 10, 20].map((size) => (
+                          <option key={size} value={size}>{size}</option>
+                        ))}
+                      </select>
+                      <span className="text-brand-text-secondary/60 ml-2">
+                        Showing {indexOfFirstCategory + 1} to {Math.min(indexOfLastCategory, totalCategoriesCount)} of {totalCategoriesCount} categories
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => setCurrentPageCategories(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPageCategories === 1}
+                        className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        &larr;
+                      </button>
+
+                      {Array.from({ length: totalCategoriesPages }).map((_, i) => {
+                        const pNum = i + 1;
+                        return (
+                          <button
+                            key={pNum}
+                            onClick={() => setCurrentPageCategories(pNum)}
+                            className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
+                              currentPageCategories === pNum
+                                ? "border-brand-accent bg-brand-accent text-brand-text"
+                                : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
+                            }`}
+                          >
+                            {pNum}
+                          </button>
+                        );
+                      })}
+
+                      <button
+                        onClick={() => setCurrentPageCategories(prev => Math.min(prev + 1, totalCategoriesPages))}
+                        disabled={currentPageCategories === totalCategoriesPages}
+                        className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                      >
+                        &rarr;
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {activeTab === "reports" && (() => {
         const handleDismissReport = (reportId) => {

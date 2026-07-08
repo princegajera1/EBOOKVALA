@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { 
-  BarChart2, BookOpen, Upload, Star, Users, Settings,
+  BarChart2, BookOpen, Upload, Star, Users, Settings, Download,
   ArrowRight, ArrowLeft, Sparkles, Check, CheckCircle2, 
   AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages, Bookmark
 } from "lucide-react";
+import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { dbService } from "../../services/db";
@@ -37,6 +38,21 @@ const buildEmptyChartBins = () => {
     });
   }
   return bins;
+};
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-[#161618]/95 backdrop-blur-md border border-brand-border/80 rounded-[14px] p-3 shadow-brand text-left font-sans select-none">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-brand-text-secondary">{label}</p>
+        <p className="text-sm font-black text-brand-text mt-1.5 flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-brand-accent animate-pulse"></span>
+          <span>{payload[0].value.toLocaleString()} {payload[0].name === "downloads" ? "Downloads" : "Reads"}</span>
+        </p>
+      </div>
+    );
+  }
+  return null;
 };
 
 export const AuthorDashboard = () => {
@@ -458,15 +474,15 @@ export const AuthorDashboard = () => {
     : "N/A";
 
   const stats = [
-    { label: "Total Books", value: books.length, desc: "Total catalog size" },
-    { label: "Published Books", value: publishedBooksCount, desc: "Live in library" },
-    { label: "Draft Books", value: draftBooksCount, desc: "Saved drafts" },
-    { label: "Downloads", value: totalDownloads.toLocaleString(), desc: "Total downloads" },
-    { label: "Reads", value: totalReads.toLocaleString(), desc: "Total page reads" },
-    { label: "Bookmarks", value: totalBookmarks.toLocaleString(), desc: "Added to wishlists" },
-    { label: "Followers", value: totalFollowersCount.toLocaleString(), desc: "Total subscribers" },
-    { label: "Reviews", value: totalReviewsCount, desc: "Total reviews" },
-    { label: "Average Rating", value: avgRating, desc: "Feedback score" }
+    { label: "Total Books", value: books.length, desc: "Total catalog size", icon: BookOpen, colorClass: "text-indigo-500 bg-indigo-500/10 border-indigo-500/25" },
+    { label: "Published Books", value: publishedBooksCount, desc: "Live in library", icon: CheckCircle2, colorClass: "text-emerald-500 bg-emerald-500/10 border-emerald-500/25" },
+    { label: "Draft Books", value: draftBooksCount, desc: "Saved drafts", icon: FileText, colorClass: "text-zinc-400 bg-zinc-400/10 border-zinc-400/25" },
+    { label: "Downloads", value: totalDownloads.toLocaleString(), desc: "Total downloads", icon: Download, colorClass: "text-blue-500 bg-blue-500/10 border-blue-500/25" },
+    { label: "Reads", value: totalReads.toLocaleString(), desc: "Total page reads", icon: Eye, colorClass: "text-purple-500 bg-purple-500/10 border-purple-500/25" },
+    { label: "Bookmarks", value: totalBookmarks.toLocaleString(), desc: "Added to wishlists", icon: Bookmark, colorClass: "text-rose-500 bg-rose-500/10 border-rose-500/25" },
+    { label: "Followers", value: totalFollowersCount.toLocaleString(), desc: "Total subscribers", icon: Users, colorClass: "text-cyan-500 bg-cyan-500/10 border-cyan-500/25" },
+    { label: "Reviews", value: totalReviewsCount, desc: "Total reviews", icon: Sparkles, colorClass: "text-amber-500 bg-amber-500/10 border-amber-500/25" },
+    { label: "Average Rating", value: avgRating, desc: "Feedback score", icon: Star, colorClass: "text-yellow-500 bg-yellow-500/10 border-yellow-500/25" }
   ];
 
   if (!user) {
@@ -495,37 +511,79 @@ export const AuthorDashboard = () => {
       {activeTab === "overview" && (
         <div className="flex flex-col gap-8 text-left transition-colors duration-300">
           
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-display font-black text-brand-text tracking-tight">Author Insights</h1>
-              <p className="text-xs text-brand-text-secondary mt-1">Review your publications statistics and catalog downloads.</p>
-            </div>
+          {/* Welcome Card & Verification Banner */}
+          <div className="relative overflow-hidden bg-gradient-to-r from-brand-accent/15 via-brand-accent/5 to-transparent border border-brand-border/60 rounded-[24px] p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-brand text-left">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-accent/10 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20"></div>
             
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="h-14 w-14 rounded-full bg-brand-accent/10 border border-brand-accent/35 flex items-center justify-center text-brand-accent shadow-brand shrink-0">
+                <Sparkles className="h-6 w-6 animate-pulse" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight flex items-center gap-2">
+                  Welcome back, {authorProfile?.displayName || user?.displayName || "Author"}
+                  {authorProfile?.isVerified && (
+                    <span className="inline-flex items-center gap-1 bg-brand-success/15 text-brand-success border border-brand-success/35 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full mt-0.5">
+                      ✓ Verified Pro
+                    </span>
+                  )}
+                </h1>
+                <p className="text-xs text-brand-text-secondary mt-1 max-w-xl font-medium">
+                  Your publishing workspace is live. Review your real-time insights, analytics trend, and manage your eBook catalog.
+                </p>
+              </div>
+            </div>
+
             {!authorProfile?.isVerified && (
-              <span className="bg-amber-500/10 text-amber-500 border border-amber-500/20 text-[9px] font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-                Verification Review Pending
-              </span>
+              <div className="relative z-10 flex items-center gap-2.5 bg-amber-500/10 border border-amber-500/25 px-4 py-2 rounded-full shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span className="text-[10px] font-bold tracking-wider text-amber-500 uppercase">
+                  Verification Pending Review
+                </span>
+              </div>
             )}
           </div>
 
           {/* Stats metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 select-none">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-5 select-none">
             {loading ? (
               Array.from({ length: 9 }).map((_, idx) => (
-                <div key={idx} className="animate-pulse bg-brand-card border border-brand-border rounded-[20px] p-5 shadow-brand text-left">
+                <div key={idx} className="animate-pulse bg-brand-card/40 backdrop-blur-md border border-brand-border/60 rounded-[20px] p-5 shadow-brand text-left">
                   <div className="h-3.5 w-24 bg-brand-border/45 rounded mb-3" />
                   <div className="h-7 w-16 bg-brand-border/60 rounded mb-2" />
                   <div className="h-2.5 w-32 bg-brand-border/30 rounded" />
                 </div>
               ))
             ) : (
-              stats.map((stat, idx) => (
-                <div key={idx} className="bg-brand-card border border-brand-border rounded-[20px] p-5 shadow-brand text-left">
-                  <p className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-wider">{stat.label}</p>
-                  <p className="text-2xl font-mono font-black text-brand-text mt-2">{stat.value}</p>
-                  <p className="text-[10px] text-brand-text-secondary/70 mt-1 font-semibold">{stat.desc}</p>
-                </div>
-              ))
+              stats.map((stat, idx) => {
+                const IconComponent = stat.icon;
+                return (
+                  <motion.div
+                    key={idx}
+                    whileHover={{ y: -4, scale: 1.01 }}
+                    transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                    className="group relative overflow-hidden bg-brand-card/40 backdrop-blur-md border border-brand-border/60 hover:border-brand-accent/35 rounded-[22px] p-5 shadow-brand hover:shadow-brand-hover text-left transition-colors duration-300 cursor-pointer"
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div>
+                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider">{stat.label}</p>
+                        <p className="text-3xl font-mono font-black text-brand-text mt-3 tracking-tight">{stat.value}</p>
+                      </div>
+                      <div className={`p-2.5 rounded-[14px] border ${stat.colorClass} transition-transform duration-300 group-hover:scale-110 shadow-sm`}>
+                        <IconComponent className="h-5 w-5" />
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-brand-text-secondary/75 mt-4 font-semibold flex items-center justify-between">
+                      <span>{stat.desc}</span>
+                      <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-brand-accent text-xs">→</span>
+                    </p>
+                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-brand-accent/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
+                  </motion.div>
+                );
+              })
             )}
           </div>
 
@@ -561,22 +619,14 @@ export const AuthorDashboard = () => {
                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--color-brand-accent)" stopOpacity={0.12}/>
+                          <stop offset="5%" stopColor="var(--color-brand-accent)" stopOpacity={0.24}/>
                           <stop offset="95%" stopColor="var(--color-brand-accent)" stopOpacity={0.01}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--brand-border)" opacity={0.3} />
                       <XAxis dataKey="month" tickLine={false} axisLine={false} />
                       <YAxis tickLine={false} axisLine={false} />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: "var(--brand-card)", 
-                          borderColor: "var(--brand-border)",
-                          borderRadius: "12px",
-                          color: "var(--brand-text)",
-                          fontFamily: "var(--font-sans)"
-                        }} 
-                      />
+                      <Tooltip content={<CustomTooltip />} />
                       <Area 
                         type="monotone" 
                         dataKey={chartMetric} 
@@ -592,29 +642,35 @@ export const AuthorDashboard = () => {
             </div>
 
             {/* Recent Activity (Right 1 col) */}
-            <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand text-left flex flex-col gap-4">
-              <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono border-b border-brand-border/60 pb-2">Recent Activity</h3>
-              <div className="flex flex-col gap-4 overflow-y-auto max-h-[300px] pr-1">
+            <div className="bg-brand-card/40 backdrop-blur-md border border-brand-border/60 rounded-[24px] p-6 shadow-brand text-left flex flex-col gap-5 h-full">
+              <div>
+                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Recent Activity</h3>
+                <p className="text-[10px] text-brand-text-secondary mt-0.5 font-semibold">Real-time updates from your books.</p>
+              </div>
+              <div className="flex flex-col gap-3 overflow-y-auto max-h-[310px] pr-1 no-scrollbar">
                 {[
-                  { title: "Book published", time: "2 hours ago", desc: "Your book \"Designing for Scale\" is now live.", icon: CheckCircle2, color: "text-brand-success" },
-                  { title: "New review received", time: "5 hours ago", desc: "Rohan Patel rated \"Designing for Scale\" 5 stars.", icon: Star, color: "text-amber-500" },
-                  { title: "Bookmarked by reader", time: "Yesterday", desc: "A reader bookmarked \"Designing for Scale\".", icon: Bookmark, color: "text-brand-accent" },
-                  { title: "Book updated", time: "3 days ago", desc: "Version 1.0.2 draft is saved.", icon: Edit, color: "text-brand-text-secondary" },
-                  { title: "Draft saved", time: "5 days ago", desc: "Draft for chapter 3 completed.", icon: FileText, color: "text-brand-text-secondary" },
-                  { title: "SEO optimization improved", time: "1 week ago", desc: "SEO Meta tag scores calculated to 94%.", icon: Globe, color: "text-brand-accent" }
+                  { title: "Book published", time: "2 hours ago", desc: "Your book \"Designing for Scale\" is now live.", icon: CheckCircle2, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
+                  { title: "New review received", time: "5 hours ago", desc: "Rohan Patel rated \"Designing for Scale\" 5 stars.", icon: Star, color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
+                  { title: "Bookmarked by reader", time: "Yesterday", desc: "A reader bookmarked \"Designing for Scale\".", icon: Bookmark, color: "text-brand-accent bg-brand-accent/10 border-brand-accent/20" },
+                  { title: "Book updated", time: "3 days ago", desc: "Version 1.0.2 draft is saved.", icon: Edit, color: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20" },
+                  { title: "Draft saved", time: "5 days ago", desc: "Draft for chapter 3 completed.", icon: FileText, color: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20" },
+                  { title: "SEO optimized", time: "1 week ago", desc: "SEO Meta tag scores calculated to 94%.", icon: Globe, color: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20" }
                 ].map((act, idx) => {
                   const Icon = act.icon;
                   return (
-                    <div key={idx} className="flex gap-3 text-xs leading-normal select-none">
-                      <div className={`mt-0.5 shrink-0 ${act.color}`}>
-                        <Icon className="h-4 w-4" />
+                    <div 
+                      key={idx} 
+                      className="group flex items-start gap-3 p-2.5 rounded-[16px] border border-transparent hover:border-brand-border/60 hover:bg-[#1a1a1c]/30 transition-all duration-200 cursor-pointer select-none"
+                    >
+                      <div className={`p-2 rounded-[10px] border ${act.color} shrink-0 transition-transform duration-300 group-hover:scale-105`}>
+                        <Icon className="h-3.5 w-3.5" />
                       </div>
-                      <div className="flex-grow">
+                      <div className="flex-grow min-w-0">
                         <div className="flex justify-between items-center gap-2">
-                          <p className="font-bold text-brand-text leading-none">{act.title}</p>
+                          <p className="text-[11px] font-bold text-brand-text truncate leading-tight">{act.title}</p>
                           <span className="text-[8px] font-mono text-brand-text-secondary uppercase tracking-wider font-bold shrink-0">{act.time}</span>
                         </div>
-                        <p className="text-[10px] text-brand-text-secondary mt-1 font-medium">{act.desc}</p>
+                        <p className="text-[10px] text-brand-text-secondary mt-0.5 truncate font-medium">{act.desc}</p>
                       </div>
                     </div>
                   );

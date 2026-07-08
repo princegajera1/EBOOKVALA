@@ -8,6 +8,7 @@ import { Button } from "../../../components/ui/Button";
 import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { motion } from "framer-motion";
 
 export const LibraryManagement = ({ 
   books = [], 
@@ -271,15 +272,15 @@ export const LibraryManagement = ({
 
       {/* SaaS Library Table */}
       {filteredBooks.length > 0 ? (
-        <div className="bg-brand-card border border-brand-border rounded-[24px] shadow-sm overflow-hidden select-none">
+        <div className="bg-brand-card/40 backdrop-blur-md border border-brand-border/60 rounded-[24px] shadow-brand overflow-hidden select-none">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-brand-border/60 text-brand-text-secondary font-bold uppercase tracking-wider font-mono text-[9px] bg-brand-bg-secondary/20">
+                <tr className="border-b border-brand-border/60 text-brand-text-secondary font-bold uppercase tracking-wider font-mono text-[9px] bg-brand-bg-secondary/45">
                   <th className="p-4 w-10 text-center">
                     <button 
                       onClick={toggleSelectAll}
-                      className="p-1 rounded hover:bg-black/5 text-brand-text"
+                      className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-brand-text cursor-pointer transition-colors duration-200"
                     >
                       {selectedBookIds.length === filteredBooks.length ? (
                         <CheckSquare className="h-4.5 w-4.5 text-brand-accent" />
@@ -299,7 +300,7 @@ export const LibraryManagement = ({
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-brand-border/30 font-semibold text-brand-text-secondary">
+              <tbody className="divide-y divide-brand-border/20 font-semibold text-brand-text-secondary">
                 {filteredBooks.map((book) => {
                   const isSelected = selectedBookIds.includes(book.id);
                   const isPinned = pinnedBookIds.includes(book.id);
@@ -307,15 +308,15 @@ export const LibraryManagement = ({
                   return (
                     <tr 
                       key={book.id} 
-                      className={`hover:bg-brand-bg-secondary/15 transition-colors ${
-                        isSelected ? "bg-brand-accent/5" : ""
+                      className={`group/row transition-all duration-200 border-b border-brand-border/20 ${
+                        isSelected ? "bg-brand-accent/5 border-brand-accent/30" : "hover:bg-[#1a1a1c]/30"
                       }`}
                     >
                       {/* Checkbox */}
                       <td className="p-4 text-center">
                         <button 
                           onClick={() => toggleSelectBook(book.id)}
-                          className="p-1 rounded hover:bg-black/5 text-brand-text"
+                          className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/5 text-brand-text cursor-pointer transition-colors duration-200"
                         >
                           {isSelected ? (
                             <CheckSquare className="h-4.5 w-4.5 text-brand-accent" />
@@ -329,9 +330,9 @@ export const LibraryManagement = ({
                       <td className="p-4">
                         <div 
                           onClick={() => navigate(`/book/${book.slug || book.id}`)}
-                          className="h-14 w-10 bg-brand-bg-secondary border border-brand-border/60 rounded-[6px] overflow-hidden shrink-0 shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
+                          className="relative h-14 w-10 bg-[#161616] border border-brand-border/60 rounded-[8px] overflow-hidden shrink-0 shadow-brand group-hover/row:border-brand-accent/40 group-hover/row:shadow-brand-hover cursor-pointer transition-all duration-300"
                         >
-                          <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
+                          <img src={book.coverURL} alt="" className="h-full w-full object-cover group-hover/row:scale-105 transition-transform duration-500" />
                         </div>
                       </td>
 
@@ -339,7 +340,7 @@ export const LibraryManagement = ({
                       <td className="p-4 max-w-[200px] lg:max-w-xs">
                         <div className="flex items-center gap-1.5">
                           {isPinned && <Pin className="h-3 w-3 text-brand-accent fill-brand-accent" />}
-                          <span className="text-xs font-bold text-brand-text truncate block">{book.title}</span>
+                          <span className="text-xs font-bold text-brand-text group-hover/row:text-brand-accent transition-colors duration-200 truncate block">{book.title}</span>
                         </div>
                         <p className="text-[10px] text-brand-text-secondary truncate mt-0.5">{book.subtitle || book.description || "No description."}</p>
                       </td>
@@ -364,7 +365,7 @@ export const LibraryManagement = ({
                       {/* Rating */}
                       <td className="p-4 text-center font-mono">
                         <div className="flex items-center justify-center gap-0.5 text-amber-500 text-[10px] font-bold">
-                          <Star className="h-3 w-3 fill-amber-500" />
+                          <Star className="h-3 w-3 fill-amber-500 animate-pulse" />
                           <span>{book.rating ? book.rating.toFixed(1) : "—"}</span>
                         </div>
                       </td>
@@ -376,7 +377,7 @@ export const LibraryManagement = ({
                             onClick={() => togglePin(book.id)}
                             variant="ghost" 
                             size="sm" 
-                            className={`h-7.5 w-7.5 p-0 rounded-full cursor-pointer hover:bg-brand-bg-secondary ${
+                            className={`h-7.5 w-7.5 p-0 rounded-full cursor-pointer hover:bg-brand-bg-secondary hover:scale-105 transition-all ${
                               isPinned ? "text-brand-accent" : "text-brand-text-secondary"
                             }`}
                             title={isPinned ? "Unpin book" : "Pin book to dashboard"}
@@ -388,7 +389,7 @@ export const LibraryManagement = ({
                             onClick={() => navigate(`/read/${book.slug || book.id}`)}
                             variant="outline" 
                             size="sm" 
-                            className="h-7.5 rounded-full text-[10px] px-2.5 font-bold border-brand-border text-brand-accent hover:bg-brand-accent/5 cursor-pointer flex items-center"
+                            className="h-7.5 rounded-full text-[10px] px-2.5 font-bold border-brand-border text-brand-accent hover:bg-brand-accent/5 hover:scale-[1.03] transition-all cursor-pointer flex items-center shadow-sm"
                           >
                             <BookOpen className="mr-1 h-3 w-3" /> Open
                           </Button>
@@ -397,7 +398,7 @@ export const LibraryManagement = ({
                             onClick={() => onEditBook(book)} 
                             variant="ghost" 
                             size="sm" 
-                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
+                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary hover:scale-105 transition-all cursor-pointer"
                             title="Edit metadata"
                           >
                             <Edit className="h-3.5 w-3.5" />
@@ -406,7 +407,7 @@ export const LibraryManagement = ({
                             onClick={() => onDuplicateBook(book)} 
                             variant="ghost" 
                             size="sm" 
-                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
+                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary hover:scale-105 transition-all cursor-pointer"
                             title="Duplicate book"
                           >
                             <Copy className="h-3.5 w-3.5" />
@@ -415,7 +416,7 @@ export const LibraryManagement = ({
                             onClick={() => onDeleteBook(book)} 
                             variant="ghost" 
                             size="sm" 
-                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-danger hover:bg-brand-danger/10 cursor-pointer"
+                            className="h-7.5 w-7.5 p-0 rounded-full text-brand-danger hover:bg-brand-danger/10 hover:scale-105 transition-all cursor-pointer"
                             title="Delete permanently"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

@@ -48,6 +48,7 @@ export const AuthProvider = ({ children }) => {
           role: userData.role || "reader",
           purchasedBooks: userData.purchasedBooks || [],
           wishlist: userData.wishlist || [],
+          readingProgress: userData.readingProgress || {},
           createdAt: userData.createdAt,
           updatedAt: userData.updatedAt
         };

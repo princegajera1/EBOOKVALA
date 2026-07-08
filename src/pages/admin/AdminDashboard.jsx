@@ -448,11 +448,7 @@ export const AdminDashboard = () => {
     { id: "overview", label: "Overview", icon: BarChart2 },
     { id: "users", label: "Users", icon: Users },
     { id: "books", label: "eBooks", icon: BookOpen },
-    { id: "fields", label: "Field Builder", icon: Sliders },
-    { id: "categories", label: "Categories", icon: Grid },
     { id: "traffic", label: "Live Traffic", icon: Compass },
-    { id: "health", label: "System Health", icon: Activity },
-    { id: "logs", label: "Audit Logs", icon: Terminal },
     { id: "settings", label: "Settings", icon: Settings }
   ];
 
@@ -798,152 +794,10 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* 4. CUSTOM FIELD BUILDER TAB */}
-      {activeTab === "fields" && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left select-none">
-          {/* Dynamic Builder */}
-          <div className="md:col-span-5 flex flex-col gap-5">
-            <div>
-              <h2 className="text-2xl font-display font-black text-brand-text tracking-tight">Dynamic Fields</h2>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Extend book metadata schema on the fly (EAV Engine).</p>
-            </div>
-
-            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col gap-4">
-              <Button onClick={() => {
-                setFieldForm({ id: "", label: "", type: "text", required: false, options: "", defaultValue: "" });
-                setIsFieldModalOpen(true);
-              }} variant="primary" className="w-full h-11 rounded-full text-xs font-bold shadow-sm">
-                <PlusCircle className="mr-1.5 h-4 w-4" /> Add Dynamic Field
-              </Button>
-
-              <div className="flex flex-col gap-3 mt-2">
-                <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">Field Preview Registry</span>
-                {customFields.map((field) => (
-                  <div key={field.id} className="flex justify-between items-center p-3 bg-brand-bg-secondary border border-brand-border rounded-xl">
-                    <div className="min-w-0">
-                      <span className="text-xs font-bold text-brand-text">{field.label}</span>
-                      <p className="text-[9px] font-mono text-brand-text-secondary uppercase mt-0.5">{field.type} • {field.required ? "Required" : "Optional"}</p>
-                    </div>
-                    <button 
-                      onClick={() => handleDeleteCustomField(field.id)}
-                      className="p-1.5 text-brand-danger hover:bg-brand-danger/10 rounded-full transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ))}
-                {customFields.length === 0 && (
-                  <p className="text-xs text-brand-text-secondary italic text-center py-6">No custom fields defined.</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Form rendering testing preview */}
-          <div className="md:col-span-7 flex flex-col gap-5">
-            <div>
-              <h2 className="text-lg font-bold text-brand-text tracking-tight font-display">Schema Sandbox Renderer</h2>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Live demonstration of dynamic inputs generated from JSON schema.</p>
-            </div>
-
-            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
-              {customFields.map((field) => (
-                <div key={field.id} className="flex flex-col gap-2">
-                  <label className="text-xs font-bold text-brand-text-secondary">
-                    {field.label} {field.required && <span className="text-brand-danger">*</span>}
-                  </label>
-
-                  {field.type === "dropdown" ? (
-                    <select className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none focus:border-brand-accent cursor-pointer">
-                      {field.options.split(",").map((o, idx) => (
-                        <option key={idx} value={o.trim()}>{o.trim()}</option>
-                      ))}
-                    </select>
-                  ) : field.type === "switch" ? (
-                    <div className="flex items-center gap-3">
-                      <input type="checkbox" className="h-4.5 w-4.5 rounded border-brand-border accent-brand-accent cursor-pointer" />
-                      <span className="text-xs text-brand-text-secondary">Enabled</span>
-                    </div>
-                  ) : field.type === "number" ? (
-                    <input type="number" placeholder={field.defaultValue} className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none" />
-                  ) : (
-                    <input type="text" placeholder={field.defaultValue} className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none" />
-                  )}
-                </div>
-              ))}
-              {customFields.length === 0 && (
-                <p className="text-xs text-brand-text-secondary italic text-center py-6">Define schema fields to display renderer outputs.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
 
-      {/* 7. CATEGORIES TAB */}
-      {activeTab === "categories" && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left select-none">
-          
-          {/* Add Category Form */}
-          <div className="md:col-span-4 flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-brand-text tracking-tight font-display">Create Category</h2>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Add new category classification.</p>
-            </div>
-            
-            <div className="bg-brand-card border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col gap-4">
-              <Input
-                label="Category Name"
-                placeholder="e.g. Science Fiction"
-                value={newCategoryName}
-                onChange={(e) => setNewCategoryName(e.target.value)}
-              />
-              <Button onClick={handleAddCategory} variant="primary" className="w-full h-11 rounded-full text-xs font-bold shadow-sm mt-2">
-                <Plus className="mr-1.5 h-4 w-4" /> Create Category
-              </Button>
-            </div>
-          </div>
 
-          {/* List Categories */}
-          <div className="md:col-span-8 flex flex-col gap-4">
-            <div>
-              <h2 className="text-lg font-bold text-brand-text tracking-tight font-display">Existing Categories</h2>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Review list of active book categories.</p>
-            </div>
 
-            <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
-              <table className="w-full text-xs text-left text-brand-text-secondary">
-                <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
-                  <tr>
-                    <th className="py-4 px-5">Category Name</th>
-                    <th className="py-4 px-5">Slug Reference</th>
-                    <th className="py-4 px-5">eBooks Count</th>
-                    <th className="py-4 px-5 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {categories.map((cat) => (
-                    <tr key={cat.id} className="border-b border-brand-border/60 last:border-0 hover:bg-brand-bg-secondary/40 transition-colors">
-                      <td className="py-4 px-5 font-bold text-brand-text">{cat.name}</td>
-                      <td className="py-4 px-5 font-mono text-[10px]">{cat.slug}</td>
-                      <td className="py-4 px-5 font-mono font-bold text-brand-text">{cat.count || 0} Books</td>
-                      <td className="py-4 px-5 text-right">
-                        <button 
-                          onClick={() => handleDeleteCategory(cat.id)}
-                          className="p-2 text-brand-danger hover:bg-brand-danger/10 rounded-full transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-      )}
 
       {/* 8. LIVE TRAFFIC & VISITORS TAB */}
       {activeTab === "traffic" && (
@@ -1103,91 +957,7 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* 9. SYSTEM HEALTH TAB */}
-      {activeTab === "health" && (
-        <div className="flex flex-col gap-6 text-left select-none font-display">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">System Health & Latency</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Compute infrastructure loads, database locks, and performance monitoring.</p>
-          </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
-              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">CPU Usage</span>
-              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.cpu}%</h3>
-              <div className="h-1.5 bg-[#111] rounded-full mt-3 overflow-hidden">
-                <div className="h-full bg-brand-accent" style={{ width: `${systemMetrics.cpu}%` }} />
-              </div>
-            </div>
-            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
-              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">RAM Utilization</span>
-              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.memory}%</h3>
-              <div className="h-1.5 bg-[#111] rounded-full mt-3 overflow-hidden">
-                <div className="h-full bg-amber-500" style={{ width: `${systemMetrics.memory}%` }} />
-              </div>
-            </div>
-            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
-              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">Active Pool Conn</span>
-              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.dbConnections}</h3>
-              <p className="text-[9px] text-brand-text-secondary mt-2">Active PostgreSQL threads</p>
-            </div>
-            <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px]">
-              <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">API Response Latency</span>
-              <h3 className="text-2xl font-black text-brand-text mt-3">{systemMetrics.apiLatency} ms</h3>
-              <p className="text-[9px] text-brand-success font-semibold mt-2">✓ Within target bounds</p>
-            </div>
-          </div>
-
-          <div className="p-5 border border-brand-border bg-[#161616] rounded-[20px] flex flex-col gap-3 font-mono text-xs">
-            <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase font-display">Services Health Status</span>
-            <div className="flex justify-between items-center py-2 border-b border-brand-border/40">
-              <span>Redis Cache Clusters:</span>
-              <span className="text-brand-success font-bold">HEALTHY</span>
-            </div>
-            <div className="flex justify-between items-center py-2 border-b border-brand-border/40">
-              <span>Supabase Storage Buckets:</span>
-              <span className="text-brand-success font-bold">HEALTHY</span>
-            </div>
-            <div className="flex justify-between items-center py-2">
-              <span>Edge CDN Hit Rate:</span>
-              <span className="text-brand-accent font-bold">{systemMetrics.cdnCacheHit}%</span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 9. AUDIT LOGS TAB */}
-      {activeTab === "logs" && (
-        <div className="flex flex-col gap-6 text-left select-none">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">System Audit Log</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Chronological logs of administrative activities on the platform.</p>
-          </div>
-
-          <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
-            <table className="w-full text-xs text-left text-brand-text-secondary">
-              <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
-                <tr>
-                  <th className="py-4 px-5">Admin Operator</th>
-                  <th className="py-4 px-5">Activity Log</th>
-                  <th className="py-4 px-5">Client IP Address</th>
-                  <th className="py-4 px-5 text-right">Timestamp</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditLogs.map((log) => (
-                  <tr key={log.id} className="border-b border-brand-border/60 last:border-0 hover:bg-brand-bg-secondary/40 transition-colors">
-                    <td className="py-4 px-5 font-bold text-brand-text">{log.admin}</td>
-                    <td className="py-4 px-5 font-mono text-[11px]">{log.action}</td>
-                    <td className="py-4 px-5 font-mono">{log.ip}</td>
-                    <td className="py-4 px-5 text-right font-semibold text-brand-text-secondary">{log.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
 
       {/* 10. SITE SETTINGS TAB */}
       {activeTab === "settings" && (

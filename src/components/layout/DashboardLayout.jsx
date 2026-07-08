@@ -7,13 +7,13 @@ import { motion } from "framer-motion";
 import { Menu, Search, Bell, Sun, Moon } from "lucide-react";
 
 export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChange, children }) => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, initialLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    if (!loading) {
+    if (!initialLoading) {
       if (!isAuthenticated) {
         if (requiredRole === "admin") {
           navigate("/635284");
@@ -30,9 +30,9 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
         }
       }
     }
-  }, [isAuthenticated, user, loading, navigate, requiredRole]);
+  }, [isAuthenticated, user, initialLoading, navigate, requiredRole]);
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="h-screen w-screen bg-brand-bg flex items-center justify-center select-none transition-colors duration-300">
         <div className="flex flex-col items-center gap-4">

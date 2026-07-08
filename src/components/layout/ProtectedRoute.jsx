@@ -16,12 +16,12 @@ export const FullScreenSpinner = () => (
 );
 
 export const ProtectedRoute = ({ role, children }) => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, initialLoading, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading) {
+    if (!initialLoading) {
       if (!isAuthenticated) {
         const isLoggingOut = sessionStorage.getItem("logging_out") === "true";
         if (isLoggingOut) {
@@ -43,9 +43,9 @@ export const ProtectedRoute = ({ role, children }) => {
         }
       }
     }
-  }, [isAuthenticated, user, loading, navigate, role, location]);
+  }, [isAuthenticated, user, initialLoading, navigate, role, location]);
 
-  if (loading) {
+  if (initialLoading) {
     return <FullScreenSpinner />;
   }
 

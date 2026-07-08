@@ -20,6 +20,7 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   // --------------------------------------------------------------------------
   // Internal: Sync user profile from Firestore into app state.
@@ -78,6 +79,7 @@ export const AuthProvider = ({ children }) => {
   // --------------------------------------------------------------------------
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setInitialLoading(true);
       // BUG 10 FIX: Only set loading=true if we actually need to do async work.
       // Avoids the flash when signup calls signOut internally and triggers this listener.
       if (firebaseUser) {
@@ -87,6 +89,7 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setLoading(false);
       }
+      setInitialLoading(false);
     });
 
     return () => unsubscribe();
@@ -319,6 +322,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         loading,
+        initialLoading,
         isAuthenticated: !!user,
         login,
         signup,

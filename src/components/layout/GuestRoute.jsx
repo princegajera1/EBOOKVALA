@@ -4,11 +4,11 @@ import { useAuth } from "../../hooks/useAuth";
 import { FullScreenSpinner } from "./ProtectedRoute";
 
 export const GuestRoute = ({ children }) => {
-  const { user, loading, isAuthenticated, isReader, isAuthor, isAdmin } = useAuth();
+  const { user, initialLoading, isAuthenticated, isReader, isAuthor, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
+    if (!initialLoading && isAuthenticated) {
       if (isAdmin) {
         navigate("/admin/dashboard");
       } else if (isAuthor) {
@@ -17,9 +17,9 @@ export const GuestRoute = ({ children }) => {
         navigate("/dashboard");
       }
     }
-  }, [isAuthenticated, isReader, isAuthor, isAdmin, loading, navigate]);
+  }, [isAuthenticated, isReader, isAuthor, isAdmin, initialLoading, navigate]);
 
-  if (loading) {
+  if (initialLoading) {
     return <FullScreenSpinner />;
   }
 

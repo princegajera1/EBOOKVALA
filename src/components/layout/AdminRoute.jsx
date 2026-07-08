@@ -4,18 +4,18 @@ import { useAuth } from "../../hooks/useAuth";
 import { FullScreenSpinner } from "./ProtectedRoute";
 
 export const AdminRoute = ({ children }) => {
-  const { user, loading, isAuthenticated, isAdmin } = useAuth();
+  const { user, initialLoading, isAuthenticated, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading) {
+    if (!initialLoading) {
       if (!isAuthenticated || !isAdmin) {
         navigate("/admin/login");
       }
     }
-  }, [isAuthenticated, isAdmin, loading, navigate]);
+  }, [isAuthenticated, isAdmin, initialLoading, navigate]);
 
-  if (loading) {
+  if (initialLoading) {
     return <FullScreenSpinner />;
   }
 

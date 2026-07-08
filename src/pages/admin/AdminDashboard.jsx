@@ -126,6 +126,10 @@ export const AdminDashboard = () => {
   const [currentPageCategories, setCurrentPageCategories] = useState(1);
   const [pageSizeCategories, setPageSizeCategories] = useState(5);
 
+  // Live Tracker States
+  const [liveTrackerSearch, setLiveTrackerSearch] = useState("");
+  const [liveTrackerStatusFilter, setLiveTrackerStatusFilter] = useState("all");
+
   // eBook Editor Modal States
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
@@ -2579,7 +2583,6 @@ export const AdminDashboard = () => {
         // Map dynamic active logs from getDynamicVisitorLog()
         // And assign login/logout timestamps
         const activeUsersList = dynamicVisitorLog.map((v, idx) => {
-          // Let's create realistic login/logout timestamps
           const baseTime = new Date();
           const loginTime = new Date(baseTime.getTime() - (idx * 15 + 10) * 60 * 1000);
           const logoutTime = v.status === "Active" 
@@ -2593,60 +2596,215 @@ export const AdminDashboard = () => {
           };
         });
 
+        // Search & Filter state evaluations
+        const filteredTrackerLogs = activeUsersList.filter(usr => {
+          const userObj = usersList.find(u => u.uid === usr.id);
+          const userEmail = (userObj?.email || usr.user).toLowerCase();
+          const userDisplayName = (userObj?.displayName || "").toLowerCase();
+          const locationVal = usr.location.toLowerCase();
+          const deviceVal = usr.device.toLowerCase();
+          const searchVal = liveTrackerSearch.toLowerCase();
+
+          const matchesSearch = 
+            userEmail.includes(searchVal) ||
+            userDisplayName.includes(searchVal) ||
+            locationVal.includes(searchVal) ||
+            deviceVal.includes(searchVal);
+          
+          const matchesStatus = 
+            liveTrackerStatusFilter === "all" || 
+            usr.status.toLowerCase() === liveTrackerStatusFilter;
+
+          return matchesSearch && matchesStatus;
+        });
+
+        const activeCountNum = activeUsersList.filter(u => u.status === "Active").length;
+
         return (
           <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-            <div>
-              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Live Users Tracker</h1>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Real-time sessions monitor tracking active user presence, login entries and exit timestamps.</p>
-            </div>
+            {/* Header section with live count pill */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Live Users Tracker</h1>
+                <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Real-time sessions monitor tracking active user presence, login entries and exit timestamps.</p>
+              </div>
 
-            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left text-brand-text-secondary">
-                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
-                    <tr>
-                      <th className="py-4 px-5">Active User</th>
-                      <th className="py-4 px-5">Location</th>
-                      <th className="py-4 px-5">Device</th>
-                      <th className="py-4 px-5">Login Time</th>
-                      <th className="py-4 px-5">Logout Time</th>
-                      <th className="py-4 px-5">Duration</th>
-                      <th className="py-4 px-5 text-right">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeUsersList.map((usr) => (
-                      <tr key={usr.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
-                        <td className="py-4 px-5">
-                          <div className="flex items-center gap-2.5">
-                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${usr.status === "Active" ? "bg-brand-success animate-pulse" : "bg-brand-text-secondary/40"}`} />
-                            <span className="font-bold text-brand-text font-display">{usr.user}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-5 font-semibold text-brand-text-secondary">{usr.location}</td>
-                        <td className="py-4 px-5 font-mono text-[10px]">{usr.device}</td>
-                        <td className="py-4 px-5 font-mono font-bold text-brand-text">{usr.loginTime}</td>
-                        <td className="py-4 px-5 font-mono font-bold text-brand-text-secondary">
-                          {usr.status === "Active" ? (
-                            <span className="text-brand-success font-bold font-sans text-[10px] uppercase bg-brand-success/10 px-1.5 py-0.5 rounded">Active Now</span>
-                          ) : (
-                            usr.logoutTime
-                          )}
-                        </td>
-                        <td className="py-4 px-5 font-mono text-brand-text-secondary">{usr.duration}</td>
-                        <td className="py-4 px-5 text-right">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                            usr.status === "Active" ? "bg-brand-success/15 text-brand-success" : "bg-[#111] text-brand-text-secondary/70 border border-brand-border"
-                          }`}>
-                            {usr.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              {/* Pulsing Dynamic Live Badge */}
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-success/10 border border-brand-success/20 text-brand-success text-[11px] font-bold select-none shrink-0 shadow-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-success opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-success"></span>
+                </span>
+                <span>{activeCountNum} active now</span>
               </div>
             </div>
+
+            {/* Filter Panel Controls */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 w-full">
+                <div className="relative w-full sm:w-64">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search by email, city, device..."
+                    value={liveTrackerSearch}
+                    onChange={(e) => setLiveTrackerSearch(e.target.value)}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                  />
+                </div>
+
+                <select
+                  value={liveTrackerStatusFilter}
+                  onChange={(e) => setLiveTrackerStatusFilter(e.target.value)}
+                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="all">All Sessions</option>
+                  <option value="active">Active Now</option>
+                  <option value="ended">Ended</option>
+                </select>
+
+                {(liveTrackerSearch || liveTrackerStatusFilter !== "all") && (
+                  <button
+                    onClick={() => { setLiveTrackerSearch(""); setLiveTrackerStatusFilter("all"); }}
+                    className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Grid display / Table */}
+            {filteredTrackerLogs.length > 0 ? (
+              <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left text-brand-text-secondary border-collapse">
+                    <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none sticky top-0 z-10">
+                      <tr>
+                        <th className="py-4 px-5">Active User</th>
+                        <th className="py-4 px-5 hidden md:table-cell">Location</th>
+                        <th className="py-4 px-5 hidden md:table-cell">Device & Client</th>
+                        <th className="py-4 px-5">Login Time</th>
+                        <th className="py-4 px-5">Logout Time</th>
+                        <th className="py-4 px-5 text-right hidden md:table-cell">Duration</th>
+                        <th className="py-4 px-5 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredTrackerLogs.map((usr) => {
+                        const isGuest = usr.id.startsWith("guest");
+                        let displayName = "";
+                        let email = "";
+                        let avatarChar = "G";
+
+                        if (isGuest) {
+                          displayName = "Guest Session";
+                          email = usr.id;
+                        } else {
+                          const userObj = usersList.find(u => u.uid === usr.id);
+                          if (userObj) {
+                            displayName = userObj.displayName || "";
+                            email = userObj.email || "registered@ebookvala.com";
+                            avatarChar = (displayName || email || "U").charAt(0).toUpperCase();
+                          } else {
+                            email = usr.user;
+                            avatarChar = "U";
+                          }
+                        }
+
+                        return (
+                          <tr key={usr.id} className="h-16 border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/20 transition-colors animate-fade-in">
+                            {/* Identity Column */}
+                            <td className="py-3 px-5">
+                              <div className="flex items-center gap-3">
+                                {/* Initial Avatar Badge */}
+                                <div className={`h-9 w-9 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                                  isGuest 
+                                    ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" 
+                                    : "bg-brand-primary/10 text-brand-primary border border-brand-primary/20"
+                                }`}>
+                                  {avatarChar}
+                                </div>
+
+                                <div className="flex flex-col gap-0.5">
+                                  {displayName && (
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[12px] font-bold text-brand-text font-display leading-tight">{displayName}</span>
+                                      {isGuest && (
+                                        <span className="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-brand-bg-secondary text-brand-text-secondary border border-brand-border">
+                                          Guest
+                                        </span>
+                                      )}
+                                    </div>
+                                  )}
+                                  <span className={`font-mono text-[10.5px] leading-tight ${isGuest ? "text-brand-text-secondary/50 font-semibold" : "text-brand-text font-bold"}`}>
+                                    {email}
+                                  </span>
+
+                                  {/* Mobile Responsive Folding Details */}
+                                  <div className="flex flex-wrap items-center gap-2 mt-1 text-[9px] text-brand-text-secondary/60 font-semibold md:hidden leading-none select-none">
+                                    <span>{usr.location}</span>
+                                    <span>•</span>
+                                    <span>{usr.device}</span>
+                                    <span>•</span>
+                                    <span className="font-mono">{usr.duration}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* Location Column */}
+                            <td className="py-4 px-5 font-semibold text-brand-text-secondary hidden md:table-cell">{usr.location}</td>
+
+                            {/* Device Column */}
+                            <td className="py-4 px-5 font-mono text-[10px] hidden md:table-cell">{usr.device}</td>
+
+                            {/* Login Time */}
+                            <td className="py-4 px-5 font-mono font-bold text-brand-text">{usr.loginTime}</td>
+
+                            {/* Logout Time */}
+                            <td className="py-4 px-5 font-mono font-bold">
+                              {usr.status === "Active" ? (
+                                <span className="text-brand-success font-bold font-sans text-[9px] uppercase bg-brand-success/10 px-2 py-0.5 rounded-full select-none">Active Now</span>
+                              ) : (
+                                <span className="text-brand-text-secondary/80">{usr.logoutTime}</span>
+                              )}
+                            </td>
+
+                            {/* Duration Column */}
+                            <td className="py-4 px-5 text-right font-mono font-bold text-brand-text text-[11px] hidden md:table-cell">{usr.duration}</td>
+
+                            {/* Status Column */}
+                            <td className="py-4 px-5 text-right">
+                              {usr.status === "Active" ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold bg-brand-success/10 text-brand-success select-none">
+                                  <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-success opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-success"></span>
+                                  </span>
+                                  ACTIVE
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold bg-brand-text-secondary/10 text-brand-text-secondary select-none">
+                                  ENDED
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ) : (
+              /* Premium Empty State */
+              <div className="flex flex-col items-center justify-center py-20 text-center select-none bg-brand-card border border-brand-border rounded-[20px] shadow-sm">
+                <AlertCircle className="h-10 w-10 text-brand-text-secondary/35 mb-3.5" />
+                <h4 className="text-sm font-bold text-brand-text">No active sessions right now</h4>
+                <p className="text-xs text-brand-text-secondary mt-1 max-w-[280px]">We couldn't find any user sessions matching your filter criteria.</p>
+              </div>
+            )}
           </div>
         );
       })()}

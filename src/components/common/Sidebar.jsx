@@ -140,10 +140,10 @@ const SidebarProfileCard = ({ user, isCollapsed, onTabChange }) => {
             className="flex-1 overflow-hidden text-left min-w-0"
           >
             <p className="text-[13px] font-semibold text-brand-text truncate leading-tight">
-              {user?.displayName || "Reader"}
+              {user?.displayName || "User"}
             </p>
             <p className="text-[10px] font-mono text-brand-text-secondary uppercase tracking-wider mt-0.5 truncate">
-              Reader
+              {user?.role || "reader"}
             </p>
           </motion.div>
         )}

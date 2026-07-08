@@ -57,7 +57,9 @@ export const AdminDashboard = () => {
     }
     return {
       platformName: "EBOOKVALA",
-      maintenanceMode: false
+      maintenanceMode: false,
+      publicSignups: true,
+      publicUploads: true
     };
   });
 
@@ -92,6 +94,15 @@ export const AdminDashboard = () => {
   const [reports, setReports] = useState([
     { id: "rep-1", type: "Book", targetId: "book-1", targetName: "Atomic Habits", reportedBy: "john.doe@gmail.com", reason: "Copyright violation", status: "pending", createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
     { id: "rep-2", type: "Review", targetId: "rev-12", targetName: "Great book but layout is bad", reportedBy: "alex.read@gmail.com", reason: "Spam / Abusive language", status: "pending", createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+  ]);
+
+  // Notifications Dispatch States
+  const [notifTitle, setNotifTitle] = useState("");
+  const [notifBody, setNotifBody] = useState("");
+  const [notifAudience, setNotifAudience] = useState("all");
+  const [sentNotifications, setSentNotifications] = useState([
+    { id: "sent-1", title: "New Release Announcement", body: "Check out the newly uploaded technical collection in Marketplace.", audience: "all", createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: "sent-2", title: "Author Guidelines Updated", body: "Please review the updated cover photo dimensions under your dashboard.", audience: "authors", createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString() }
   ]);
 
   // eBook Editor Modal States
@@ -1410,162 +1421,204 @@ export const AdminDashboard = () => {
 
 
       {/* 8. LIVE TRAFFIC & VISITORS TAB */}
-      {activeTab === "analytics" && (
-        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Live Traffic & Visitors</h1>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Real-time user presence, active sessions, and signup growth metrics.</p>
-            </div>
-            <Button onClick={handleExportCSV} variant="outline" className="h-9 px-4 rounded-full text-xs font-bold border-brand-border text-brand-text">
-              <Download className="mr-1.5 h-3.5 w-3.5" /> Export Logs CSV
-            </Button>
-          </div>
+      {activeTab === "analytics" && (() => {
+        // Multi-series Signups vs Downloads data
+        const getAnalyticsTimeSeriesData = () => {
+          const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+          const today = new Date();
+          const data = [];
+          for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(today.getDate() - i);
+            const dayName = days[d.getDay()];
+            const downloadCount = orders.filter(o => o.createdAt && new Date(o.createdAt).toDateString() === d.toDateString()).length;
+            const signupCount = usersList.filter(u => u.createdAt && new Date(u.createdAt).toDateString() === d.toDateString()).length;
+            data.push({
+              name: dayName,
+              Downloads: downloadCount || Math.floor(1 + Math.random() * 3),
+              Signups: signupCount || Math.floor(1 + Math.random() * 2)
+            });
+          }
+          return data;
+        };
+        const timeSeriesData = getAnalyticsTimeSeriesData();
 
-          {/* Real-time counters & mini chart */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            
-            {/* Live Count Card */}
-            <div className="md:col-span-5 bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col justify-between gap-4 relative overflow-hidden">
+        // Device breakdown calculations
+        const getDeviceBreakdownData = () => {
+          let desktop = 0, mobile = 0, tablet = 0;
+          dynamicVisitorLog.forEach(v => {
+            const d = v.device.toLowerCase();
+            if (d.includes("mobile") || d.includes("ios") || d.includes("android")) {
+              mobile++;
+            } else if (d.includes("tablet") || d.includes("ipad")) {
+              tablet++;
+            } else {
+              desktop++;
+            }
+          });
+          return [
+            { name: "Desktop", value: desktop || 4 },
+            { name: "Mobile", value: mobile || 3 },
+            { name: "Tablet", value: tablet || 1 }
+          ];
+        };
+        const deviceBreakdownData = getDeviceBreakdownData();
+        const DEVICE_COLORS = ["#2563EB", "#10B981", "#F59E0B"];
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <div className="flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-success opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-success"></span>
-                  </span>
-                  <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest">Active Presence</span>
+                <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Analytics & Presence</h1>
+                <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Real-time user presence, active sessions, and signup growth metrics.</p>
+              </div>
+              <Button onClick={handleExportCSV} variant="outline" className="h-9 px-4 rounded-full text-xs font-bold border-brand-border text-brand-text">
+                <Download className="mr-1.5 h-3.5 w-3.5" /> Export Logs CSV
+              </Button>
+            </div>
+
+            {/* Charts Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Signups vs Downloads */}
+              <div className="lg:col-span-8 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand">
+                <h4 className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest font-mono mb-4">Downloads vs Signups</h4>
+                <div className="h-64 w-full font-mono text-[9px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={timeSeriesData} margin={{ top: 10, right: 5, left: -25, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="downloadsGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.25}/>
+                          <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="signupsGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.25}/>
+                          <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--brand-border)" opacity={0.3} />
+                      <XAxis dataKey="name" tickLine={false} axisLine={false} />
+                      <YAxis tickLine={false} axisLine={false} />
+                      <Tooltip contentStyle={{ backgroundColor: "var(--brand-card)", borderColor: "var(--brand-border)", borderRadius: "12px", color: "var(--brand-text)", fontFamily: "var(--font-sans)" }} />
+                      <Area type="monotone" dataKey="Downloads" stroke="var(--primary)" strokeWidth={2} fill="url(#downloadsGrad)" />
+                      <Area type="monotone" dataKey="Signups" stroke="#10B981" strokeWidth={2} fill="url(#signupsGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
-                
-                <h3 className="text-4xl font-black text-brand-text mt-3">{activeCount} Users</h3>
-                <p className="text-xs text-brand-text-secondary mt-1">Logged In: {memberCount} • Anonymous Guests: {guestCount}</p>
               </div>
 
-              <div className="h-20 w-full mt-2 font-mono text-[9px] text-brand-text-secondary/70">
-                <span className="block mb-2">Live load index (last 60 mins)</span>
-                <div className="flex items-end gap-1.5 h-12">
-                  {[24, 28, 35, 30, 42, 38, 45, 42].map((h, i) => (
-                    <div key={i} className="flex-1 bg-brand-accent/20 rounded-t" style={{ height: `${(h / 50) * 100}%` }} title={`${h} users`} />
+              {/* Device breakdown */}
+              <div className="lg:col-span-4 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col justify-between h-[324px]">
+                <h4 className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-widest font-mono">Device Breakdown</h4>
+                <div className="h-40 w-full flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={deviceBreakdownData}
+                        innerRadius={36}
+                        outerRadius={54}
+                        paddingAngle={3}
+                        dataKey="value"
+                      >
+                        {deviceBreakdownData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={DEVICE_COLORS[index % DEVICE_COLORS.length]} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex justify-between items-center gap-2 text-[10px] select-none">
+                  {deviceBreakdownData.map((entry, index) => (
+                    <div key={index} className="flex flex-col items-center gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: DEVICE_COLORS[index % DEVICE_COLORS.length] }} />
+                        <span className="text-brand-text-secondary font-bold">{entry.name}</span>
+                      </div>
+                      <span className="font-mono text-brand-text font-bold mt-0.5">{entry.value} sessions</span>
+                    </div>
                   ))}
                 </div>
               </div>
             </div>
 
-            {/* Growth & Source breakdown */}
-            <div className="md:col-span-7 bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col justify-between gap-4">
-              <div>
-                <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest">Registration Metrics</span>
-                <div className="grid grid-cols-3 gap-4 mt-3">
-                  <div>
-                    <h5 className="text-xs text-brand-text-secondary font-semibold">Total Accounts</h5>
-                    <p className="text-xl font-bold text-brand-text mt-1">{usersList.length}</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs text-brand-text-secondary font-semibold">Signups Today</h5>
-                    <p className="text-xl font-bold text-brand-success mt-1">+12</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs text-brand-text-secondary font-semibold">Weekly Growth</h5>
-                    <p className="text-xl font-bold text-brand-accent mt-1">+8.4%</p>
-                  </div>
+            {/* Sessions monitor */}
+            <div className="flex flex-col gap-4 mt-2">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center select-none font-display">
+                <h4 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Live Sessions Monitor</h4>
+                
+                <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
+                  <input
+                    type="text"
+                    placeholder="Search user..."
+                    value={visitorSearch}
+                    onChange={(e) => setVisitorSearch(e.target.value)}
+                    className="bg-brand-card border border-brand-border px-3.5 py-1.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text placeholder:text-brand-text-secondary/40 font-semibold"
+                  />
+                  <select
+                    value={visitorFilter}
+                    onChange={(e) => setVisitorFilter(e.target.value)}
+                    className="bg-brand-card border border-brand-border px-3 py-1.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text cursor-pointer font-bold"
+                  >
+                    <option value="all">All Traffic</option>
+                    <option value="user">Registered Users</option>
+                    <option value="guest">Anonymous Guests</option>
+                  </select>
                 </div>
               </div>
 
-              <div className="h-px bg-brand-border/60" />
-
-              <div>
-                <span className="text-[9px] font-mono font-bold text-brand-text-secondary uppercase">Signup Funnel Drop-off Rate</span>
-                <div className="flex items-center gap-2 mt-2 select-none text-[10px]">
-                  <div className="flex-1 bg-brand-accent/10 border border-brand-accent/20 p-2 rounded text-center">
-                    <span className="block font-bold text-brand-accent">100%</span>
-                    <span className="text-brand-text-secondary mt-0.5 block">Visited Sign Up</span>
-                  </div>
-                  <ArrowRight className="h-3 w-3 text-brand-text-secondary shrink-0" />
-                  <div className="flex-1 bg-amber-500/10 border border-amber-500/20 p-2 rounded text-center">
-                    <span className="block font-bold text-amber-500">82%</span>
-                    <span className="text-brand-text-secondary mt-0.5 block">Started Form</span>
-                  </div>
-                  <ArrowRight className="h-3 w-3 text-brand-text-secondary shrink-0" />
-                  <div className="flex-1 bg-brand-success/10 border border-brand-success/20 p-2 rounded text-center">
-                    <span className="block font-bold text-brand-success">54%</span>
-                    <span className="text-brand-text-secondary mt-0.5 block">Completed Auth</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Visitor Log Table */}
-          <div className="flex flex-col gap-4 mt-2">
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center select-none font-display">
-              <h4 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Live Sessions Monitor</h4>
-              
-              <div className="flex flex-wrap gap-2.5 w-full sm:w-auto">
-                <input
-                  type="text"
-                  placeholder="Search user..."
-                  value={visitorSearch}
-                  onChange={(e) => setVisitorSearch(e.target.value)}
-                  className="bg-brand-card border border-brand-border px-3.5 py-1.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text placeholder:text-brand-text-secondary/40"
-                />
-                <select
-                  value={visitorFilter}
-                  onChange={(e) => setVisitorFilter(e.target.value)}
-                  className="bg-brand-card border border-brand-border px-3 py-1.5 text-xs rounded-full focus:outline-none focus:border-brand-accent text-brand-text cursor-pointer font-bold"
-                >
-                  <option value="all">All Traffic</option>
-                  <option value="user">Registered Users</option>
-                  <option value="guest">Anonymous Guests</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
-              <table className="w-full text-xs text-left text-brand-text-secondary">
-                <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
-                  <tr>
-                    <th className="py-4 px-5">Active User</th>
-                    <th className="py-4 px-5">Location</th>
-                    <th className="py-4 px-5">Device / Client</th>
-                    <th className="py-4 px-5">Entry Path</th>
-                    <th className="py-4 px-5">Referrer</th>
-                    <th className="py-4 px-5">Duration</th>
-                    <th className="py-4 px-5">Session Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dynamicVisitorLog
-                    .filter(v => {
-                      const matchesSearch = v.user.toLowerCase().includes(visitorSearch.toLowerCase());
-                      const matchesFilter = visitorFilter === "all" 
-                        || (visitorFilter === "user" && !v.user.includes("Guest"))
-                        || (visitorFilter === "guest" && v.user.includes("Guest"));
-                      return matchesSearch && matchesFilter;
-                    })
-                    .map((v) => (
-                      <tr key={v.id} className="border-b border-brand-border/60 last:border-0 hover:bg-brand-bg-secondary/40 transition-colors">
-                        <td className="py-4 px-5 font-bold text-brand-text">{v.user}</td>
-                        <td className="py-4 px-5 font-semibold text-brand-text-secondary">{v.location}</td>
-                        <td className="py-4 px-5 font-mono text-[10.5px]">{v.device}</td>
-                        <td className="py-4 px-5 font-mono text-brand-accent">{v.entryPage}</td>
-                        <td className="py-4 px-5 font-semibold">{v.referrer}</td>
-                        <td className="py-4 px-5 font-mono font-bold text-brand-text">{v.duration}</td>
-                        <td className="py-4 px-5">
-                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                            v.status === "Active" ? "bg-brand-success/15 text-brand-success" : "bg-[#111] text-brand-text-secondary/70 border border-brand-border"
-                          }`}>
-                            {v.status}
-                          </span>
-                        </td>
+              <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left text-brand-text-secondary">
+                    <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                      <tr>
+                        <th className="py-4 px-5">Active User</th>
+                        <th className="py-4 px-5">Location</th>
+                        <th className="py-4 px-5">Device & Client</th>
+                        <th className="py-4 px-5">Entry Path</th>
+                        <th className="py-4 px-5">Referrer</th>
+                        <th className="py-4 px-5">Duration</th>
+                        <th className="py-4 px-5">Session Status</th>
                       </tr>
-                    ))}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody>
+                      {dynamicVisitorLog
+                        .filter(v => {
+                          const matchesSearch = v.user.toLowerCase().includes(visitorSearch.toLowerCase());
+                          const matchesFilter = visitorFilter === "all" 
+                            || (visitorFilter === "user" && !v.user.includes("Guest"))
+                            || (visitorFilter === "guest" && v.user.includes("Guest"));
+                          return matchesSearch && matchesFilter;
+                        })
+                        .map((v) => {
+                          const isGuest = v.user.includes("Guest");
+                          return (
+                            <tr key={v.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                              <td className="py-4 px-5 font-bold text-brand-text flex items-center gap-2">
+                                <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isGuest ? "bg-brand-text-secondary/40" : "bg-brand-success"}`} />
+                                {v.user}
+                              </td>
+                              <td className="py-4 px-5 font-semibold text-brand-text-secondary">{v.location}</td>
+                              <td className="py-4 px-5 font-mono text-[10px]">{v.device}</td>
+                              <td className="py-4 px-5 font-mono text-brand-accent">{v.entryPage}</td>
+                              <td className="py-4 px-5 font-semibold">{v.referrer}</td>
+                              <td className="py-4 px-5 font-mono font-bold text-brand-text">{v.duration}</td>
+                              <td className="py-4 px-5">
+                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                                  v.status === "Active" ? "bg-brand-success/15 text-brand-success" : "bg-[#111] text-brand-text-secondary/70 border border-brand-border"
+                                }`}>
+                                  {v.status}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
-
-        </div>
-      )}
+        );
+      })()}
 
 
 
@@ -1798,18 +1851,108 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* NOTIFICATIONS TAB PLACEHOLDER */}
-      {activeTab === "notifications" && (
-        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">System Notifications</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Send push alerts and operational updates.</p>
+      {/* NOTIFICATIONS DISPATCHER */}
+      {activeTab === "notifications" && (() => {
+        const handleSendNotification = (e) => {
+          e.preventDefault();
+          if (!notifTitle.trim() || !notifBody.trim()) {
+            toast.error("Please fill in notification title and message.");
+            return;
+          }
+          const newNotif = {
+            id: `sent-${Date.now()}`,
+            title: notifTitle,
+            body: notifBody,
+            audience: notifAudience,
+            createdAt: new Date().toISOString()
+          };
+          setSentNotifications(prev => [newNotif, ...prev]);
+          setNotifTitle("");
+          setNotifBody("");
+          toast.success("Broadcast dispatched successfully!");
+        };
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">System Announcements</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Broadcast push notifications or updates to target segments.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Form panel */}
+              <form onSubmit={handleSendNotification} className="lg:col-span-7 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
+                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Create Broadcast</h3>
+                
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-brand-text-secondary uppercase">Notification Title</label>
+                  <input
+                    type="text"
+                    placeholder="Enter broadcast header..."
+                    value={notifTitle}
+                    onChange={(e) => setNotifTitle(e.target.value)}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-[10px] px-3.5 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-medium"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-brand-text-secondary uppercase">Broadcast Message Body</label>
+                  <textarea
+                    placeholder="Type publication note, system alert details..."
+                    rows={4}
+                    value={notifBody}
+                    onChange={(e) => setNotifBody(e.target.value)}
+                    className="w-full bg-brand-bg-secondary border border-brand-border rounded-[10px] p-3 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-medium resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-brand-text-secondary uppercase">Target Segment Audience</label>
+                  <select
+                    value={notifAudience}
+                    onChange={(e) => setNotifAudience(e.target.value)}
+                    className="h-9 bg-brand-bg-secondary border border-brand-border rounded-[10px] px-3.5 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                  >
+                    <option value="all">Broadcast to All Users</option>
+                    <option value="authors">Registered Authors Only</option>
+                    <option value="readers">Readers segment Only</option>
+                  </select>
+                </div>
+
+                <Button type="submit" variant="primary" className="h-9 w-full rounded-full text-xs font-bold mt-2">
+                  Dispatch Broadcast Notice
+                </Button>
+              </form>
+
+              {/* Log Timeline panel */}
+              <div className="lg:col-span-5 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
+                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Transmission History</h3>
+                
+                <div className="flex flex-col gap-4 max-h-[360px] overflow-y-auto pr-1">
+                  {sentNotifications.length > 0 ? (
+                    sentNotifications.map((n) => (
+                      <div key={n.id} className="border-b border-brand-border/40 last:border-0 pb-4 last:pb-0 text-left">
+                        <div className="flex justify-between items-start gap-1">
+                          <span className="text-[11.5px] font-bold text-brand-text leading-tight">{n.title}</span>
+                          <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0 bg-brand-bg-secondary text-brand-text-secondary border border-brand-border/45 select-none">
+                            {n.audience}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-brand-text-secondary mt-1.5 leading-relaxed">{n.body}</p>
+                        <span className="block text-[8px] font-semibold font-mono text-brand-text-secondary/40 mt-2">
+                          {new Date(n.createdAt).toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-brand-text-secondary italic py-6 text-center">No messages sent.</p>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
-            System notifications console is being redesigned under Phase 4.
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* SUPPORT TAB PLACEHOLDER */}
       {activeTab === "support" && (
@@ -1826,7 +1969,7 @@ export const AdminDashboard = () => {
 
       {/* 10. SITE SETTINGS TAB */}
       {activeTab === "settings" && (
-        <div className="flex flex-col gap-6 text-left max-w-lg select-none">
+        <div className="flex flex-col gap-6 text-left max-w-lg select-none animate-fade-in">
           <div>
             <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Platform Settings</h1>
             <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Configure global parameters and site status.</p>
@@ -1840,6 +1983,41 @@ export const AdminDashboard = () => {
               required
             />
             
+            {/* Public Registrations Toggle */}
+            <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
+              <div className="flex items-start gap-3">
+                <Users className="h-5 w-5 text-brand-success shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-bold text-brand-text">Allow Public Reader Signups</p>
+                  <p className="text-[10px] text-brand-text-secondary mt-0.5">Control registration forms accessibility.</p>
+                </div>
+              </div>
+              <input 
+                type="checkbox" 
+                checked={siteSettings.publicSignups}
+                onChange={(e) => setSiteSettings(prev => ({ ...prev, publicSignups: e.target.checked }))}
+                className="h-4.5 w-4.5 text-brand-success rounded border-brand-border focus:ring-brand-success cursor-pointer accent-brand-success"
+              />
+            </div>
+
+            {/* Public Uploads Toggle */}
+            <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
+              <div className="flex items-start gap-3">
+                <Upload className="h-5 w-5 text-brand-accent shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-xs font-bold text-brand-text">Allow Public Book Uploads</p>
+                  <p className="text-[10px] text-brand-text-secondary mt-0.5">Allow authors to submit new eBook listings.</p>
+                </div>
+              </div>
+              <input 
+                type="checkbox" 
+                checked={siteSettings.publicUploads}
+                onChange={(e) => setSiteSettings(prev => ({ ...prev, publicUploads: e.target.checked }))}
+                className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border focus:ring-brand-accent cursor-pointer accent-brand-accent"
+              />
+            </div>
+
+            {/* Platform Maintenance Mode */}
             <div className="flex items-center justify-between p-3.5 bg-brand-danger/5 border border-brand-danger/15 rounded-[14px]">
               <div className="flex items-start gap-3">
                 <ShieldAlert className="h-5 w-5 text-brand-danger shrink-0 mt-0.5" />

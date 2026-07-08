@@ -28,20 +28,20 @@
 }
 
 .dark {
-  --primary: #FFFFFF;
-  --primary-hover: #F3F4F6;
-  --secondary: #AEAEB2;
-  --accent: #0A84FF;
-  --success: #10B981;
+  --primary: #2563EB;
+  --primary-hover: #1D4ED8;
+  --secondary: #A1A1AA;
+  --accent: #2563EB;
+  --success: #22C55E;
   --warning: #F59E0B;
   --danger: #EF4444;
-  --bg: #000000;
-  --bg-secondary: #111111;
-  --card: #1C1C1E;
-  --border: #3A3A3C;
-  --input-border: #48484A;
-  --text: #FFFFFF;
-  --text-secondary: #AEAEB2;
+  --bg: #09090B;
+  --bg-secondary: #18181B;
+  --card: #111113;
+  --border: #27272A;
+  --input-border: #27272A;
+  --text: #FAFAFA;
+  --text-secondary: #A1A1AA;
   
   color-scheme: dark;
 }

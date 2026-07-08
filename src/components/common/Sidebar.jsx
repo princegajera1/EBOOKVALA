@@ -36,6 +36,7 @@ const SidebarNavItem = ({
       whileHover={{ x: isCollapsed ? 0 : 2 }}
       whileTap={{ scale: 0.98 }}
       aria-label={link.label}
+      title={isCollapsed ? link.label : undefined}
       aria-current={isActive ? "page" : undefined}
       className={`
         group relative flex items-center w-full rounded-brand-btn text-[13px] font-medium

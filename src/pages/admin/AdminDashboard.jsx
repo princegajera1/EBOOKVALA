@@ -5,7 +5,7 @@ import {
   Plus, Settings, Grid, BarChart2, ShieldAlert, Edit, FileText, Upload, Download,
   Zap, Activity, Cpu, Database, DatabaseZap, Terminal, Bell, Lock, ToggleLeft,
   Sliders, Calendar, PlusCircle, ArrowRight, Play, Eye, Layers, DollarSign,
-  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles
+  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles, HelpCircle
 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
@@ -426,11 +426,17 @@ export const AdminDashboard = () => {
 
 
   const sidebarLinks = [
-    { id: "overview", label: "Overview", icon: BarChart2 },
-    { id: "users", label: "Users", icon: Users },
-    { id: "books", label: "eBooks", icon: BookOpen },
-    { id: "traffic", label: "Live Traffic", icon: Compass },
-    { id: "settings", label: "Settings", icon: Settings }
+    { id: "overview", label: "Dashboard", icon: BarChart2 },
+    { id: "books", label: "Books", icon: BookOpen },
+    { id: "authors", label: "Authors", icon: ShieldCheck },
+    { id: "users", label: "Readers", icon: Users },
+    { id: "categories", label: "Categories", icon: Grid },
+    { id: "reports", label: "Reports", icon: ShieldAlert },
+    { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "activity", label: "Activity", icon: Activity },
+    { id: "notifications", label: "Notifications", icon: Bell },
+    { id: "settings", label: "Settings", icon: Settings },
+    { id: "support", label: "Support", icon: HelpCircle }
   ];
 
   const pendingBooks = books.filter(b => b.status === "pending");
@@ -830,7 +836,7 @@ export const AdminDashboard = () => {
 
 
       {/* 8. LIVE TRAFFIC & VISITORS TAB */}
-      {activeTab === "traffic" && (
+      {activeTab === "analytics" && (
         <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -988,6 +994,84 @@ export const AdminDashboard = () => {
       )}
 
 
+
+      {/* AUTHORS TAB PLACEHOLDER */}
+      {activeTab === "authors" && (
+        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Platform Authors</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Verification status and listings of contributors.</p>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
+            Authors catalog view is being redesigned under Phase 2.
+          </div>
+        </div>
+      )}
+
+      {/* CATEGORIES TAB PLACEHOLDER */}
+      {activeTab === "categories" && (
+        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">eBook Categories</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Active genre categories config matrix.</p>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
+            Categories manager console is being redesigned under Phase 4.
+          </div>
+        </div>
+      )}
+
+      {/* REPORTS TAB PLACEHOLDER */}
+      {activeTab === "reports" && (
+        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Moderation Reports</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Content flags and warning triggers queue.</p>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
+            Reports queue manager is being redesigned under Phase 3.
+          </div>
+        </div>
+      )}
+
+      {/* ACTIVITY TAB PLACEHOLDER */}
+      {activeTab === "activity" && (
+        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Activity Logs</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Chronological admin operation matrix.</p>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
+            Activity log terminal is being redesigned under Phase 4.
+          </div>
+        </div>
+      )}
+
+      {/* NOTIFICATIONS TAB PLACEHOLDER */}
+      {activeTab === "notifications" && (
+        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">System Notifications</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Send push alerts and operational updates.</p>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
+            System notifications console is being redesigned under Phase 4.
+          </div>
+        </div>
+      )}
+
+      {/* SUPPORT TAB PLACEHOLDER */}
+      {activeTab === "support" && (
+        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Help Desk & Support</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Operator tickets and diagnostic channels.</p>
+          </div>
+          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
+            Help desk is being redesigned under Phase 5.
+          </div>
+        </div>
+      )}
 
       {/* 10. SITE SETTINGS TAB */}
       {activeTab === "settings" && (

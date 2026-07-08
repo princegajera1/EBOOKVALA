@@ -22,7 +22,7 @@ import rohanAvatar from "../assets/testimonials/rohan.png";
 const AnimatedCounter = ({ value, duration = 1.5 }) => {
   const [count, setCount] = useState(0);
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+  const isInView = useInView(ref, { once: true, margin: "0px" });
 
   useEffect(() => {
     if (!isInView) return;

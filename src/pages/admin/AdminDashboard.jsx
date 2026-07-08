@@ -1848,18 +1848,63 @@ export const AdminDashboard = () => {
         );
       })()}
 
-      {/* ACTIVITY TAB PLACEHOLDER */}
-      {activeTab === "activity" && (
-        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Activity Logs</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Chronological admin operation matrix.</p>
+      {/* ACTIVITY LOGS TAB */}
+      {activeTab === "activity" && (() => {
+        // Let's create an expanded mock list of all actions in the platform
+        const fullActivityLogs = [
+          { id: "log-1", user: "Admin", action: "Approved eBook listing", target: "Atomic Habits", category: "Book", time: "10 mins ago", severity: "success" },
+          { id: "log-2", user: "John Doe", action: "Completed author verification", target: "Author Account", category: "User", time: "45 mins ago", severity: "accent" },
+          { id: "log-3", user: "Admin", action: "Suspended reader access", target: "spammer.reader@gmail.com", category: "User", time: "2 hours ago", severity: "danger" },
+          { id: "log-4", user: "Amara", action: "Published a new chapter", target: "Secrets of the Forest", category: "Book", time: "5 hours ago", severity: "success" },
+          { id: "log-5", user: "Admin", action: "Dismissed copyright flag", target: "Atomic Habits", category: "Report", time: "1 day ago", severity: "warning" },
+          { id: "log-6", user: "Rohan", action: "Updated contributor profile", target: "Rohan's Biography", category: "User", time: "2 days ago", severity: "accent" }
+        ];
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Activity Logs</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Chronological audit log of admin operations and system events.</p>
+            </div>
+
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">Operator</th>
+                      <th className="py-4 px-5">Action Type</th>
+                      <th className="py-4 px-5">Target Event</th>
+                      <th className="py-4 px-5">Scope</th>
+                      <th className="py-4 px-5 text-right">Time Elapsed</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {fullActivityLogs.map((log) => (
+                      <tr key={log.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                        <td className="py-4 px-5 font-bold text-brand-text font-display">{log.user}</td>
+                        <td className="py-4 px-5 font-semibold text-brand-text-secondary">{log.action}</td>
+                        <td className="py-4 px-5 font-semibold text-brand-text">{log.target}</td>
+                        <td className="py-4 px-5">
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                            log.severity === "success" ? "bg-brand-success/10 text-brand-success" :
+                            log.severity === "warning" ? "bg-brand-warning/10 text-brand-warning" :
+                            log.severity === "danger" ? "bg-brand-danger/10 text-brand-danger" :
+                            "bg-brand-accent/10 text-brand-accent"
+                          }`}>
+                            {log.category}
+                          </span>
+                        </td>
+                        <td className="py-4 px-5 text-right font-mono font-medium text-brand-text-secondary">{log.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
-            Activity log terminal is being redesigned under Phase 4.
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* NOTIFICATIONS DISPATCHER */}
       {activeTab === "notifications" && (() => {

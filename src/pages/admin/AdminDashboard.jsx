@@ -76,6 +76,24 @@ export const AdminDashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoadingData, setIsLoadingData] = useState(true);
 
+  // Phase 3 Pagination & Filter States
+  const [currentPageBooks, setCurrentPageBooks] = useState(1);
+  const [pageSizeBooks, setPageSizeBooks] = useState(10);
+  const [filterBookStatus, setFilterBookStatus] = useState("all");
+
+  const [currentPageUsers, setCurrentPageUsers] = useState(1);
+  const [pageSizeUsers, setPageSizeUsers] = useState(10);
+  const [filterUserRole, setFilterUserRole] = useState("all");
+
+  const [currentPageReports, setCurrentPageReports] = useState(1);
+  const [pageSizeReports, setPageSizeReports] = useState(10);
+  const [filterReportStatus, setFilterReportStatus] = useState("all");
+
+  const [reports, setReports] = useState([
+    { id: "rep-1", type: "Book", targetId: "book-1", targetName: "Atomic Habits", reportedBy: "john.doe@gmail.com", reason: "Copyright violation", status: "pending", createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+    { id: "rep-2", type: "Review", targetId: "rev-12", targetName: "Great book but layout is bad", reportedBy: "alex.read@gmail.com", reason: "Spam / Abusive language", status: "pending", createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
+  ]);
+
   // eBook Editor Modal States
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
@@ -228,6 +246,29 @@ export const AdminDashboard = () => {
       loadAdminData();
     } catch (err) {
       toast.error("Action failed.");
+    }
+  };
+
+  const handleToggleUserRole = async (uid, currentRole) => {
+    const newRole = currentRole === "author" ? "reader" : "author";
+    const toastId = toast.loading(`Updating user role to ${newRole}...`);
+    try {
+      await dbService.updateUserProfile(uid, { role: newRole });
+      toast.success("User role updated successfully!", { id: toastId });
+      loadAdminData();
+    } catch (err) {
+      toast.error("Failed to update user role.", { id: toastId });
+    }
+  };
+
+  const handleToggleUserSuspension = async (uid, isSuspended) => {
+    const toastId = toast.loading(isSuspended ? "Un-suspending user..." : "Suspending user...");
+    try {
+      await dbService.updateUserProfile(uid, { isSuspended: !isSuspended });
+      toast.success(isSuspended ? "User restored!" : "User suspended!", { id: toastId });
+      loadAdminData();
+    } catch (err) {
+      toast.error("Failed to update user status.", { id: toastId });
     }
   };
 
@@ -964,158 +1005,404 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* 2. MANAGE USERS TAB */}
-      {activeTab === "users" && (
-        <div className="flex flex-col gap-6 text-left">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {activeTab === "users" && (() => {
+        const usersFiltered = usersList.filter(u => {
+          const matchesSearch = 
+            u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            u.role?.toLowerCase().includes(searchQuery.toLowerCase());
+          
+          let matchesRole = true;
+          if (filterUserRole !== "all") {
+            if (filterUserRole === "reader") {
+              matchesRole = !u.role || u.role === "reader";
+            } else {
+              matchesRole = u.role === filterUserRole;
+            }
+          }
+          return matchesSearch && matchesRole;
+        });
+
+        const totalUsersCount = usersFiltered.length;
+        const totalUsersPages = Math.ceil(totalUsersCount / pageSizeUsers) || 1;
+        const indexOfLastUser = currentPageUsers * pageSizeUsers;
+        const indexOfFirstUser = indexOfLastUser - pageSizeUsers;
+        const currentUsers = usersFiltered.slice(indexOfFirstUser, indexOfLastUser);
+
+        return (
+          <div className="flex flex-col gap-6 text-left animate-fade-in">
             <div>
               <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Manage Users</h1>
               <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Audit, suspend, or modify roles of platform accounts.</p>
             </div>
-            
-            <div className="w-full sm:w-72">
-              <SearchBox
-                size="sm"
-                placeholder="Search name, email, or role..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onClear={() => setSearchQuery("")}
-                onSubmit={(e) => e.preventDefault()}
-                shortcutHint={false}
-                aria-label="Search users"
-              />
-            </div>
-          </div>
 
-          <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
-            <table className="w-full text-xs text-left text-brand-text-secondary">
-              <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
-                <tr>
-                  <th className="py-4 px-5">User Details</th>
-                  <th className="py-4 px-5">Email</th>
-                  <th className="py-4 px-5">Role</th>
-                  <th className="py-4 px-5">Registered Date</th>
-                  <th className="py-4 px-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((u) => (
-                  <tr key={u.uid} className="border-b border-brand-border/60 last:border-0 hover:bg-brand-bg-secondary/40 transition-colors">
-                    <td className="py-4 px-5 font-bold text-brand-text">{u.displayName || u.name}</td>
-                    <td className="py-4 px-5 font-mono">{u.email}</td>
-                    <td className="py-4 px-5 capitalize">
-                      <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
-                        u.role === "admin" ? "bg-brand-danger/10 text-brand-danger" :
-                        u.role === "author" ? "bg-brand-accent/10 text-brand-accent" :
-                        "bg-brand-bg-secondary text-brand-text-secondary border border-brand-border/40"
-                      }`}>
-                        {u.role}
-                      </span>
-                    </td>
-                    <td className="py-4 px-5">{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "N/A"}</td>
-                    <td className="py-4 px-5 text-right">
-                      <Button variant="outline" size="sm" className="h-8 rounded-full text-[10px] border-brand-border text-brand-text hover:bg-brand-bg-secondary">
-                        <Ban className="mr-1 h-3 w-3 text-brand-danger" /> Suspend
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {/* Filters Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 w-full">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search name, email, or role..."
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageUsers(1); }}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                  />
+                </div>
+
+                <select
+                  value={filterUserRole}
+                  onChange={(e) => { setFilterUserRole(e.target.value); setCurrentPageUsers(1); }}
+                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="reader">Readers</option>
+                  <option value="author">Authors</option>
+                  <option value="admin">Admins</option>
+                </select>
+
+                {(searchQuery || filterUserRole !== "all") && (
+                  <button
+                    onClick={() => { setSearchQuery(""); setFilterUserRole("all"); setCurrentPageUsers(1); }}
+                    className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Table Container */}
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">User Profile</th>
+                      <th className="py-4 px-5">Email</th>
+                      <th className="py-4 px-5">Role</th>
+                      <th className="py-4 px-5">Registered Date</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentUsers.length > 0 ? (
+                      currentUsers.map((u) => (
+                        <tr key={u.uid} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                          <td className="py-4 px-5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-7 w-7 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0 shadow-sm">
+                                <img
+                                  src={u.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(u.displayName || "User")}`}
+                                  alt=""
+                                  className="h-full w-full object-cover"
+                                />
+                              </div>
+                              <span className="font-bold text-brand-text font-display">{u.displayName || u.name || "Anonymous Reader"}</span>
+                              {u.isSuspended && (
+                                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-brand-danger/15 text-brand-danger uppercase">Suspended</span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-5 font-mono font-medium">{u.email}</td>
+                          <td className="py-4 px-5 capitalize">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                              u.role === "admin" ? "bg-brand-danger/10 text-brand-danger" :
+                              u.role === "author" ? "bg-brand-accent/10 text-brand-accent" :
+                              "bg-brand-bg-secondary text-brand-text-secondary border border-brand-border/40"
+                            }`}>
+                              {u.role || "reader"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-5 font-medium">{u.createdAt ? new Date(u.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : "N/A"}</td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex gap-1.5 justify-end select-none">
+                              {u.role !== "admin" && (
+                                <>
+                                  <button 
+                                    onClick={() => handleToggleUserRole(u.uid, u.role || "reader")}
+                                    className="px-2.5 py-1.5 rounded-full border border-brand-border text-brand-text hover:bg-brand-bg-secondary text-[10px] font-bold cursor-pointer transition-colors"
+                                  >
+                                    Make {u.role === "author" ? "Reader" : "Author"}
+                                  </button>
+                                  <button 
+                                    onClick={() => handleToggleUserSuspension(u.uid, u.isSuspended)}
+                                    className={`px-2.5 py-1.5 rounded-full text-[10px] font-bold cursor-pointer transition-colors ${
+                                      u.isSuspended
+                                        ? "bg-brand-success/10 text-brand-success hover:bg-brand-success/20"
+                                        : "bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20"
+                                    }`}
+                                  >
+                                    {u.isSuspended ? "Restore" : "Suspend"}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
+                          No users matched current filters.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalUsersCount > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="text-brand-text-secondary">Rows per page:</span>
+                  <select
+                    value={pageSizeUsers}
+                    onChange={(e) => { setPageSizeUsers(Number(e.target.value)); setCurrentPageUsers(1); }}
+                    className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
+                  >
+                    {[5, 10, 20, 50].map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  <span className="text-brand-text-secondary/60 ml-2">
+                    Showing {indexOfFirstUser + 1} to {Math.min(indexOfLastUser, totalUsersCount)} of {totalUsersCount} users
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPageUsers(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPageUsers === 1}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &larr;
+                  </button>
+
+                  {Array.from({ length: totalUsersPages }).map((_, i) => {
+                    const pNum = i + 1;
+                    return (
+                      <button
+                        key={pNum}
+                        onClick={() => setCurrentPageUsers(pNum)}
+                        className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
+                          currentPageUsers === pNum
+                            ? "border-brand-accent bg-brand-accent text-brand-text"
+                            : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPageUsers(prev => Math.min(prev + 1, totalUsersPages))}
+                    disabled={currentPageUsers === totalUsersPages}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 3. MANAGE BOOKS TAB */}
-      {activeTab === "books" && (
-        <div className="flex flex-col gap-6 text-left">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      {activeTab === "books" && (() => {
+        const booksFiltered = books.filter(book => {
+          const matchesSearch = 
+            book.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            book.authorName?.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchesStatus = filterBookStatus === "all" || book.status === filterBookStatus;
+          return matchesSearch && matchesStatus;
+        });
+
+        const totalBooksCount = booksFiltered.length;
+        const totalBooksPages = Math.ceil(totalBooksCount / pageSizeBooks) || 1;
+        const indexOfLastBook = currentPageBooks * pageSizeBooks;
+        const indexOfFirstBook = indexOfLastBook - pageSizeBooks;
+        const currentBooks = booksFiltered.slice(indexOfFirstBook, indexOfLastBook);
+
+        return (
+          <div className="flex flex-col gap-6 text-left animate-fade-in">
             <div>
               <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Manage Publications</h1>
               <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Monitor, approve, or remove published digital eBooks.</p>
             </div>
-            
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button onClick={triggerAddBook} variant="primary" className="h-9 px-4 rounded-full text-xs font-bold shrink-0">
+
+            {/* Filters Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search books, authors..."
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageBooks(1); }}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                  />
+                </div>
+
+                <select
+                  value={filterBookStatus}
+                  onChange={(e) => { setFilterBookStatus(e.target.value); setCurrentPageBooks(1); }}
+                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="published">Published</option>
+                  <option value="pending">Pending Approval</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+
+                {(searchQuery || filterBookStatus !== "all") && (
+                  <button
+                    onClick={() => { setSearchQuery(""); setFilterBookStatus("all"); setCurrentPageBooks(1); }}
+                    className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+
+              <Button onClick={triggerAddBook} variant="primary" className="h-9 px-4 rounded-full text-xs font-bold shrink-0 w-full sm:w-auto select-none">
                 <Plus className="mr-1.5 h-4 w-4" /> Add eBook
               </Button>
-              <div className="relative w-full sm:w-72">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-brand-text-secondary/50" />
-                <input
-                  type="text"
-                  placeholder="Search title, author, or status..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-brand-card border border-brand-border rounded-full py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/5 text-brand-text font-medium"
-                />
+            </div>
+
+            {/* Table Container */}
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">eBook Title</th>
+                      <th className="py-4 px-5">Author</th>
+                      <th className="py-4 px-5 font-mono">Downloads</th>
+                      <th className="py-4 px-5">Status</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentBooks.length > 0 ? (
+                      currentBooks.map((book) => (
+                        <tr key={book.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                          <td className="py-4 px-5">
+                            <div className="flex items-center gap-3">
+                              <div className="h-9.5 w-7 bg-brand-bg-secondary border border-brand-border/40 rounded overflow-hidden shrink-0 select-none shadow-sm">
+                                <img src={book.coverURL || "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=120&auto=format&fit=crop"} alt="" className="h-full w-full object-cover animate-fade-in" />
+                              </div>
+                              <span className="font-bold text-brand-text truncate max-w-[180px] font-display">{book.title}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-5 font-semibold text-brand-text-secondary">{book.authorName}</td>
+                          <td className="py-4 px-5 font-mono font-bold text-brand-text">{(book.salesCount || 0).toLocaleString()}</td>
+                          <td className="py-4 px-5">
+                            <StatusBadge status={book.status} />
+                          </td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex gap-1.5 justify-end select-none">
+                              {book.status === "pending" && (
+                                <button 
+                                  onClick={() => handleApproveBook(book.id)}
+                                  className="px-3 py-1.5 rounded-full bg-brand-success/10 text-brand-success hover:bg-brand-success/20 text-[10px] font-bold cursor-pointer transition-colors"
+                                >
+                                  Approve
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => triggerEditBook(book)}
+                                className="p-2 rounded-full border border-brand-border text-brand-text hover:bg-brand-bg-secondary cursor-pointer transition-colors"
+                                title="Edit eBook"
+                              >
+                                <Edit className="h-3.5 w-3.5" />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteBook(book.id)}
+                                className="p-2 rounded-full border border-brand-border text-brand-danger hover:bg-brand-danger/10 cursor-pointer transition-colors"
+                                title="Delete eBook"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
+                          No eBooks matched current filters.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-          </div>
 
-          <div className="border border-brand-border rounded-[16px] shadow-brand overflow-hidden bg-brand-card">
-            <table className="w-full text-xs text-left text-brand-text-secondary">
-              <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border">
-                <tr>
-                  <th className="py-4 px-5">eBook Title</th>
-                  <th className="py-4 px-5">Author</th>
-                  <th className="py-4 px-5">Reads/Downloads</th>
-                  <th className="py-4 px-5">Status</th>
-                  <th className="py-4 px-5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredBooks.map((book) => (
-                  <tr key={book.id} className="border-b border-brand-border/60 last:border-0 hover:bg-brand-bg-secondary/40 transition-colors">
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="h-9 w-6.5 bg-brand-bg-secondary border border-brand-border/40 rounded-[4px] overflow-hidden shrink-0 select-none shadow-sm">
-                          <img src={book.coverURL} alt="" className="h-full w-full object-cover animate-fade-in" />
-                        </div>
-                        <span className="font-bold text-brand-text truncate max-w-[200px] font-display">{book.title}</span>
-                      </div>
-                    </td>
-                    <td className="py-4 px-5 font-semibold">{book.authorName}</td>
-                    <td className="py-4 px-5 font-mono font-bold text-brand-text">{(book.salesCount || 0).toLocaleString()}</td>
-                    <td className="py-4 px-5">
-                      <StatusBadge status={book.status} />
-                    </td>
-                    <td className="py-4 px-5 text-right">
-                      <div className="flex gap-2 justify-end select-none">
-                        {book.status === "pending" && (
-                          <Button 
-                            onClick={() => handleApproveBook(book.id)}
-                            variant="primary" 
-                            size="sm" 
-                            className="h-8 rounded-full text-[10px] px-3.5 font-bold shadow-sm animate-pulse"
-                          >
-                            Approve
-                          </Button>
-                        )}
-                        <Button 
-                          onClick={() => triggerEditBook(book)}
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 rounded-full text-[10px] border-brand-border text-brand-text hover:bg-brand-bg-secondary"
-                        >
-                          <Edit className="mr-1 h-3.5 w-3.5" /> Edit
-                        </Button>
-                        <Button 
-                          onClick={() => handleDeleteBook(book.id)}
-                          variant="outline" 
-                          size="sm" 
-                          className="h-8 rounded-full text-[10px] border-brand-border text-brand-danger hover:bg-brand-bg-secondary"
-                        >
-                          <Trash2 className="mr-1 h-3.5 w-3.5" /> Delete
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {/* Pagination Controls */}
+            {totalBooksCount > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="text-brand-text-secondary">Rows per page:</span>
+                  <select
+                    value={pageSizeBooks}
+                    onChange={(e) => { setPageSizeBooks(Number(e.target.value)); setCurrentPageBooks(1); }}
+                    className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
+                  >
+                    {[5, 10, 20, 50].map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  <span className="text-brand-text-secondary/60 ml-2">
+                    Showing {indexOfFirstBook + 1} to {Math.min(indexOfLastBook, totalBooksCount)} of {totalBooksCount} eBooks
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPageBooks(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPageBooks === 1}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &larr;
+                  </button>
+
+                  {Array.from({ length: totalBooksPages }).map((_, i) => {
+                    const pNum = i + 1;
+                    return (
+                      <button
+                        key={pNum}
+                        onClick={() => setCurrentPageBooks(pNum)}
+                        className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
+                          currentPageBooks === pNum
+                            ? "border-brand-accent bg-brand-accent text-brand-text"
+                            : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPageBooks(prev => Math.min(prev + 1, totalBooksPages))}
+                    disabled={currentPageBooks === totalBooksPages}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
 
 
@@ -1308,18 +1595,195 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* REPORTS TAB PLACEHOLDER */}
-      {activeTab === "reports" && (
-        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Moderation Reports</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Content flags and warning triggers queue.</p>
+      {activeTab === "reports" && (() => {
+        const handleDismissReport = (reportId) => {
+          setReports(prev => prev.filter(r => r.id !== reportId));
+          toast.success("Report dismissed.");
+        };
+
+        const handleResolveAction = (reportId, actionLabel) => {
+          setReports(prev => prev.filter(r => r.id !== reportId));
+          toast.success(`Action taken: ${actionLabel}. Report resolved.`);
+        };
+
+        const reportsFiltered = reports.filter(r => {
+          const matchesSearch = 
+            r.targetName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            r.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            r.reportedBy?.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchesStatus = filterReportStatus === "all" || r.status === filterReportStatus;
+          return matchesSearch && matchesStatus;
+        });
+
+        const totalReportsCount = reportsFiltered.length;
+        const totalReportsPages = Math.ceil(totalReportsCount / pageSizeReports) || 1;
+        const indexOfLastReport = currentPageReports * pageSizeReports;
+        const indexOfFirstReport = indexOfLastReport - pageSizeReports;
+        const currentReports = reportsFiltered.slice(indexOfFirstReport, indexOfLastReport);
+
+        return (
+          <div className="flex flex-col gap-6 text-left animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Moderation Queue</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Content flags, copyright notices, and warning triggers.</p>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 w-full">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search reports, reasons..."
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageReports(1); }}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                  />
+                </div>
+
+                <select
+                  value={filterReportStatus}
+                  onChange={(e) => { setFilterReportStatus(e.target.value); setCurrentPageReports(1); }}
+                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="all">All Reports</option>
+                  <option value="pending">Pending</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+
+                {(searchQuery || filterReportStatus !== "all") && (
+                  <button
+                    onClick={() => { setSearchQuery(""); setFilterReportStatus("all"); setCurrentPageReports(1); }}
+                    className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Table Container */}
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">Reported Target</th>
+                      <th className="py-4 px-5">Type</th>
+                      <th className="py-4 px-5">Reason</th>
+                      <th className="py-4 px-5">Reported By</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentReports.length > 0 ? (
+                      currentReports.map((r) => (
+                        <tr key={r.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                          <td className="py-4 px-5 font-bold text-brand-text font-display">{r.targetName}</td>
+                          <td className="py-4 px-5 capitalize">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                              r.type === "Book" ? "bg-brand-accent/10 text-brand-accent" : "bg-brand-warning/10 text-brand-warning"
+                            }`}>
+                              {r.type}
+                            </span>
+                          </td>
+                          <td className="py-4 px-5 font-semibold text-brand-text-secondary">{r.reason}</td>
+                          <td className="py-4 px-5 font-mono">{r.reportedBy}</td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex gap-1.5 justify-end select-none">
+                              <button 
+                                onClick={() => handleDismissReport(r.id)}
+                                className="px-2.5 py-1.5 rounded-full border border-brand-border text-brand-text hover:bg-brand-bg-secondary text-[10px] font-bold cursor-pointer transition-colors"
+                              >
+                                Dismiss
+                              </button>
+                              <button 
+                                onClick={() => handleResolveAction(r.id, "Warn User")}
+                                className="px-2.5 py-1.5 rounded-full bg-brand-warning/10 text-brand-warning hover:bg-brand-warning/20 text-[10px] font-bold cursor-pointer transition-colors"
+                              >
+                                Warn User
+                              </button>
+                              <button 
+                                onClick={() => handleResolveAction(r.id, "Delete Target")}
+                                className="px-2.5 py-1.5 rounded-full bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20 text-[10px] font-bold cursor-pointer transition-colors"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
+                          No flags pending review.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalReportsCount > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="text-brand-text-secondary">Rows per page:</span>
+                  <select
+                    value={pageSizeReports}
+                    onChange={(e) => { setPageSizeReports(Number(e.target.value)); setCurrentPageReports(1); }}
+                    className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
+                  >
+                    {[5, 10, 20, 50].map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  <span className="text-brand-text-secondary/60 ml-2">
+                    Showing {indexOfFirstReport + 1} to {Math.min(indexOfLastReport, totalReportsCount)} of {totalReportsCount} flags
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPageReports(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPageReports === 1}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &larr;
+                  </button>
+
+                  {Array.from({ length: totalReportsPages }).map((_, i) => {
+                    const pNum = i + 1;
+                    return (
+                      <button
+                        key={pNum}
+                        onClick={() => setCurrentPageReports(pNum)}
+                        className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
+                          currentPageReports === pNum
+                            ? "border-brand-accent bg-brand-accent text-brand-text"
+                            : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPageReports(prev => Math.min(prev + 1, totalReportsPages))}
+                    disabled={currentPageReports === totalReportsPages}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
-            Reports queue manager is being redesigned under Phase 3.
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ACTIVITY TAB PLACEHOLDER */}
       {activeTab === "activity" && (

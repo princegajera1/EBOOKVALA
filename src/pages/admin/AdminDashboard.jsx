@@ -105,6 +105,16 @@ export const AdminDashboard = () => {
     { id: "sent-2", title: "Author Guidelines Updated", body: "Please review the updated cover photo dimensions under your dashboard.", audience: "authors", createdAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString() }
   ]);
 
+  // Support Tickets States
+  const [filterTicketStatus, setFilterTicketStatus] = useState("all");
+  const [currentPageTickets, setCurrentPageTickets] = useState(1);
+  const [pageSizeTickets, setPageSizeTickets] = useState(5);
+  const [supportTickets, setSupportTickets] = useState([
+    { id: "tick-1", subject: "Failed PDF upload error", message: "Getting a storage quota timeout alert while uploading my book.", email: "john.author@gmail.com", userRole: "author", status: "open", createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
+    { id: "tick-2", subject: "Cannot view purchased books", message: "My downloads are showing empty under reader profile panel.", email: "jenny.read@gmail.com", userRole: "reader", status: "open", createdAt: new Date(Date.now() - 18 * 60 * 60 * 1000).toISOString() },
+    { id: "tick-3", subject: "Inappropriate review report", message: "A review on my book contains aggressive personal slurs.", email: "author.amara@gmail.com", userRole: "author", status: "closed", createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() }
+  ]);
+
   // eBook Editor Modal States
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
   const [editingBook, setEditingBook] = useState(null);
@@ -1954,18 +1964,200 @@ export const AdminDashboard = () => {
         );
       })()}
 
-      {/* SUPPORT TAB PLACEHOLDER */}
-      {activeTab === "support" && (
-        <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Help Desk & Support</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Operator tickets and diagnostic channels.</p>
+      {/* SUPPORT & TICKETING DESK */}
+      {activeTab === "support" && (() => {
+        const handleResolveTicket = (ticketId) => {
+          setSupportTickets(prev => prev.map(t => t.id === ticketId ? { ...t, status: "closed" } : t));
+          toast.success("Support ticket marked resolved!");
+        };
+
+        const handleWarnUser = (email) => {
+          toast.success(`Warning notice sent to ${email}`);
+        };
+
+        const ticketsFiltered = supportTickets.filter(t => {
+          const matchesSearch = 
+            t.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            t.email.toLowerCase().includes(searchQuery.toLowerCase());
+          const matchesStatus = filterTicketStatus === "all" || t.status === filterTicketStatus;
+          return matchesSearch && matchesStatus;
+        });
+
+        const totalTicketsCount = ticketsFiltered.length;
+        const totalTicketsPages = Math.ceil(totalTicketsCount / pageSizeTickets) || 1;
+        const indexOfLastTicket = currentPageTickets * pageSizeTickets;
+        const indexOfFirstTicket = indexOfLastTicket - pageSizeTickets;
+        const currentTickets = ticketsFiltered.slice(indexOfFirstTicket, indexOfLastTicket);
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Help Desk & Tickets</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Address user inquiries, resolve bug reports, and moderate requests.</p>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 w-full">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search tickets, emails..."
+                    value={searchQuery}
+                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageTickets(1); }}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                  />
+                </div>
+
+                <select
+                  value={filterTicketStatus}
+                  onChange={(e) => { setFilterTicketStatus(e.target.value); setCurrentPageTickets(1); }}
+                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="all">All Tickets</option>
+                  <option value="open">Open Inquiries</option>
+                  <option value="closed">Resolved Tickets</option>
+                </select>
+
+                {(searchQuery || filterTicketStatus !== "all") && (
+                  <button
+                    onClick={() => { setSearchQuery(""); setFilterTicketStatus("all"); setCurrentPageTickets(1); }}
+                    className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
+                  >
+                    Reset Filters
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Tickets Table */}
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">User Details</th>
+                      <th className="py-4 px-5">Subject Header</th>
+                      <th className="py-4 px-5">Message Query</th>
+                      <th className="py-4 px-5">Status</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentTickets.length > 0 ? (
+                      currentTickets.map((t) => (
+                        <tr key={t.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                          <td className="py-4 px-5">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="font-bold text-brand-text truncate max-w-[150px] font-display">{t.email}</span>
+                              <span className={`inline-block w-fit text-[8px] font-bold uppercase tracking-wider px-1 rounded ${
+                                t.userRole === "author" ? "bg-brand-accent/15 text-brand-accent" : "bg-brand-text-secondary/15 text-brand-text-secondary"
+                              }`}>
+                                {t.userRole}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-5 font-bold text-brand-text truncate max-w-[150px]">{t.subject}</td>
+                          <td className="py-4 px-5 font-semibold text-brand-text-secondary max-w-[200px] truncate" title={t.message}>{t.message}</td>
+                          <td className="py-4 px-5">
+                            <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                              t.status === "open" ? "bg-brand-danger/15 text-brand-danger animate-pulse" : "bg-[#111] text-brand-text-secondary/70 border border-brand-border"
+                            }`}>
+                              {t.status}
+                            </span>
+                          </td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex gap-1.5 justify-end select-none">
+                              {t.status === "open" && (
+                                <button 
+                                  onClick={() => handleResolveTicket(t.id)}
+                                  className="px-2.5 py-1.5 rounded-full bg-brand-success/15 text-brand-success hover:bg-brand-success/25 text-[10px] font-bold cursor-pointer transition-colors"
+                                >
+                                  Mark Resolved
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => handleWarnUser(t.email)}
+                                className="px-2.5 py-1.5 rounded-full bg-brand-warning/15 text-brand-warning hover:bg-brand-warning/25 text-[10px] font-bold cursor-pointer transition-colors"
+                              >
+                                Send Warning
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
+                          No support tickets match current criteria.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination Controls */}
+            {totalTicketsCount > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="text-brand-text-secondary">Rows per page:</span>
+                  <select
+                    value={pageSizeTickets}
+                    onChange={(e) => { setPageSizeTickets(Number(e.target.value)); setCurrentPageTickets(1); }}
+                    className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
+                  >
+                    {[5, 10, 20].map((size) => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  <span className="text-brand-text-secondary/60 ml-2">
+                    Showing {indexOfFirstTicket + 1} to {Math.min(indexOfLastTicket, totalTicketsCount)} of {totalTicketsCount} tickets
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setCurrentPageTickets(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPageTickets === 1}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &larr;
+                  </button>
+
+                  {Array.from({ length: totalTicketsPages }).map((_, i) => {
+                    const pNum = i + 1;
+                    return (
+                      <button
+                        key={pNum}
+                        onClick={() => setCurrentPageTickets(pNum)}
+                        className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
+                          currentPageTickets === pNum
+                            ? "border-brand-accent bg-brand-accent text-brand-text"
+                            : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
+                        }`}
+                      >
+                        {pNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    onClick={() => setCurrentPageTickets(prev => Math.min(prev + 1, totalTicketsPages))}
+                    disabled={currentPageTickets === totalTicketsPages}
+                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    &rarr;
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-          <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 text-center text-brand-text-secondary text-sm">
-            Help desk is being redesigned under Phase 5.
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 10. SITE SETTINGS TAB */}
       {activeTab === "settings" && (

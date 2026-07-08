@@ -143,8 +143,7 @@ function App() {
                 </GuestRoute>
               } />
 
-              {/* Secret Admin Entry — password only, no Firebase needed */}
-              <Route path="/635284" element={<SecretAdminEntry />} />
+
 
               {/* Dashboard routes (Role protection enforced via ProtectedRoute / AdminRoute) */}
               <Route path="/dashboard" element={

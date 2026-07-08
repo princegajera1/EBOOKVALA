@@ -10,7 +10,7 @@ export const AdminRoute = ({ children }) => {
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated || !isAdmin) {
-        navigate("/635284");
+        navigate("/admin/login");
       }
     }
   }, [isAuthenticated, isAdmin, loading, navigate]);

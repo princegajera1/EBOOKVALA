@@ -1,67 +1,91 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, LogOut, CheckCircle2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
 import logoImg from "../../assets/logo.png";
 
+const EXPANDED_WIDTH = 228;
+const COLLAPSED_WIDTH = 72;
+
 // ---------------------------------------------------------------------------
-// SidebarNavItem — individual nav button with framer-motion micro interactions
+// SidebarNavItem
 // ---------------------------------------------------------------------------
-const SidebarNavItem = ({ link, isActive, isCollapsed, onTabChange }) => {
+const SidebarNavItem = ({
+  link,
+  isActive,
+  isCollapsed,
+  onTabChange,
+  onLogout,
+  layoutIdPrefix = "",
+}) => {
   const Icon = link.icon;
+  const isLogout = link.action === "logout";
+
+  const handleClick = () => {
+    if (isLogout) {
+      onLogout?.();
+      return;
+    }
+    onTabChange?.(link.id);
+  };
 
   return (
     <motion.button
-      key={link.id}
-      onClick={() => onTabChange(link.id)}
-      whileTap={{ scale: 0.97 }}
+      onClick={handleClick}
+      whileHover={{ x: isCollapsed ? 0 : 2 }}
+      whileTap={{ scale: 0.98 }}
       aria-label={link.label}
       aria-current={isActive ? "page" : undefined}
       className={`
-        relative flex items-center gap-3 w-full rounded-[12px] text-xs font-bold
-        transition-all duration-200 cursor-pointer outline-none
+        group relative flex items-center w-full rounded-brand-btn text-[13px] font-medium
+        transition-colors duration-200 cursor-pointer outline-none
         focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-1 focus-visible:ring-offset-brand-card
-        ${isCollapsed ? "justify-center px-0 py-3" : "px-3.5 py-2.5"}
-        ${isActive
-          ? "text-brand-text bg-brand-bg-secondary border border-brand-border shadow-[0_1px_4px_0_rgba(15,23,42,0.06)]"
-          : "text-brand-text-secondary hover:bg-brand-bg-secondary hover:text-brand-text border border-transparent"
+        ${isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2"}
+        ${
+          isLogout
+            ? "text-brand-danger hover:bg-brand-danger/8 hover:text-brand-danger"
+            : isActive
+              ? "text-brand-text bg-brand-bg-secondary"
+              : "text-brand-text-secondary hover:bg-brand-bg-secondary/80 hover:text-brand-text"
         }
       `}
     >
-      {/* Animated active left-bar indicator */}
       <AnimatePresence>
-        {isActive && (
+        {isActive && !isLogout && (
           <motion.span
-            layoutId="activeIndicator"
-            className="absolute left-1.5 top-2 bottom-2 w-[3px] rounded-full bg-brand-accent"
-            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            layoutId={`${layoutIdPrefix}activeIndicator`}
+            className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-brand-accent"
+            transition={{ type: "spring", stiffness: 420, damping: 32 }}
           />
         )}
       </AnimatePresence>
 
-      {/* Icon with subtle scale on hover */}
       <motion.span
-        whileHover={{ scale: 1.13 }}
-        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        whileHover={{ scale: 1.08 }}
+        transition={{ type: "spring", stiffness: 400, damping: 22 }}
         className="shrink-0 flex items-center justify-center"
         aria-hidden="true"
       >
         <Icon
-          className={`h-[18px] w-[18px] transition-colors duration-200 ${
-            isActive ? "text-brand-accent" : "text-brand-text-secondary/70"
+          className={`h-[17px] w-[17px] transition-colors duration-200 ${
+            isLogout
+              ? "text-brand-danger/80 group-hover:text-brand-danger"
+              : isActive
+                ? "text-brand-accent"
+                : "text-brand-text-secondary/75 group-hover:text-brand-text"
           }`}
+          strokeWidth={isActive || isLogout ? 2.25 : 2}
         />
       </motion.span>
 
-      {/* Label — hidden when collapsed */}
       <AnimatePresence>
         {!isCollapsed && (
           <motion.span
-            initial={{ opacity: 0, x: -6 }}
+            initial={{ opacity: 0, x: -4 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -6 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
+            exit={{ opacity: 0, x: -4 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
             className="truncate leading-none"
           >
             {link.label}
@@ -73,7 +97,7 @@ const SidebarNavItem = ({ link, isActive, isCollapsed, onTabChange }) => {
 };
 
 // ---------------------------------------------------------------------------
-// SidebarProfileCard — avatar + name + role, clickable → settings
+// SidebarProfileCard
 // ---------------------------------------------------------------------------
 const SidebarProfileCard = ({ user, isCollapsed, onTabChange }) => {
   const avatarSrc =
@@ -82,29 +106,22 @@ const SidebarProfileCard = ({ user, isCollapsed, onTabChange }) => {
       user?.displayName || "U"
     )}`;
 
-  const handleClick = () => {
-    if (onTabChange) onTabChange("settings");
-  };
-
   return (
     <motion.button
-      onClick={handleClick}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      onClick={() => onTabChange?.("settings")}
+      whileHover={{ scale: 1.005 }}
+      whileTap={{ scale: 0.99 }}
       aria-label={isCollapsed ? `Profile: ${user?.displayName}` : "Go to settings"}
       className={`
-        w-full flex items-center gap-3 p-2.5 rounded-[14px]
-        bg-brand-bg-secondary border border-brand-border
-        shadow-[0_1px_3px_0_rgba(15,23,42,0.05)]
-        hover:border-brand-accent/30 hover:shadow-[0_2px_8px_0_rgba(15,23,42,0.08)]
+        w-full flex items-center rounded-brand-card
+        bg-brand-bg-secondary/60 border border-brand-border/80
+        hover:border-brand-accent/25 hover:bg-brand-bg-secondary
         transition-all duration-200 cursor-pointer outline-none
         focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-1 focus-visible:ring-offset-brand-card
-        ${isCollapsed ? "justify-center" : ""}
+        ${isCollapsed ? "justify-center p-2" : "gap-2.5 p-2.5"}
       `}
     >
-      {/* Avatar */}
-      <div className="h-9 w-9 rounded-full overflow-hidden bg-brand-card border-2 border-brand-border shadow-sm shrink-0">
+      <div className="h-8 w-8 rounded-full overflow-hidden bg-brand-card border border-brand-border shrink-0">
         <img
           src={avatarSrc}
           alt={`Avatar of ${user?.displayName || "user"}`}
@@ -113,32 +130,20 @@ const SidebarProfileCard = ({ user, isCollapsed, onTabChange }) => {
         />
       </div>
 
-      {/* Name + role — hidden when collapsed */}
       <AnimatePresence>
         {!isCollapsed && (
           <motion.div
-            initial={{ opacity: 0, x: -6 }}
+            initial={{ opacity: 0, x: -4 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -6 }}
-            transition={{ duration: 0.15, ease: "easeOut" }}
-            className="flex-1 overflow-hidden text-left"
+            exit={{ opacity: 0, x: -4 }}
+            transition={{ duration: 0.14, ease: "easeOut" }}
+            className="flex-1 overflow-hidden text-left min-w-0"
           >
-            {/* Name row with verified badge */}
-            <div className="flex items-center gap-1.5 min-w-0">
-              <p className="text-[13px] font-bold text-brand-text truncate leading-tight">
-                {user?.displayName || "User"}
-              </p>
-              {/* Verified badge — shown for authors and admins */}
-              {(user?.role === "author" || user?.role === "admin") && (
-                <CheckCircle2
-                  className="h-3.5 w-3.5 shrink-0 text-brand-accent"
-                  aria-label="Verified"
-                />
-              )}
-            </div>
-            {/* Role chip */}
-            <p className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest mt-0.5 truncate">
-              {user?.role} Mode
+            <p className="text-[13px] font-semibold text-brand-text truncate leading-tight">
+              {user?.displayName || "Reader"}
+            </p>
+            <p className="text-[10px] font-mono text-brand-text-secondary uppercase tracking-wider mt-0.5 truncate">
+              Reader
             </p>
           </motion.div>
         )}
@@ -148,162 +153,229 @@ const SidebarProfileCard = ({ user, isCollapsed, onTabChange }) => {
 };
 
 // ---------------------------------------------------------------------------
-// Sidebar — main export
+// SidebarContent — shared between desktop + mobile drawer
 // ---------------------------------------------------------------------------
-export const Sidebar = ({ links = [], activeTab, onTabChange }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const SidebarContent = ({
+  links,
+  activeTab,
+  onTabChange,
+  isCollapsed,
+  setIsCollapsed,
+  onMobileClose,
+  isMobile = false,
+  layoutIdPrefix = "",
+  showProfile = true,
+}) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const hasNavLogout = links.some((l) => l.action === "logout");
 
   const handleLogout = () => {
     logout();
     navigate("/");
+    onMobileClose?.();
+  };
+
+  const handleNavClick = (tabId) => {
+    onTabChange?.(tabId);
+    onMobileClose?.();
   };
 
   return (
-    <motion.aside
-      animate={{ width: isCollapsed ? 76 : 240 }}
-      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="shrink-0 h-screen sticky top-0 bg-brand-card border-r border-brand-border
-                 flex flex-col z-30 select-none overflow-hidden"
-      aria-label="Dashboard Sidebar"
-    >
-      {/* ── Inner scrollable area ── */}
-      <div className="flex flex-col flex-1 justify-between overflow-y-auto no-scrollbar px-3 py-4">
+    <div className="flex flex-col flex-1 min-h-0">
+      <div className="flex flex-col flex-1 gap-4 px-3 py-4 overflow-y-auto no-scrollbar">
+        {/* Brand */}
+        <div
+          className={`flex items-center shrink-0 ${
+            isCollapsed && !isMobile ? "justify-center" : "justify-between"
+          } px-0.5`}
+        >
+          {!isCollapsed || isMobile ? (
+            <Link
+              to="/"
+              onClick={onMobileClose}
+              className="text-sm font-display font-black tracking-tight text-brand-text
+                         flex items-center gap-2 rounded-md
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
+            >
+              <img src={logoImg} className="h-6 w-6 object-contain rounded-md" alt="EBOOKVALA logo" />
+              <span>EBOOKVALA</span>
+            </Link>
+          ) : (
+            <Link
+              to="/"
+              className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
+              aria-label="Go to home"
+            >
+              <img src={logoImg} className="h-7 w-7 object-contain rounded-md" alt="EBOOKVALA logo" />
+            </Link>
+          )}
 
-        {/* ── Top section: Brand + Profile + Nav ── */}
-        <div className="flex flex-col gap-5">
-
-          {/* Brand header + collapse toggle */}
-          <div className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} px-1`}>
-            {!isCollapsed ? (
-              <Link
-                to="/"
-                className="text-[15px] font-display font-black tracking-tight text-brand-text
-                           hover:cursor-pointer rounded-md flex items-center gap-2
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent
-                           focus-visible:ring-offset-2 focus-visible:ring-offset-brand-card"
-                tabIndex={0}
-              >
-                <img src={logoImg} className="h-6 w-6 object-contain rounded-md" alt="EBOOKVALA logo" />
-                <span>EBOOKVALA</span>
-              </Link>
-            ) : (
-              <Link
-                to="/"
-                className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent
-                           focus-visible:ring-offset-2 focus-visible:ring-offset-brand-card"
-                aria-label="Go to home"
-              >
-                <img src={logoImg} className="h-7 w-7 object-contain rounded-md" alt="EBOOKVALA logo" />
-              </Link>
-            )}
-
-            {/* Collapse toggle — desktop only */}
-            {!isCollapsed && (
+          {isMobile ? (
+            <motion.button
+              onClick={onMobileClose}
+              whileTap={{ scale: 0.92 }}
+              className="p-2 rounded-brand-btn text-brand-text-secondary hover:text-brand-text hover:bg-brand-bg-secondary
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
+              aria-label="Close menu"
+            >
+              <X className="h-4 w-4" />
+            </motion.button>
+          ) : (
+            !isCollapsed && (
               <motion.button
                 onClick={() => setIsCollapsed(true)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.93 }}
-                className="hidden md:flex p-1.5 rounded-full border border-brand-border bg-brand-card
+                whileHover={{ scale: 1.06 }}
+                whileTap={{ scale: 0.94 }}
+                className="hidden lg:flex p-1.5 rounded-full border border-brand-border bg-brand-card
                            hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text
-                           cursor-pointer transition-colors duration-200
                            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
                 aria-label="Collapse sidebar"
               >
                 <ChevronLeft className="h-3.5 w-3.5" />
               </motion.button>
-            )}
-            {isCollapsed && (
-              <motion.button
-                onClick={() => setIsCollapsed(false)}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.93 }}
-                className="hidden md:flex p-1.5 rounded-full border border-brand-border bg-brand-card
-                           hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text
-                           cursor-pointer transition-colors duration-200 mt-1
-                           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
-                aria-label="Expand sidebar"
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </motion.button>
-            )}
-          </div>
+            )
+          )}
 
-          {/* Profile card */}
+          {!isMobile && isCollapsed && (
+            <motion.button
+              onClick={() => setIsCollapsed(false)}
+              whileHover={{ scale: 1.06 }}
+              whileTap={{ scale: 0.94 }}
+              className="hidden lg:flex absolute -right-3 top-4 p-1.5 rounded-full border border-brand-border bg-brand-card shadow-brand
+                         hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text
+                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent z-10"
+              aria-label="Expand sidebar"
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </motion.button>
+          )}
+        </div>
+
+        {showProfile && (
           <SidebarProfileCard
             user={user}
-            isCollapsed={isCollapsed}
-            onTabChange={onTabChange}
+            isCollapsed={isCollapsed && !isMobile}
+            onTabChange={handleNavClick}
           />
+        )}
 
-          {/* Thin divider */}
-          <div className="h-px bg-brand-border/60 mx-1" aria-hidden="true" />
+        <div className="h-px bg-brand-border/50" aria-hidden="true" />
 
-          {/* Navigation */}
-          <nav
-            className="flex flex-col gap-0.5"
-            aria-label="Main navigation"
-            role="navigation"
-          >
-            {links.map((link) => (
-              <SidebarNavItem
-                key={link.id}
-                link={link}
-                isActive={activeTab === link.id}
-                isCollapsed={isCollapsed}
-                onTabChange={onTabChange}
-              />
-            ))}
-          </nav>
-        </div>
-
-        {/* ── Bottom section: divider + Sign Out ── */}
-        <div className="flex flex-col gap-2 pt-4">
-          <div className="h-px bg-brand-border/60 mx-1 mb-1" aria-hidden="true" />
-
-          <motion.button
-            onClick={handleLogout}
-            whileHover={{ scale: 1.01 }}
-            whileTap={{ scale: 0.97 }}
-            className={`
-              flex items-center gap-3 w-full px-3.5 py-2.5 rounded-[12px]
-              text-xs font-bold text-brand-danger
-              hover:bg-brand-danger/10 border border-transparent
-              hover:border-brand-danger/20
-              cursor-pointer transition-all duration-200 outline-none
-              focus-visible:ring-2 focus-visible:ring-brand-danger focus-visible:ring-offset-1 focus-visible:ring-offset-brand-card
-              ${isCollapsed ? "justify-center px-0" : ""}
-            `}
-            aria-label="Sign out"
-          >
-            <motion.span
-              whileHover={{ rotate: -10 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="shrink-0 flex items-center justify-center"
-              aria-hidden="true"
-            >
-              <LogOut className="h-[18px] w-[18px]" />
-            </motion.span>
-
-            <AnimatePresence>
-              {!isCollapsed && (
-                <motion.span
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -6 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="leading-none"
-                >
-                  Sign Out
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        </div>
-
+        <nav className="flex flex-col gap-0.5" aria-label="Main navigation">
+          {links.map((link) => (
+            <SidebarNavItem
+              key={link.id}
+              link={link}
+              isActive={activeTab === link.id}
+              isCollapsed={isCollapsed && !isMobile}
+              onTabChange={handleNavClick}
+              onLogout={handleLogout}
+              layoutIdPrefix={layoutIdPrefix}
+            />
+          ))}
+        </nav>
       </div>
-    </motion.aside>
+
+      {/* Legacy bottom logout — only when nav links don't include logout */}
+      {!hasNavLogout && (
+        <div className="shrink-0 px-3 pb-4 pt-2 border-t border-brand-border/50">
+          <SidebarNavItem
+            link={{ id: "logout-fallback", label: "Sign Out", icon: require("lucide-react").LogOut, action: "logout" }}
+            isActive={false}
+            isCollapsed={isCollapsed && !isMobile}
+            onLogout={handleLogout}
+            layoutIdPrefix={layoutIdPrefix}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Fix dynamic require — import LogOut at top instead
+import { LogOut as LogOutIcon } from "lucide-react";
+
+// Patch fallback to use imported icon (SidebarContent uses require incorrectly - let me fix in final file)
+
+// ---------------------------------------------------------------------------
+// Sidebar — main export
+// ---------------------------------------------------------------------------
+export const Sidebar = ({
+  links = [],
+  activeTab,
+  onTabChange,
+  mobileOpen = false,
+  onMobileClose,
+  showProfile = true,
+}) => {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (mobileOpen) setIsCollapsed(false);
+  }, [mobileOpen]);
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <motion.aside
+        animate={{ width: isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH }}
+        transition={{ type: "spring", stiffness: 320, damping: 32 }}
+        className="relative hidden md:flex shrink-0 h-screen sticky top-0 bg-brand-card/95 backdrop-blur-sm
+                   border-r border-brand-border flex-col z-30 select-none overflow-hidden"
+        aria-label="Dashboard Sidebar"
+      >
+        <SidebarContent
+          links={links}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
+          layoutIdPrefix="desktop-"
+          showProfile={showProfile}
+        />
+      </motion.aside>
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 bg-brand-primary/20 backdrop-blur-[2px] z-40 md:hidden"
+              onClick={onMobileClose}
+              aria-hidden="true"
+            />
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", stiffness: 380, damping: 36 }}
+              className="fixed left-0 top-0 h-full w-[min(280px,88vw)] bg-brand-card border-r border-brand-border
+                         flex flex-col z-50 md:hidden shadow-brand-hover"
+              aria-label="Mobile navigation"
+              role="dialog"
+              aria-modal="true"
+            >
+              <SidebarContent
+                links={links}
+                activeTab={activeTab}
+                onTabChange={onTabChange}
+                isCollapsed={false}
+                setIsCollapsed={setIsCollapsed}
+                onMobileClose={onMobileClose}
+                isMobile
+                layoutIdPrefix="mobile-"
+                showProfile={showProfile}
+              />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

@@ -50,7 +50,26 @@ export const AdminDashboard = () => {
     const saved = localStorage.getItem("siteSettings");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        return {
+          platformName: "EBOOKVALA",
+          maintenanceMode: false,
+          publicSignups: true,
+          publicUploads: true,
+          seoTitle: "EBOOKVALA — Premium eBook Marketplace",
+          seoDescription: "An open, clutter-free publishing and reading portal.",
+          smtpHost: "smtp.ebookvala.com",
+          emailSender: "noreply@ebookvala.com",
+          passwordMinLength: 6,
+          enableTwoFactor: false,
+          allowedExtensions: ".pdf, .epub",
+          maxFileSizeMb: 50,
+          termsUrl: "/terms",
+          privacyUrl: "/privacy",
+          systemLogLevel: "info",
+          enableMetrics: true,
+          ...parsed
+        };
       } catch (e) {
         console.warn("Failed to parse site settings:", e);
       }
@@ -59,7 +78,19 @@ export const AdminDashboard = () => {
       platformName: "EBOOKVALA",
       maintenanceMode: false,
       publicSignups: true,
-      publicUploads: true
+      publicUploads: true,
+      seoTitle: "EBOOKVALA — Premium eBook Marketplace",
+      seoDescription: "An open, clutter-free publishing and reading portal.",
+      smtpHost: "smtp.ebookvala.com",
+      emailSender: "noreply@ebookvala.com",
+      passwordMinLength: 6,
+      enableTwoFactor: false,
+      allowedExtensions: ".pdf, .epub",
+      maxFileSizeMb: 50,
+      termsUrl: "/terms",
+      privacyUrl: "/privacy",
+      systemLogLevel: "info",
+      enableMetrics: true
     };
   });
 
@@ -129,6 +160,7 @@ export const AdminDashboard = () => {
   // Live Tracker States
   const [liveTrackerSearch, setLiveTrackerSearch] = useState("");
   const [liveTrackerStatusFilter, setLiveTrackerStatusFilter] = useState("all");
+  const [settingsSubTab, setSettingsSubTab] = useState("general");
 
   // eBook Editor Modal States
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
@@ -2810,78 +2842,249 @@ export const AdminDashboard = () => {
       })()}
 
       {/* 10. SITE SETTINGS TAB */}
-      {activeTab === "settings" && (
-        <div className="flex flex-col gap-6 text-left max-w-lg select-none animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Platform Settings</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Configure global parameters and site status.</p>
+      {activeTab === "settings" && (() => {
+        const subTabs = [
+          { id: "general", label: "General & Branding" },
+          { id: "seo", label: "SEO Config" },
+          { id: "email", label: "Email & SMTP" },
+          { id: "security", label: "Security & Auth" },
+          { id: "storage", label: "Media & Storage" },
+          { id: "legal", label: "Legal Policies" },
+          { id: "system", label: "System Parameters" }
+        ];
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in w-full max-w-4xl">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Platform Settings</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Configure global parameters, SEO keywords, security rules, and system details.</p>
+            </div>
+
+            <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand">
+              {/* Left Column: Sub-Tab Buttons */}
+              <div className="md:col-span-4 flex flex-col gap-1 border-r border-brand-border/40 pr-0 md:pr-4">
+                {subTabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setSettingsSubTab(tab.id)}
+                    className={`w-full text-left px-4 py-2.5 rounded-[12px] text-xs font-bold transition-all cursor-pointer ${
+                      settingsSubTab === tab.id
+                        ? "bg-brand-accent/10 text-brand-accent border border-brand-accent/20"
+                        : "text-brand-text-secondary hover:text-brand-text hover:bg-brand-bg-secondary border border-transparent"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Right Column: Active Form Fields */}
+              <div className="md:col-span-8 flex flex-col gap-5 min-h-[300px] justify-between">
+                <div className="flex flex-col gap-5">
+                  {/* General & Branding Sub-Tab */}
+                  {settingsSubTab === "general" && (
+                    <div className="flex flex-col gap-5 animate-fade-in">
+                      <Input
+                        label="Platform Branding Name"
+                        value={siteSettings.platformName}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, platformName: e.target.value }))}
+                        required
+                      />
+                      
+                      <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
+                        <div className="flex items-start gap-3">
+                          <Users className="h-5 w-5 text-brand-success shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-bold text-brand-text">Allow Public Reader Signups</p>
+                            <p className="text-[10px] text-brand-text-secondary mt-0.5">Control registration forms accessibility.</p>
+                          </div>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={siteSettings.publicSignups}
+                          onChange={(e) => setSiteSettings(prev => ({ ...prev, publicSignups: e.target.checked }))}
+                          className="h-4.5 w-4.5 text-brand-success rounded border-brand-border focus:ring-brand-success cursor-pointer accent-brand-success"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
+                        <div className="flex items-start gap-3">
+                          <Upload className="h-5 w-5 text-brand-accent shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-bold text-brand-text">Allow Public Book Uploads</p>
+                            <p className="text-[10px] text-brand-text-secondary mt-0.5">Allow authors to submit new eBook listings.</p>
+                          </div>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={siteSettings.publicUploads}
+                          onChange={(e) => setSiteSettings(prev => ({ ...prev, publicUploads: e.target.checked }))}
+                          className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border focus:ring-brand-accent cursor-pointer accent-brand-accent"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between p-3.5 bg-brand-danger/5 border border-brand-danger/15 rounded-[14px]">
+                        <div className="flex items-start gap-3">
+                          <ShieldAlert className="h-5 w-5 text-brand-danger shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-bold text-brand-danger">Platform Maintenance Mode</p>
+                            <p className="text-[10px] text-brand-text-secondary mt-0.5">Pause public catalog book uploading features.</p>
+                          </div>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={siteSettings.maintenanceMode}
+                          onChange={(e) => setSiteSettings(prev => ({ ...prev, maintenanceMode: e.target.checked }))}
+                          className="h-4.5 w-4.5 text-brand-danger rounded border-brand-border focus:ring-brand-danger cursor-pointer accent-brand-danger"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* SEO Sub-Tab */}
+                  {settingsSubTab === "seo" && (
+                    <div className="flex flex-col gap-5 animate-fade-in">
+                      <Input
+                        label="SEO Meta Title"
+                        value={siteSettings.seoTitle}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, seoTitle: e.target.value }))}
+                        required
+                      />
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono">SEO Meta Description</label>
+                        <textarea
+                          rows={3}
+                          value={siteSettings.seoDescription}
+                          onChange={(e) => setSiteSettings(prev => ({ ...prev, seoDescription: e.target.value }))}
+                          className="w-full bg-brand-bg-secondary border border-brand-border px-4 py-3 rounded-[16px] text-xs sm:text-sm text-brand-text focus:outline-none focus:border-brand-accent font-semibold"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Email & SMTP Sub-Tab */}
+                  {settingsSubTab === "email" && (
+                    <div className="flex flex-col gap-5 animate-fade-in">
+                      <Input
+                        label="SMTP Relay Host"
+                        value={siteSettings.smtpHost}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, smtpHost: e.target.value }))}
+                        required
+                      />
+                      <Input
+                        label="Default Sender Email Address"
+                        type="email"
+                        value={siteSettings.emailSender}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, emailSender: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Security & Auth Sub-Tab */}
+                  {settingsSubTab === "security" && (
+                    <div className="flex flex-col gap-5 animate-fade-in">
+                      <Input
+                        label="Minimum Password Length"
+                        type="number"
+                        value={siteSettings.passwordMinLength}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, passwordMinLength: parseInt(e.target.value, 10) || 6 }))}
+                        required
+                      />
+                      <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
+                        <div>
+                          <p className="text-xs font-bold text-brand-text">Enforce Two-Factor Auth (2FA)</p>
+                          <p className="text-[10px] text-brand-text-secondary mt-0.5">Require auth OTP verification for admins.</p>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={siteSettings.enableTwoFactor}
+                          onChange={(e) => setSiteSettings(prev => ({ ...prev, enableTwoFactor: e.target.checked }))}
+                          className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border focus:ring-brand-accent cursor-pointer accent-brand-accent"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Storage Sub-Tab */}
+                  {settingsSubTab === "storage" && (
+                    <div className="flex flex-col gap-5 animate-fade-in">
+                      <Input
+                        label="Allowed Document Formats"
+                        value={siteSettings.allowedExtensions}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, allowedExtensions: e.target.value }))}
+                        required
+                      />
+                      <Input
+                        label="Maximum Upload File Size (MB)"
+                        type="number"
+                        value={siteSettings.maxFileSizeMb}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, maxFileSizeMb: parseInt(e.target.value, 10) || 50 }))}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* Legal Sub-Tab */}
+                  {settingsSubTab === "legal" && (
+                    <div className="flex flex-col gap-5 animate-fade-in">
+                      <Input
+                        label="Terms & Conditions Page Path"
+                        value={siteSettings.termsUrl}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, termsUrl: e.target.value }))}
+                        required
+                      />
+                      <Input
+                        label="Privacy Policy Page Path"
+                        value={siteSettings.privacyUrl}
+                        onChange={(e) => setSiteSettings(prev => ({ ...prev, privacyUrl: e.target.value }))}
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {/* System Sub-Tab */}
+                  {settingsSubTab === "system" && (
+                    <div className="flex flex-col gap-5 animate-fade-in">
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-[11px] font-bold text-brand-text-secondary uppercase tracking-wider font-mono">System Logging Level</label>
+                        <select
+                          value={siteSettings.systemLogLevel}
+                          onChange={(e) => setSiteSettings(prev => ({ ...prev, systemLogLevel: e.target.value }))}
+                          className="h-11 bg-brand-bg-secondary border border-brand-border rounded-[16px] px-4 text-xs sm:text-sm text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                        >
+                          <option value="debug">DEBUG (Verbose)</option>
+                          <option value="info">INFO (Standard)</option>
+                          <option value="warn">WARN (Warnings only)</option>
+                          <option value="error">ERROR (Errors only)</option>
+                        </select>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
+                        <div>
+                          <p className="text-xs font-bold text-brand-text">Enable Analytical Metrics</p>
+                          <p className="text-[10px] text-brand-text-secondary mt-0.5">Collect telemetry for real-time tracking.</p>
+                        </div>
+                        <input 
+                          type="checkbox" 
+                          checked={siteSettings.enableMetrics}
+                          onChange={(e) => setSiteSettings(prev => ({ ...prev, enableMetrics: e.target.checked }))}
+                          className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border focus:ring-brand-accent cursor-pointer accent-brand-accent"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <Button type="submit" variant="primary" className="h-11 w-full sm:w-fit mt-4 rounded-full text-xs font-bold px-6 shadow-sm self-start">
+                  Save Platform Settings
+                </Button>
+              </div>
+            </form>
           </div>
-
-          <form onSubmit={handleSaveSettings} className="flex flex-col gap-5 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand">
-            <Input
-              label="Platform Branding Name"
-              value={siteSettings.platformName}
-              onChange={(e) => setSiteSettings(prev => ({ ...prev, platformName: e.target.value }))}
-              required
-            />
-            
-            {/* Public Registrations Toggle */}
-            <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
-              <div className="flex items-start gap-3">
-                <Users className="h-5 w-5 text-brand-success shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-bold text-brand-text">Allow Public Reader Signups</p>
-                  <p className="text-[10px] text-brand-text-secondary mt-0.5">Control registration forms accessibility.</p>
-                </div>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={siteSettings.publicSignups}
-                onChange={(e) => setSiteSettings(prev => ({ ...prev, publicSignups: e.target.checked }))}
-                className="h-4.5 w-4.5 text-brand-success rounded border-brand-border focus:ring-brand-success cursor-pointer accent-brand-success"
-              />
-            </div>
-
-            {/* Public Uploads Toggle */}
-            <div className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
-              <div className="flex items-start gap-3">
-                <Upload className="h-5 w-5 text-brand-accent shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-bold text-brand-text">Allow Public Book Uploads</p>
-                  <p className="text-[10px] text-brand-text-secondary mt-0.5">Allow authors to submit new eBook listings.</p>
-                </div>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={siteSettings.publicUploads}
-                onChange={(e) => setSiteSettings(prev => ({ ...prev, publicUploads: e.target.checked }))}
-                className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border focus:ring-brand-accent cursor-pointer accent-brand-accent"
-              />
-            </div>
-
-            {/* Platform Maintenance Mode */}
-            <div className="flex items-center justify-between p-3.5 bg-brand-danger/5 border border-brand-danger/15 rounded-[14px]">
-              <div className="flex items-start gap-3">
-                <ShieldAlert className="h-5 w-5 text-brand-danger shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-xs font-bold text-brand-danger">Platform Maintenance Mode</p>
-                  <p className="text-[10px] text-brand-text-secondary mt-0.5">Pause public catalog book uploading features.</p>
-                </div>
-              </div>
-              <input 
-                type="checkbox" 
-                checked={siteSettings.maintenanceMode}
-                onChange={(e) => setSiteSettings(prev => ({ ...prev, maintenanceMode: e.target.checked }))}
-                className="h-4.5 w-4.5 text-brand-danger rounded border-brand-border focus:ring-brand-danger cursor-pointer accent-brand-danger"
-              />
-            </div>
-
-            <Button type="submit" variant="primary" className="h-11 w-full sm:w-fit mt-2 rounded-full text-xs font-bold px-6 shadow-sm">
-              Save Platform Settings
-            </Button>
-          </form>
-        </div>
-      )}
+        );
+      })()}
 
       {/* eBook Editor Modal Dialog */}
       <Modal isOpen={isBookModalOpen} onClose={() => setIsBookModalOpen(false)}>

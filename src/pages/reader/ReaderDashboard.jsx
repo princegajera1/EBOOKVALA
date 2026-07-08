@@ -16,7 +16,6 @@ import { Library } from "./modules/Library";
 import { Wishlist } from "./modules/Wishlist";
 import { Downloads } from "./modules/Downloads";
 import { Achievements } from "./modules/Achievements";
-import { Community } from "./modules/Community";
 import { Settings } from "./modules/Settings";
 
 export const ReaderDashboard = () => {
@@ -226,8 +225,7 @@ export const ReaderDashboard = () => {
             {activeTab === "library" && <Library user={user} books={books} onTabChange={handleTabChange} />}
             {activeTab === "wishlist" && <Wishlist user={user} books={books} onUpdateWishlist={async (newList) => await updateProfile({ wishlist: newList })} />}
             {activeTab === "downloads" && <Downloads user={user} books={books} />}
-            {activeTab === "achievements" && <Achievements user={user} />}
-            {activeTab === "community" && <Community user={user} />}
+            {activeTab === "achievements" && <Achievements user={user} books={books} />}
             {activeTab === "settings" && <Settings user={user} onSaveProfile={updateProfile} />}
           </>
         )}

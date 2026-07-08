@@ -6,7 +6,7 @@ import { useAuth } from "../../hooks/useAuth";
 const SECRET_PASSWORD = import.meta.env.VITE_SECRET_ADMIN_TOKEN || "";
 
 const ADMIN_EMAIL = "admin@ebookvala.com";
-const ADMIN_PASS = "admin0561";
+const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASSWORD || "admin0561";
 
 export const SecretAdminEntry = () => {
   const [value, setValue] = useState("");

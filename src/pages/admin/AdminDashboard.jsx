@@ -37,10 +37,31 @@ export const AdminDashboard = () => {
   const [categories, setCategories] = useState([]);
 
   // Site Settings
-  const [siteSettings, setSiteSettings] = useState({
-    platformName: "EBOOKVALA",
-    maintenanceMode: false
+  const [siteSettings, setSiteSettings] = useState(() => {
+    const saved = localStorage.getItem("siteSettings");
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.warn("Failed to parse site settings:", e);
+      }
+    }
+    return {
+      platformName: "EBOOKVALA",
+      maintenanceMode: false
+    };
   });
+
+  const handleSaveSettings = (e) => {
+    e.preventDefault();
+    const toastId = toast.loading("Saving platform settings...");
+    try {
+      localStorage.setItem("siteSettings", JSON.stringify(siteSettings));
+      toast.success("Platform settings updated successfully!", { id: toastId });
+    } catch (err) {
+      toast.error("Failed to save settings.", { id: toastId });
+    }
+  };
 
   const [newCategoryName, setNewCategoryName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -434,6 +455,33 @@ export const AdminDashboard = () => {
   const pendingBooks = books.filter(b => b.status === "pending");
   const pendingVerifications = authors.filter(a => a.verificationStatus === "pending");
 
+  // Calculate real downloads trend from database orders
+  const getDownloadsTrendData = () => {
+    const today = new Date();
+    const trendMap = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      trendMap[dateStr] = 0;
+    }
+    orders.forEach(order => {
+      if (order.createdAt) {
+        const d = new Date(order.createdAt);
+        const dateStr = d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+        if (dateStr in trendMap) {
+          trendMap[dateStr]++;
+        }
+      }
+    });
+    return Object.entries(trendMap).map(([day, count]) => ({
+      day,
+      downloads: count
+    }));
+  };
+
+  const downloadsTrend = getDownloadsTrendData();
+
   // Filtering lists
   const filteredUsers = usersList.filter(u => 
     u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -466,7 +514,7 @@ export const AdminDashboard = () => {
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: "Total Downloads", value: (orders.length + 1540).toLocaleString(), desc: "eBooks distributed" },
+              { label: "Total Downloads", value: orders.length.toLocaleString(), desc: "eBooks distributed" },
               { label: "Total Users", value: usersList.length, desc: "Readers & Authors" },
               { label: "Total Books", value: books.length, desc: "Catalog holdings" },
               { label: "Active Authors", value: authors.length, desc: "Content contributors" }
@@ -487,7 +535,7 @@ export const AdminDashboard = () => {
               <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest mb-6 font-mono">30-Day Downloads Trend</h3>
               <div className="h-72 w-full font-mono text-[10px]">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={DOWNLOADS_TREND} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart data={downloadsTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorDownloads" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="var(--color-brand-accent)" stopOpacity={0.12}/>

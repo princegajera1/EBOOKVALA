@@ -276,11 +276,14 @@ const SidebarContent = ({
             />
           ))}
         </nav>
+      </div>
 
+      {/* Fixed Bottom Container (Always Visible) */}
+      <div className="shrink-0 px-3 pb-4 pt-2 border-t border-brand-border/50 flex flex-col gap-4">
         {/* Live Users Presence Widget */}
-        <div className="mt-6 border-t border-brand-border/30 pt-4">
+        <div>
           {!isCollapsed || isMobile ? (
-            <div className="mx-1 p-3 bg-brand-bg-secondary/40 border border-brand-border/40 rounded-[14px] text-left select-none shadow-inner">
+            <div className="p-3 bg-brand-bg-secondary/40 border border-brand-border/40 rounded-[14px] text-left select-none shadow-inner">
               <div className="flex items-center gap-1.5">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-success opacity-75"></span>
@@ -309,11 +312,8 @@ const SidebarContent = ({
             </div>
           )}
         </div>
-      </div>
 
-      {/* Legacy bottom logout — only when nav links don't include logout */}
-      {!hasNavLogout && (
-        <div className="shrink-0 px-3 pb-4 pt-2 border-t border-brand-border/50">
+        {!hasNavLogout && (
           <SidebarNavItem
             link={{ id: "logout-fallback", label: "Sign Out", icon: LogOut, action: "logout" }}
             isActive={false}
@@ -321,8 +321,8 @@ const SidebarContent = ({
             onLogout={handleLogout}
             layoutIdPrefix={layoutIdPrefix}
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

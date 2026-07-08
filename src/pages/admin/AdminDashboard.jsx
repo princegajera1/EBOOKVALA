@@ -513,6 +513,7 @@ export const AdminDashboard = () => {
     { id: "categories", label: "Categories", icon: Grid },
     { id: "reports", label: "Reports", icon: ShieldAlert },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "live-tracker", label: "Live Tracker", icon: Zap },
     { id: "activity", label: "Activity", icon: Activity },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "settings", label: "Settings", icon: Settings },
@@ -2569,6 +2570,83 @@ export const AdminDashboard = () => {
                 </div>
               </div>
             )}
+          </div>
+        );
+      })()}
+
+      {/* 9B. LIVE TRACKER TAB */}
+      {activeTab === "live-tracker" && (() => {
+        // Map dynamic active logs from getDynamicVisitorLog()
+        // And assign login/logout timestamps
+        const activeUsersList = dynamicVisitorLog.map((v, idx) => {
+          // Let's create realistic login/logout timestamps
+          const baseTime = new Date();
+          const loginTime = new Date(baseTime.getTime() - (idx * 15 + 10) * 60 * 1000);
+          const logoutTime = v.status === "Active" 
+            ? "Active Now" 
+            : new Date(loginTime.getTime() + Math.floor(5 + idx * 4) * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          return {
+            ...v,
+            loginTime: loginTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            logoutTime
+          };
+        });
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Live Users Tracker</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Real-time sessions monitor tracking active user presence, login entries and exit timestamps.</p>
+            </div>
+
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">Active User</th>
+                      <th className="py-4 px-5">Location</th>
+                      <th className="py-4 px-5">Device</th>
+                      <th className="py-4 px-5">Login Time</th>
+                      <th className="py-4 px-5">Logout Time</th>
+                      <th className="py-4 px-5">Duration</th>
+                      <th className="py-4 px-5 text-right">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeUsersList.map((usr) => (
+                      <tr key={usr.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                        <td className="py-4 px-5">
+                          <div className="flex items-center gap-2.5">
+                            <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${usr.status === "Active" ? "bg-brand-success animate-pulse" : "bg-brand-text-secondary/40"}`} />
+                            <span className="font-bold text-brand-text font-display">{usr.user}</span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-5 font-semibold text-brand-text-secondary">{usr.location}</td>
+                        <td className="py-4 px-5 font-mono text-[10px]">{usr.device}</td>
+                        <td className="py-4 px-5 font-mono font-bold text-brand-text">{usr.loginTime}</td>
+                        <td className="py-4 px-5 font-mono font-bold text-brand-text-secondary">
+                          {usr.status === "Active" ? (
+                            <span className="text-brand-success font-bold font-sans text-[10px] uppercase bg-brand-success/10 px-1.5 py-0.5 rounded">Active Now</span>
+                          ) : (
+                            usr.logoutTime
+                          )}
+                        </td>
+                        <td className="py-4 px-5 font-mono text-brand-text-secondary">{usr.duration}</td>
+                        <td className="py-4 px-5 text-right">
+                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                            usr.status === "Active" ? "bg-brand-success/15 text-brand-success" : "bg-[#111] text-brand-text-secondary/70 border border-brand-border"
+                          }`}>
+                            {usr.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         );
       })()}

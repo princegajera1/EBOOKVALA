@@ -17,6 +17,7 @@ import { Modal } from "../../components/ui/Modal";
 import { uploadFile } from "../../services/storage";
 import { toast } from "react-hot-toast";
 import { SearchBox } from "../../components/ui/SearchBox";
+import { useTheme } from "../../hooks/useTheme";
 
 const DOWNLOADS_TREND = Array.from({ length: 30 }).map((_, i) => ({
   day: `Day ${i + 1}`,
@@ -28,6 +29,11 @@ export const AdminDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
   const navigate = useNavigate();
+  
+  const { updateTheme } = useTheme();
+  useEffect(() => {
+    updateTheme("dark");
+  }, []);
 
   // Database states
   const [books, setBooks] = useState([]);
@@ -443,8 +449,6 @@ export const AdminDashboard = () => {
     { id: "users", label: "Users", icon: Users },
     { id: "books", label: "eBooks", icon: BookOpen },
     { id: "fields", label: "Field Builder", icon: Sliders },
-    { id: "ai", label: "AI Services", icon: Sparkles },
-    { id: "automations", label: "Automations", icon: Zap },
     { id: "categories", label: "Categories", icon: Grid },
     { id: "traffic", label: "Live Traffic", icon: Compass },
     { id: "health", label: "System Health", icon: Activity },
@@ -875,132 +879,6 @@ export const AdminDashboard = () => {
         </div>
       )}
 
-      {/* 5. AI SERVICES TAB */}
-      {activeTab === "ai" && (
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 text-left select-none">
-          <div className="md:col-span-5 flex flex-col gap-5">
-            <div>
-              <h2 className="text-2xl font-display font-black text-brand-text tracking-tight">AI Configurations</h2>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Active LLM routing matrix and throttle policies.</p>
-            </div>
-
-            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-5 shadow-brand flex flex-col gap-4 font-display">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#999]">Primary AI Model</label>
-                <select 
-                  value={aiConfig.selectedModel}
-                  onChange={(e) => setAiConfig(prev => ({ ...prev, selectedModel: e.target.value }))}
-                  className="w-full bg-brand-bg-secondary border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 font-semibold focus:outline-none focus:border-brand-accent cursor-pointer"
-                >
-                  <option value="gemini-2.0-flash">Gemini 2.0 Flash (Default)</option>
-                  <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
-                  <option value="gpt-4o-mini">GPT-4o Mini</option>
-                  <option value="deepseek-v3">DeepSeek V3</option>
-                </select>
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#999]">Rate Limit Throttle (Requests/min)</label>
-                <input 
-                  type="number" 
-                  value={aiConfig.rateLimitPerMin}
-                  onChange={(e) => setAiConfig(prev => ({ ...prev, rateLimitPerMin: Number(e.target.value) }))}
-                  className="w-full bg-[#111] border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-bold text-[#999]">Monthly Cost Alert Threshold ($)</label>
-                <input 
-                  type="number" 
-                  value={aiConfig.costThreshold}
-                  onChange={(e) => setAiConfig(prev => ({ ...prev, costThreshold: Number(e.target.value) }))}
-                  className="w-full bg-[#111] border border-brand-border text-brand-text text-xs rounded-full py-2.5 px-4 focus:outline-none"
-                />
-              </div>
-
-              <Button onClick={() => toast.success("AI throttle rules updated!")} variant="primary" className="w-full h-10 rounded-full text-xs font-bold shadow-sm mt-2">
-                Apply Policies
-              </Button>
-            </div>
-          </div>
-
-          <div className="md:col-span-7 flex flex-col gap-5">
-            <div>
-              <h2 className="text-lg font-bold text-brand-text tracking-tight font-display">Token Usage Monitor</h2>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Live token stats processed today across modules.</p>
-            </div>
-
-            <div className="bg-[#161616] border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-4 font-mono text-xs">
-              <div className="flex justify-between items-center">
-                <span>Active Tokens (Today):</span>
-                <span className="text-brand-accent font-bold">{aiConfig.tokenUsageToday.toLocaleString()} tokens</span>
-              </div>
-              <div className="flex justify-between items-center text-brand-text-secondary">
-                <span>Summarization Engine:</span>
-                <span>492,000 (58%)</span>
-              </div>
-              <div className="flex justify-between items-center text-brand-text-secondary">
-                <span>Context Reader Chats:</span>
-                <span>357,200 (42%)</span>
-              </div>
-              <div className="h-2 bg-[#111] rounded-full overflow-hidden border border-brand-border">
-                <div className="h-full bg-brand-accent rounded-full" style={{ width: "58%" }} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 6. AUTOMATION ENGINE TAB */}
-      {activeTab === "automations" && (
-        <div className="flex flex-col gap-6 text-left select-none">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Automation Engine</h1>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Visual triggers and conditional pipeline executions.</p>
-            </div>
-            <Button onClick={() => toast.success("Automation visual builder launched!")} variant="primary" className="h-9 px-4 rounded-full text-xs font-bold">
-              <Plus className="mr-1.5 h-3.5 w-3.5" /> Create Flow
-            </Button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            {automations.map((auto) => (
-              <div key={auto.id} className="p-5 border border-brand-border bg-[#161616] rounded-[20px] flex flex-col justify-between gap-6 relative">
-                <div>
-                  <div className="flex justify-between items-start">
-                    <span className="bg-[#111] border border-brand-border text-brand-accent text-[9px] font-mono font-bold px-2 py-0.5 rounded">
-                      ACTIVE TRIGGER
-                    </span>
-                    <input 
-                      type="checkbox"
-                      checked={auto.active}
-                      onChange={() => {
-                        setAutomations(prev => prev.map(a => a.id === auto.id ? { ...a, active: !a.active } : a));
-                        toast.success(`${auto.name} status updated.`);
-                      }}
-                      className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border cursor-pointer accent-brand-accent"
-                    />
-                  </div>
-                  <h4 className="text-sm font-bold text-brand-text mt-3 font-display">{auto.name}</h4>
-                </div>
-
-                <div className="flex flex-col gap-2 font-mono text-[10px] text-brand-text-secondary bg-[#111] border border-brand-border/60 p-3 rounded-xl">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-brand-accent font-bold">ON:</span>
-                    <span>{auto.trigger}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-brand-success font-bold">DO:</span>
-                    <span>{auto.action}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* 7. CATEGORIES TAB */}
       {activeTab === "categories" && (

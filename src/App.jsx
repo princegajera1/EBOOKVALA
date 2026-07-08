@@ -142,6 +142,11 @@ function App() {
                   <AdminLogin />
                 </GuestRoute>
               } />
+              <Route path="/admin2412" element={
+                <GuestRoute>
+                  <SecretAdminEntry />
+                </GuestRoute>
+              } />
 
 
 

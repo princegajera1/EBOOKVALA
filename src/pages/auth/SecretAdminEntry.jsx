@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 
 // Read from env — not hardcoded in bundle
-const SECRET_PASSWORD = import.meta.env.VITE_SECRET_ADMIN_TOKEN || "";
+const SECRET_PASSWORD = import.meta.env.VITE_SECRET_ADMIN_TOKEN || "2412";
 
 const ADMIN_EMAIL = "admin@ebookvala.com";
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASSWORD || "admin0561";

@@ -224,10 +224,17 @@ const SidebarContent = ({
           if (!active) return;
           const data = snapshot.val() || {};
           const nowTime = Date.now();
+          // Firebase RTDB serverTimestamp() returns a plain Unix-ms number.
+          const toMs = (val) => {
+            if (!val) return 0;
+            if (typeof val === "number") return val;
+            const parsed = new Date(val).getTime();
+            return isNaN(parsed) ? 0 : parsed;
+          };
           const activeNowCount = Object.values(data).filter(s => {
             if (s.status !== "Active") return false;
-            const lastSeenTime = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
-            return nowTime - lastSeenTime <= 90000; // 90s heartbeat window
+            const lastSeenMs = toMs(s.lastSeen);
+            return lastSeenMs > 0 && (nowTime - lastSeenMs <= 90000); // 90s heartbeat window
           }).length;
 
           setStats({

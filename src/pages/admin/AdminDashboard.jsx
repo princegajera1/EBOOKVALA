@@ -544,11 +544,11 @@ export const AdminDashboard = () => {
   const [liveSessions, setLiveSessions] = useState([]);
   const [tick, setTick] = useState(Date.now());
 
-  // Real-time ticking interval for duration display
+  // Real-time ticking interval for duration display (1s for live feel)
   useEffect(() => {
     const timer = setInterval(() => {
       setTick(Date.now());
-    }, 15000);
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -707,18 +707,39 @@ export const AdminDashboard = () => {
   // Generate real dynamic visitor logs mapped from Firestore users
   const getDynamicVisitorLog = () => {
     const nowTime = Date.now();
+
+    // Safe helper: Firebase RTDB serverTimestamp() returns a plain Unix-ms number.
+    // Guard against it being null / undefined / an object.
+    const toMs = (val) => {
+      if (!val) return 0;
+      if (typeof val === "number") return val;
+      const parsed = new Date(val).getTime();
+      return isNaN(parsed) ? 0 : parsed;
+    };
+
     return liveSessions.map(s => {
-      const isSessionActive = s.status === "Active" && (s.lastSeen ? (nowTime - new Date(s.lastSeen).getTime() <= 90000) : false);
+      const lastSeenMs = toMs(s.lastSeen);
+      const isSessionActive = s.status === "Active" && lastSeenMs > 0 && (nowTime - lastSeenMs <= 90000);
       const status = isSessionActive ? "Active" : "Ended";
-      
-      const loginTime = s.loginTime ? new Date(s.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—";
-      const logoutTime = isSessionActive ? "Active Now" : (s.logoutTime ? new Date(s.logoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—");
-      
-      const loginTimeMs = s.loginTime ? new Date(s.loginTime).getTime() : nowTime;
-      const logoutTimeMs = s.logoutTime ? new Date(s.logoutTime).getTime() : nowTime;
-      const durationMs = logoutTimeMs - loginTimeMs;
+
+      const loginTimeMs = toMs(s.loginTime);
+      const logoutTimeMs = toMs(s.logoutTime);
+
+      const loginTime = loginTimeMs ? new Date(loginTimeMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—";
+      const logoutTime = isSessionActive
+        ? "Active Now"
+        : logoutTimeMs
+          ? new Date(logoutTimeMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          : "—";
+
+      const durationMs = isSessionActive
+        ? nowTime - loginTimeMs
+        : logoutTimeMs && loginTimeMs
+          ? logoutTimeMs - loginTimeMs
+          : 0;
       const durationMins = Math.max(0, Math.floor(durationMs / 60000));
-      const duration = `${durationMins} mins`;
+      const durationSecs = Math.max(0, Math.floor((durationMs % 60000) / 1000));
+      const duration = durationMins > 0 ? `${durationMins}m ${durationSecs}s` : durationSecs > 0 ? `${durationSecs}s` : "< 1s";
 
       return {
         id: s.id,
@@ -2662,21 +2683,8 @@ export const AdminDashboard = () => {
 
       {/* 9B. LIVE TRACKER TAB */}
       {activeTab === "live-tracker" && (() => {
-        // Map dynamic active logs from getDynamicVisitorLog()
-        // And assign login/logout timestamps
-        const activeUsersList = dynamicVisitorLog.map((v, idx) => {
-          const baseTime = new Date();
-          const loginTime = new Date(baseTime.getTime() - (idx * 15 + 10) * 60 * 1000);
-          const logoutTime = v.status === "Active" 
-            ? "Active Now" 
-            : new Date(loginTime.getTime() + Math.floor(5 + idx * 4) * 60 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-          return {
-            ...v,
-            loginTime: loginTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-            logoutTime
-          };
-        });
+        // Use real timestamps from dynamicVisitorLog (no fake recalculation)
+        const activeUsersList = dynamicVisitorLog;
 
         // Search & Filter state evaluations
         const filteredTrackerLogs = activeUsersList.filter(usr => {

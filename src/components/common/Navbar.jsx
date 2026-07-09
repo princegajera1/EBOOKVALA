@@ -206,7 +206,7 @@ export const Navbar = () => {
             to="/" 
             className="text-[22px] font-extrabold tracking-tighter text-brand-text select-none leading-none hover:opacity-90 hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md shrink-0 font-display"
           >
-            EBOOKVALA
+            <span className="text-brand-text">EBOOK</span><span className="text-brand-accent">VALA</span>
           </Link>
 
           {/* Center Column: Navigation Links (Desktop) */}

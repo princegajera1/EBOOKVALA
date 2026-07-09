@@ -96,7 +96,7 @@ export const Footer = () => {
           {/* Brand & Description (4 cols) */}
           <div className="md:col-span-4 flex flex-col gap-4 mb-6 md:mb-0">
             <Link to="/" className="text-2xl font-display font-black tracking-tight hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent rounded-md">
-              <span className="text-white">EBOOK</span>
+              <span className="text-zinc-950 dark:text-white">EBOOK</span>
               <span className="text-[#3B82F6]">VALA</span>
             </Link>
             <p className="text-xs text-brand-text-secondary leading-relaxed max-w-sm">

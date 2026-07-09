@@ -265,7 +265,7 @@ const SidebarContent = ({
               onClick={onMobileClose}
               className="text-lg font-display font-black tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
             >
-              <span className="text-white">EBOOK</span>
+              <span className="text-zinc-950 dark:text-white">EBOOK</span>
               <span className="text-[#3B82F6]">VALA</span>
             </Link>
           ) : (
@@ -274,7 +274,7 @@ const SidebarContent = ({
               className="text-lg font-display font-black tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
               aria-label="Go to home"
             >
-              <span className="text-white">E</span>
+              <span className="text-zinc-950 dark:text-white">E</span>
               <span className="text-[#3B82F6]">V</span>
             </Link>
           )}

@@ -84,12 +84,14 @@ export const AppProvider = ({ children }) => {
     }
 
     let active = true;
-    let unsubscribeConnected;
     let heartbeatInterval;
+    let sessionDocRef;
+    let unloadHandler;
 
     const startPresenceTracking = async () => {
       try {
-        const { getDatabase, ref, onValue, onDisconnect, set, update, serverTimestamp } = await import("firebase/database");
+        const { doc, setDoc, updateDoc, serverTimestamp } = await import("firebase/firestore");
+        const { db } = await import("../lib/firebase");
         
         // Browser and OS parsing utility
         const getBrowserAndOS = () => {
@@ -137,10 +139,7 @@ export const AppProvider = ({ children }) => {
           }
         };
 
-        const db = getDatabase();
-        const sessionRef = ref(db, `/liveSessions/${sessionId}`);
-        const connectedRef = ref(db, ".info/connected");
-
+        sessionDocRef = doc(db, "liveSessions", sessionId);
         const location = await getIpLocation();
         const device = getBrowserAndOS();
         const entryPage = window.location.pathname || "/";
@@ -162,28 +161,38 @@ export const AppProvider = ({ children }) => {
           referrer,
         };
 
-        unsubscribeConnected = onValue(connectedRef, (snap) => {
-          if (snap.val() === false || !active) return;
-
-          onDisconnect(sessionRef).update({
-            status: "Ended",
-            logoutTime: serverTimestamp(),
-          });
-
-          set(sessionRef, {
-            ...userInfo,
-            loginTime: serverTimestamp(),
-            status: "Active",
-            lastSeen: serverTimestamp(),
-          });
-        });
+        await setDoc(sessionDocRef, {
+          ...userInfo,
+          loginTime: serverTimestamp(),
+          status: "Active",
+          lastSeen: serverTimestamp(),
+        }, { merge: true });
 
         // 30 seconds heartbeat loop
-        heartbeatInterval = setInterval(() => {
-          if (active) {
-            update(sessionRef, { lastSeen: serverTimestamp() });
+        heartbeatInterval = setInterval(async () => {
+          if (active && sessionDocRef) {
+            try {
+              await updateDoc(sessionDocRef, { lastSeen: serverTimestamp() });
+            } catch (heartbeatErr) {
+              console.error("Heartbeat sync error:", heartbeatErr);
+            }
           }
         }, 30000);
+
+        unloadHandler = async () => {
+          if (sessionDocRef) {
+            try {
+              await updateDoc(sessionDocRef, {
+                status: "Ended",
+                logoutTime: new Date().toISOString()
+              });
+            } catch (e) {
+              // ignore
+            }
+          }
+        };
+
+        window.addEventListener("beforeunload", unloadHandler);
 
       } catch (err) {
         console.error("Real-time presence error:", err);
@@ -194,26 +203,15 @@ export const AppProvider = ({ children }) => {
 
     return () => {
       active = false;
-      if (unsubscribeConnected) unsubscribeConnected();
       if (heartbeatInterval) clearInterval(heartbeatInterval);
+      if (unloadHandler) window.removeEventListener("beforeunload", unloadHandler);
     };
   }, [user]);
 
-  // Sync Admin Role to Realtime Database for access security rules verification
+  // Sync Admin Role - directly authorize once logged in (no RTDB requirement)
   useEffect(() => {
     if (user && user.role === "admin") {
-      import("firebase/database").then(({ getDatabase, ref, set }) => {
-        const db = getDatabase();
-        set(ref(db, `users/${user.uid}/role`), "admin")
-          .then(() => setRtdbAdminSynced(true))
-          .catch(err => {
-            console.error("Admin role sync error:", err);
-            setRtdbAdminSynced(false);
-          });
-      }).catch(err => {
-        console.error("Admin role DB import error:", err);
-        setRtdbAdminSynced(false);
-      });
+      setRtdbAdminSynced(true);
     } else {
       setRtdbAdminSynced(false);
     }

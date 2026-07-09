@@ -519,7 +519,7 @@ export const AdminDashboard = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Firebase Realtime Database Listener for Live Sessions
+  // Firebase Firestore Listener for Live Sessions
   useEffect(() => {
     if (!rtdbAdminSynced) return;
 
@@ -528,17 +528,19 @@ export const AdminDashboard = () => {
 
     const startSessionListener = async () => {
       try {
-        const { getDatabase, ref, onValue } = await import("firebase/database");
-        const db = getDatabase();
-        const sessionsRef = ref(db, "liveSessions");
+        const { collection, onSnapshot } = await import("firebase/firestore");
+        const { db } = await import("../../lib/firebase");
+        const sessionsRef = collection(db, "liveSessions");
 
-        unsubscribe = onValue(sessionsRef, (snapshot) => {
+        unsubscribe = onSnapshot(sessionsRef, (snapshot) => {
           if (!active) return;
-          const data = snapshot.val() || {};
-          const mapped = Object.entries(data).map(([id, s]) => ({
-            id,
-            ...s
-          }));
+          const mapped = [];
+          snapshot.forEach((doc) => {
+            mapped.push({
+              id: doc.id,
+              ...doc.data()
+            });
+          });
           setLiveSessions(mapped);
         });
       } catch (err) {
@@ -680,6 +682,7 @@ export const AdminDashboard = () => {
     const toMs = (val) => {
       if (!val) return 0;
       if (typeof val === "number") return val;
+      if (val && typeof val.toMillis === "function") return val.toMillis();
       const parsed = new Date(val).getTime();
       return isNaN(parsed) ? 0 : parsed;
     };

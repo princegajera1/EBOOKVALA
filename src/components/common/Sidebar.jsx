@@ -184,12 +184,13 @@ const SidebarContent = ({
     if (!rtdbAdminSynced) return;
 
     let active = true;
-    let unsubscribeRtdb;
+    let unsubscribeFirestore;
 
     const initSidebarStats = async () => {
       try {
         const { dbService } = await import("../../services/db");
-        const { getDatabase, ref, onValue } = await import("firebase/database");
+        const { collection, onSnapshot } = await import("firebase/firestore");
+        const { db } = await import("../../lib/firebase");
         
         // 1. Fetch real Firestore user registration metrics
         const allUsers = await dbService.getUsers();
@@ -216,26 +217,30 @@ const SidebarContent = ({
           return diff <= 365 * oneDay;
         }).length;
 
-        // 2. Setup RTDB listener for active users
-        const db = getDatabase();
-        const sessionsRef = ref(db, "liveSessions");
+        // 2. Setup Firestore listener for active users
+        const sessionsRef = collection(db, "liveSessions");
 
-        unsubscribeRtdb = onValue(sessionsRef, (snapshot) => {
+        unsubscribeFirestore = onSnapshot(sessionsRef, (snapshot) => {
           if (!active) return;
-          const data = snapshot.val() || {};
           const nowTime = Date.now();
-          // Firebase RTDB serverTimestamp() returns a plain Unix-ms number.
           const toMs = (val) => {
             if (!val) return 0;
             if (typeof val === "number") return val;
+            if (val && typeof val.toMillis === "function") return val.toMillis();
             const parsed = new Date(val).getTime();
             return isNaN(parsed) ? 0 : parsed;
           };
-          const activeNowCount = Object.values(data).filter(s => {
-            if (s.status !== "Active") return false;
-            const lastSeenMs = toMs(s.lastSeen);
-            return lastSeenMs > 0 && (nowTime - lastSeenMs <= 90000); // 90s heartbeat window
-          }).length;
+
+          let activeNowCount = 0;
+          snapshot.forEach((doc) => {
+            const s = doc.data();
+            if (s.status === "Active") {
+              const lastSeenMs = toMs(s.lastSeen);
+              if (lastSeenMs > 0 && (nowTime - lastSeenMs <= 90000)) {
+                activeNowCount++;
+              }
+            }
+          });
 
           setStats({
             live: activeNowCount,
@@ -254,7 +259,7 @@ const SidebarContent = ({
 
     return () => {
       active = false;
-      if (unsubscribeRtdb) unsubscribeRtdb();
+      if (unsubscribeFirestore) unsubscribeFirestore();
     };
   }, [user, rtdbAdminSynced]);
 

@@ -366,7 +366,7 @@ export const Landing = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="lg:col-span-5 overflow-visible flex items-center justify-center z-10"
+          className="lg:col-span-5 overflow-visible hidden lg:flex items-center justify-center z-10"
         >
           <HeroImageStack />
         </motion.div>

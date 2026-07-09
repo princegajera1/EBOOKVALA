@@ -146,15 +146,23 @@ export const AppProvider = ({ children }) => {
         const referrer = document.referrer ? new URL(document.referrer).hostname : "Direct Traffic";
 
         const userInfo = user ? {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || null,
           id: user.uid,
           user: `${user.displayName || "EbookVala User"} (${user.email})`,
+          isGuest: false,
           location,
           device,
           entryPage,
           referrer,
         } : {
+          uid: null,
+          email: null,
+          displayName: null,
           id: sessionId,
           user: "Guest User (Anonymous)",
+          isGuest: true,
           location,
           device,
           entryPage,

@@ -536,9 +536,11 @@ export const AdminDashboard = () => {
           if (!active) return;
           const mapped = [];
           snapshot.forEach((doc) => {
+            const data = doc.data();
             mapped.push({
-              id: doc.id,
-              ...doc.data()
+              ...data,
+              sessionId: doc.id,
+              id: data.uid || data.id || doc.id
             });
           });
           setLiveSessions(mapped);
@@ -555,6 +557,58 @@ export const AdminDashboard = () => {
       if (unsubscribe) unsubscribe();
     };
   }, [rtdbAdminSynced]);
+
+  // Real-time listener for new user signups toast notification
+  useEffect(() => {
+    let isInitial = true;
+    let unsubscribe;
+
+    const listenNewSignups = async () => {
+      try {
+        const { collection, onSnapshot } = await import("firebase/firestore");
+        const { db } = await import("../../lib/firebase");
+        const usersRef = collection(db, "users");
+        
+        unsubscribe = onSnapshot(usersRef, (snapshot) => {
+          if (isInitial) {
+            isInitial = false;
+            return;
+          }
+          
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added") {
+              const newUser = change.doc.data();
+              const createdAt = new Date(newUser.createdAt).getTime();
+              // Check if the user document was created recently (within last 3 minutes)
+              if (createdAt && (Date.now() - createdAt < 180000)) {
+                toast.success(`🆕 New signup: ${newUser.displayName || newUser.email}`, {
+                  duration: 6000,
+                  icon: '👥',
+                  style: {
+                    background: 'var(--card)',
+                    color: 'var(--text)',
+                    border: '1px solid var(--border)',
+                    fontFamily: 'var(--font-display)',
+                    fontSize: '13px',
+                    fontWeight: 'bold',
+                    borderRadius: '16px'
+                  }
+                });
+              }
+            }
+          });
+        });
+      } catch (err) {
+        console.error("Error listening to new signups:", err);
+      }
+    };
+
+    listenNewSignups();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
 
 
 
@@ -2752,24 +2806,19 @@ export const AdminDashboard = () => {
                     </thead>
                     <tbody>
                       {filteredTrackerLogs.map((usr) => {
-                        const isGuest = usr.id.startsWith("guest") || usr.user.includes("Guest");
+                        const isGuest = usr.isGuest !== false && (usr.id.startsWith("guest") || usr.user.includes("Guest") || !usr.uid);
                         let displayName = "";
                         let email = "";
                         let avatarChar = "G";
 
                         if (isGuest) {
                           displayName = "Guest Session";
-                          email = usr.id;
+                          email = usr.sessionId || usr.id;
                         } else {
                           const userObj = usersList.find(u => u.uid === usr.id);
-                          if (userObj) {
-                            displayName = userObj.displayName || "";
-                            email = userObj.email || "registered@ebookvala.com";
-                            avatarChar = (displayName || email || "U").charAt(0).toUpperCase();
-                          } else {
-                            email = usr.user;
-                            avatarChar = "U";
-                          }
+                          displayName = usr.displayName || userObj?.displayName || "";
+                          email = usr.email || userObj?.email || usr.user || "registered@ebookvala.com";
+                          avatarChar = (displayName || email || "U").charAt(0).toUpperCase();
                         }
 
                         return (

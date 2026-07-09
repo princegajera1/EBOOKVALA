@@ -219,8 +219,7 @@
 
 /* Menu numbering styles */
 .sm-panel-itemNum {
-  opacity: var(--sm-num-opacity, 0);
-  transition: opacity 0.3s;
+  display: inline-block;
 }
 
 /* Social links section in bottom drawer */

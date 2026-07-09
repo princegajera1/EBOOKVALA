@@ -109,7 +109,7 @@ export const StaggeredMenu = ({
     itemEntranceTweenRef.current?.kill();
 
     const itemEls = Array.from(panel.querySelectorAll('.sm-panel-itemLabel'));
-    const numberEls = Array.from(panel.querySelectorAll('.sm-panel-list[data-numbering] .sm-panel-item'));
+    const numberEls = Array.from(panel.querySelectorAll('.sm-panel-itemNum'));
     const socialTitle = panel.querySelector('.sm-socials-title');
     const socialLinks = Array.from(panel.querySelectorAll('.sm-socials-link'));
 
@@ -118,7 +118,7 @@ export const StaggeredMenu = ({
     const panelStart = offscreen;
 
     if (itemEls.length) gsap.set(itemEls, { yPercent: 140, rotate: 10 });
-    if (numberEls.length) gsap.set(numberEls, { '--sm-num-opacity': 0 });
+    if (numberEls.length) gsap.set(numberEls, { opacity: 0 });
     if (socialTitle) gsap.set(socialTitle, { opacity: 0 });
     if (socialLinks.length) gsap.set(socialLinks, { y: 25, opacity: 0 });
 
@@ -137,7 +137,7 @@ export const StaggeredMenu = ({
       const itemsStart = panelInsertTime + panelDuration * itemsStartRatio;
       tl.to(itemEls, { yPercent: 0, rotate: 0, duration: 1, ease: 'power4.out', stagger: { each: 0.1, from: 'start' } }, itemsStart);
       if (numberEls.length) {
-        tl.to(numberEls, { duration: 0.6, ease: 'power2.out', '--sm-num-opacity': 1, stagger: { each: 0.08, from: 'start' } }, itemsStart + 0.1);
+        tl.to(numberEls, { duration: 0.6, ease: 'power2.out', opacity: 1, stagger: { each: 0.08, from: 'start' } }, itemsStart + 0.1);
       }
     }
 

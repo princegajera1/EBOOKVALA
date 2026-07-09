@@ -92,7 +92,7 @@ export const MarketLayout = () => {
           isFixed 
           items={navItems} 
           socialItems={socialLinks} 
-          displaySocials 
+          displaySocials={false} 
           position="right" 
           accentColor="var(--accent)" 
           logoUrl={logoImg} 

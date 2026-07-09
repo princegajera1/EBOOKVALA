@@ -9,6 +9,18 @@
   }
 }
 
+/* Mobile font scale override — prevent oversized menu items on small screens */
+@media (max-width: 480px) {
+  .sm-panel-item {
+    font-size: 1.15rem;
+    height: 2.4rem;
+  }
+
+  .staggered-menu-panel {
+    padding: 6rem 1.75rem 3rem;
+  }
+}
+
 .staggered-menu-wrapper {
   position: absolute;
   top: 0;

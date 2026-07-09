@@ -366,7 +366,7 @@ export const StaggeredMenu = ({
                             </span>
                           )}
                           {IconComponent && <IconComponent className="h-5 w-5 inline-block shrink-0 animate-fade-in text-brand-text-secondary" />}
-                          <span className="text-xl font-bold tracking-tight text-brand-text">{it.label}</span>
+                          <span className="font-bold tracking-tight text-brand-text">{it.label}</span>
                         </span>
                       </button>
                     ) : (
@@ -390,7 +390,7 @@ export const StaggeredMenu = ({
                                   </span>
                                 )}
                                 {IconComponent && <IconComponent className="h-5 w-5 inline-block shrink-0 animate-fade-in text-brand-text-secondary" />}
-                                <span className="text-xl font-bold tracking-tight text-brand-text">{it.label}</span>
+                                <span className="font-bold tracking-tight text-brand-text">{it.label}</span>
                               </span>
                             </Link>
                           );
@@ -411,7 +411,7 @@ export const StaggeredMenu = ({
                                 </span>
                               )}
                               {IconComponent && <IconComponent className="h-5 w-5 inline-block shrink-0 animate-fade-in text-brand-text-secondary" />}
-                              <span className="text-xl font-bold tracking-tight text-brand-text">{it.label}</span>
+                              <span className="font-bold tracking-tight text-brand-text">{it.label}</span>
                             </span>
                           </a>
                         );

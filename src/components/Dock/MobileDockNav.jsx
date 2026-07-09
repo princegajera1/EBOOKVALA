@@ -11,9 +11,10 @@ export const MobileDockNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // If we shouldn't show it (e.g. in full-screen reader view), hide it
+  // If we shouldn't show it (e.g. in full-screen reader view or book detail), hide it
   const isReaderView = location.pathname.startsWith("/read/");
-  if (isReaderView) return null;
+  const isBookDetailView = location.pathname.startsWith("/book/");
+  if (isReaderView || isBookDetailView) return null;
 
   // Resolve dynamic dashboard link depending on user role
   const getDashboardPath = () => {

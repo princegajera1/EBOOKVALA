@@ -22,6 +22,30 @@ export const StaggeredMenu = ({
   onMenuClose
 }) => {
   const [open, setOpen] = useState(false);
+
+  // Lock background scroll when menu is open to prevent scroll-behind bugs
+  React.useEffect(() => {
+    if (open) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
+    }
+    return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+    };
+  }, [open]);
+
   const openRef = useRef(false);
   const panelRef = useRef(null);
   const preLayersRef = useRef(null);
@@ -342,6 +366,7 @@ export const StaggeredMenu = ({
             {items && items.length ? (
               items.map((it, idx) => {
                 const IconComponent = it.icon;
+                const numberText = `0${idx + 1}`;
                 return (
                   <li className="sm-panel-itemWrap" key={it.label + idx}>
                     {it.onClick ? (
@@ -354,9 +379,14 @@ export const StaggeredMenu = ({
                         aria-label={it.ariaLabel}
                         data-index={idx + 1}
                       >
-                        <span className="sm-panel-itemLabel flex items-center gap-2">
-                          {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
-                          <span>{it.label}</span>
+                        <span className="sm-panel-itemLabel flex items-center gap-3">
+                          {displayItemNumbering && (
+                            <span className="sm-panel-itemNum text-[10px] sm:text-xs font-mono font-bold text-[var(--accent,#3B82F6)] shrink-0 self-center">
+                              {numberText}
+                            </span>
+                          )}
+                          {IconComponent && <IconComponent className="h-5 w-5 inline-block shrink-0 animate-fade-in text-brand-text-secondary" />}
+                          <span className="text-xl font-bold tracking-tight text-brand-text">{it.label}</span>
                         </span>
                       </button>
                     ) : (
@@ -373,9 +403,14 @@ export const StaggeredMenu = ({
                               aria-label={it.ariaLabel} 
                               data-index={idx + 1}
                             >
-                              <span className="sm-panel-itemLabel flex items-center gap-2">
-                                {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
-                                <span>{it.label}</span>
+                              <span className="sm-panel-itemLabel flex items-center gap-3">
+                                {displayItemNumbering && (
+                                  <span className="sm-panel-itemNum text-[10px] sm:text-xs font-mono font-bold text-[var(--accent,#3B82F6)] shrink-0 self-center">
+                                    {numberText}
+                                  </span>
+                                )}
+                                {IconComponent && <IconComponent className="h-5 w-5 inline-block shrink-0 animate-fade-in text-brand-text-secondary" />}
+                                <span className="text-xl font-bold tracking-tight text-brand-text">{it.label}</span>
                               </span>
                             </Link>
                           );
@@ -389,9 +424,14 @@ export const StaggeredMenu = ({
                             aria-label={it.ariaLabel} 
                             data-index={idx + 1}
                           >
-                            <span className="sm-panel-itemLabel flex items-center gap-2">
-                              {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
-                              <span>{it.label}</span>
+                            <span className="sm-panel-itemLabel flex items-center gap-3">
+                              {displayItemNumbering && (
+                                <span className="sm-panel-itemNum text-[10px] sm:text-xs font-mono font-bold text-[var(--accent,#3B82F6)] shrink-0 self-center">
+                                  {numberText}
+                                </span>
+                              )}
+                              {IconComponent && <IconComponent className="h-5 w-5 inline-block shrink-0 animate-fade-in text-brand-text-secondary" />}
+                              <span className="text-xl font-bold tracking-tight text-brand-text">{it.label}</span>
                             </span>
                           </a>
                         );

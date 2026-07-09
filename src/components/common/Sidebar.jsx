@@ -170,7 +170,6 @@ const SidebarContent = ({
   const navigate = useNavigate();
   const hasNavLogout = links.some((l) => l.action === "logout");
 
-  // Dynamic Real-time stats from database
   const [stats, setStats] = useState({
     live: 5,
     week: 11,
@@ -182,10 +181,14 @@ const SidebarContent = ({
     if (user?.role !== "admin") return;
 
     let active = true;
-    let intervalId;
-    const fetchRealMetrics = async () => {
+    let unsubscribeRtdb;
+
+    const initSidebarStats = async () => {
       try {
         const { dbService } = await import("../../services/db");
+        const { getDatabase, ref, onValue } = await import("firebase/database");
+        
+        // 1. Fetch real Firestore user registration metrics
         const allUsers = await dbService.getUsers();
         if (!active) return;
         
@@ -210,32 +213,38 @@ const SidebarContent = ({
           return diff <= 365 * oneDay;
         }).length;
 
-        const baseActive = 2 + Math.ceil(allUsers.length / 3);
-        setStats({
-          live: baseActive || 5,
-          week: registeredThisWeek || 11,
-          month: registeredThisMonth || 15,
-          year: registeredThisYear || 24
+        // 2. Setup RTDB listener for active users
+        const db = getDatabase();
+        const sessionsRef = ref(db, "liveSessions");
+
+        unsubscribeRtdb = onValue(sessionsRef, (snapshot) => {
+          if (!active) return;
+          const data = snapshot.val() || {};
+          const nowTime = Date.now();
+          const activeNowCount = Object.values(data).filter(s => {
+            if (s.status !== "Active") return false;
+            const lastSeenTime = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
+            return nowTime - lastSeenTime <= 90000; // 90s heartbeat window
+          }).length;
+
+          setStats({
+            live: activeNowCount,
+            week: registeredThisWeek,
+            month: registeredThisMonth,
+            year: registeredThisYear
+          });
         });
 
-        // Fluctuating simulator every 12 seconds to reflect real-time active guests
-        intervalId = setInterval(() => {
-          if (active) {
-            const randomOffset = Math.floor(Math.random() * 3) - 1; // -1, 0, or +1
-            setStats(prev => ({
-              ...prev,
-              live: Math.max(2, baseActive + randomOffset)
-            }));
-          }
-        }, 12000);
       } catch (err) {
-        console.warn("Failed to fetch real time sidebar stats:", err);
+        console.error("Sidebar stats loading error:", err);
       }
     };
-    fetchRealMetrics();
-    return () => { 
+
+    initSidebarStats();
+
+    return () => {
       active = false;
-      if (intervalId) clearInterval(intervalId);
+      if (unsubscribeRtdb) unsubscribeRtdb();
     };
   }, [user]);
 

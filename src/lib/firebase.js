@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
+import { getDatabase } from "firebase/database";
 
 // Firebase Configuration using verified project keys
 const firebaseConfig = {
@@ -20,6 +21,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+const database = getDatabase(app);
 
 // Initialize Analytics (only in browser environments where supported)
 let analytics = null;
@@ -31,4 +33,4 @@ if (typeof window !== "undefined") {
   });
 }
 
-export { app, auth, db, storage, analytics };
+export { app, auth, db, storage, analytics, database };

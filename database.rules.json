@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid == $uid || root.child('users').child(auth.uid).child('role').val() == 'admin')",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "liveSessions": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() == 'admin'",
+      "$session_id": {
+        ".write": "auth == null || !data.exists() || data.child('id').val() == auth.uid || $session_id == auth.uid"
+      }
+    }
+  }
+}

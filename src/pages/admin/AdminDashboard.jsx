@@ -539,6 +539,50 @@ export const AdminDashboard = () => {
   const [visitorSearch, setVisitorSearch] = useState("");
   const [visitorFilter, setVisitorFilter] = useState("all");
 
+  const [liveSessions, setLiveSessions] = useState([]);
+  const [tick, setTick] = useState(Date.now());
+
+  // Real-time ticking interval for duration display
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTick(Date.now());
+    }, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Firebase Realtime Database Listener for Live Sessions
+  useEffect(() => {
+    let active = true;
+    let unsubscribe;
+
+    const startSessionListener = async () => {
+      try {
+        const { getDatabase, ref, onValue } = await import("firebase/database");
+        const db = getDatabase();
+        const sessionsRef = ref(db, "liveSessions");
+
+        unsubscribe = onValue(sessionsRef, (snapshot) => {
+          if (!active) return;
+          const data = snapshot.val() || {};
+          const mapped = Object.entries(data).map(([id, s]) => ({
+            id,
+            ...s
+          }));
+          setLiveSessions(mapped);
+        });
+      } catch (err) {
+        console.error("Dashboard Real-time listener error:", err);
+      }
+    };
+
+    startSessionListener();
+
+    return () => {
+      active = false;
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
 
 
   const sidebarLinks = [
@@ -658,31 +702,33 @@ export const AdminDashboard = () => {
 
   // Generate real dynamic visitor logs mapped from Firestore users
   const getDynamicVisitorLog = () => {
-    const logs = [
-      { id: "guest-1", user: "Guest User (Anonymous)", location: "Mumbai, India", device: "Chrome / Windows", entryPage: "/marketplace", duration: "18 mins", referrer: "Google Search", status: "Active" },
-      { id: "guest-2", user: "Guest User (Anonymous)", location: "Ahmedabad, India", device: "Safari / iOS Mobile", entryPage: "/", duration: "2 mins", referrer: "Direct Traffic", status: "Active" },
-      { id: "guest-3", user: "Guest User (Anonymous)", location: "Delhi, India", device: "Firefox / macOS", entryPage: "/marketplace", duration: "12 mins", referrer: "Twitter/X Link", status: "Ended" }
-    ];
-
-    usersList.forEach((u, idx) => {
-      const cities = ["Surat, India", "Ahmedabad, India", "Mumbai, India", "Pune, India", "Delhi, India", "Bangalore, India"];
-      const devices = ["Chrome / Windows", "Safari / macOS", "Firefox / Linux", "Chrome / Android", "Safari / iOS"];
-      const pages = ["/marketplace", "/dashboard", "/books", "/reader", "/settings"];
-      const referrers = ["Direct Traffic", "Google Search", "GitHub Referral", "Newsletter Link"];
+    const nowTime = Date.now();
+    return liveSessions.map(s => {
+      const isSessionActive = s.status === "Active" && (s.lastSeen ? (nowTime - new Date(s.lastSeen).getTime() <= 90000) : false);
+      const status = isSessionActive ? "Active" : "Ended";
       
-      logs.push({
-        id: u.uid || `user-${idx}`,
-        user: `${u.displayName || "EbookVala User"} (${u.email || "user@ebookvala.com"})`,
-        location: u.location || cities[idx % cities.length],
-        device: devices[idx % devices.length],
-        entryPage: pages[idx % pages.length],
-        duration: `${Math.floor(2 + (idx * 7) % 45)} mins`,
-        referrer: referrers[idx % referrers.length],
-        status: idx % 3 === 0 ? "Active" : "Ended"
-      });
-    });
+      const loginTime = s.loginTime ? new Date(s.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—";
+      const logoutTime = isSessionActive ? "Active Now" : (s.logoutTime ? new Date(s.logoutTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "—");
+      
+      const loginTimeMs = s.loginTime ? new Date(s.loginTime).getTime() : nowTime;
+      const logoutTimeMs = s.logoutTime ? new Date(s.logoutTime).getTime() : nowTime;
+      const durationMs = logoutTimeMs - loginTimeMs;
+      const durationMins = Math.max(0, Math.floor(durationMs / 60000));
+      const duration = `${durationMins} mins`;
 
-    return logs;
+      return {
+        id: s.id,
+        user: s.user || "Unknown User",
+        location: s.location || "Unknown Location",
+        device: s.device || "Unknown Device",
+        entryPage: s.entryPage || "/",
+        referrer: s.referrer || "Direct Traffic",
+        loginTime,
+        logoutTime,
+        duration,
+        status
+      };
+    });
   };
 
   const dynamicVisitorLog = getDynamicVisitorLog();
@@ -2724,7 +2770,7 @@ export const AdminDashboard = () => {
                     </thead>
                     <tbody>
                       {filteredTrackerLogs.map((usr) => {
-                        const isGuest = usr.id.startsWith("guest");
+                        const isGuest = usr.id.startsWith("guest") || usr.user.includes("Guest");
                         let displayName = "";
                         let email = "";
                         let avatarChar = "G";

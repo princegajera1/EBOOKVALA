@@ -140,7 +140,6 @@ export const AppProvider = ({ children }) => {
         };
 
         sessionDocRef = doc(db, "liveSessions", sessionId);
-        const location = await getIpLocation();
         const device = getBrowserAndOS();
         const entryPage = window.location.pathname || "/";
         const referrer = document.referrer ? new URL(document.referrer).hostname : "Direct Traffic";
@@ -152,7 +151,7 @@ export const AppProvider = ({ children }) => {
           id: user.uid,
           user: `${user.displayName || "EbookVala User"} (${user.email})`,
           isGuest: false,
-          location,
+          location: "Unknown Location",
           device,
           entryPage,
           referrer,
@@ -163,18 +162,30 @@ export const AppProvider = ({ children }) => {
           id: sessionId,
           user: "Guest User (Anonymous)",
           isGuest: true,
-          location,
+          location: "Unknown Location",
           device,
           entryPage,
           referrer,
         };
 
+        // Write presence document immediately
         await setDoc(sessionDocRef, {
           ...userInfo,
           loginTime: serverTimestamp(),
           status: "Active",
           lastSeen: serverTimestamp(),
         }, { merge: true });
+
+        // Resolve location asynchronously in a non-blocking manner
+        getIpLocation().then(async (resolvedLoc) => {
+          if (resolvedLoc && resolvedLoc !== "Unknown Location" && active && sessionDocRef) {
+            try {
+              await updateDoc(sessionDocRef, { location: resolvedLoc });
+            } catch (locErr) {
+              console.error("Non-blocking location update error:", locErr);
+            }
+          }
+        });
 
         // 30 seconds heartbeat loop
         heartbeatInterval = setInterval(async () => {

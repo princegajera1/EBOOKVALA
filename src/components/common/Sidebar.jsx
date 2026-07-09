@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, LogOut } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
-import logoImg from "../../assets/logo.png";
 
 const EXPANDED_WIDTH = 228;
 const COLLAPSED_WIDTH = 72;
@@ -39,16 +38,16 @@ const SidebarNavItem = ({
       title={isCollapsed ? link.label : undefined}
       aria-current={isActive ? "page" : undefined}
       className={`
-        group relative flex items-center w-full rounded-brand-btn text-[13px] font-medium
+        group relative flex items-center w-full rounded-brand-btn text-[13px]
         transition-colors duration-200 cursor-pointer outline-none
         focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-1 focus-visible:ring-offset-brand-card
         ${isCollapsed ? "justify-center px-0 py-2.5" : "gap-3 px-3 py-2"}
         ${
           isLogout
-            ? "text-brand-danger hover:bg-brand-danger/8 hover:text-brand-danger"
+            ? "text-brand-danger hover:bg-brand-danger/8 hover:text-brand-danger font-medium"
             : isActive
-              ? "text-brand-text bg-brand-bg-secondary"
-              : "text-brand-text-secondary hover:bg-brand-bg-secondary/80 hover:text-brand-text"
+              ? "text-white bg-brand-bg-secondary font-semibold"
+              : "text-brand-text-secondary hover:bg-brand-bg-secondary/80 hover:text-brand-text font-medium"
         }
       `}
     >
@@ -264,20 +263,19 @@ const SidebarContent = ({
             <Link
               to="/"
               onClick={onMobileClose}
-              className="text-sm font-display font-black tracking-tight text-brand-text
-                         flex items-center gap-2 rounded-md
-                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
+              className="text-lg font-display font-black tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
             >
-              <img src={logoImg} className="h-6 w-6 object-contain rounded-md" alt="EBOOKVALA logo" />
-              <span>EBOOKVALA</span>
+              <span className="text-white">EBOOK</span>
+              <span className="text-[#3B82F6]">VALA</span>
             </Link>
           ) : (
             <Link
               to="/"
-              className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
+              className="text-lg font-display font-black tracking-tight rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent"
               aria-label="Go to home"
             >
-              <img src={logoImg} className="h-7 w-7 object-contain rounded-md" alt="EBOOKVALA logo" />
+              <span className="text-white">E</span>
+              <span className="text-[#3B82F6]">V</span>
             </Link>
           )}
 

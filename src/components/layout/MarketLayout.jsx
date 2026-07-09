@@ -103,7 +103,7 @@ export const MarketLayout = () => {
       <MobileDockNav />
       
       {/* Main Content Area: Added extra padding-top to prevent overlaps with floating headers */}
-      <main className="flex-grow pt-24 lg:pt-32 bg-brand-bg overflow-hidden relative z-10">
+      <main className="flex-grow pt-24 pb-28 lg:pt-32 lg:pb-12 bg-brand-bg overflow-hidden relative z-10">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={location.pathname}

@@ -60,7 +60,7 @@ export const MobileDockNav = () => {
   ];
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 z-40 md:hidden flex justify-center pointer-events-none pb-safe">
+    <div className="fixed bottom-4 left-0 right-0 z-40 md:hidden flex justify-center pointer-events-none pb-[env(safe-area-inset-bottom)]">
       <div className="pointer-events-auto">
         <Dock items={items} baseItemSize={48} magnification={64} distance={140} panelHeight={60} />
       </div>

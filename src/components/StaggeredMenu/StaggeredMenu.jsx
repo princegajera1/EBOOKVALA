@@ -308,14 +308,10 @@ export const StaggeredMenu = ({
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
         <div className="sm-logo" aria-label="Logo">
-          <img
-            src={logoUrl || '/src/assets/logo.png'}
-            alt="Logo"
-            className="sm-logo-img"
-            draggable={false}
-            width={32}
-            height={32}
-          />
+          <span className="font-display font-black tracking-tight select-none text-[19px]">
+            <span className="text-white">EBOOK</span>
+            <span className="text-[#3B82F6]">VALA</span>
+          </span>
         </div>
         <button
           ref={toggleBtnRef}

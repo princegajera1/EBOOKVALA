@@ -149,6 +149,38 @@ const testimonialsData = [
 ];
 
 
+const TestimonialCard = ({ testimonial }) => {
+  return (
+    <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover snap-center">
+      <div>
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex gap-0.5">
+            {[...Array(testimonial.rating)].map((_, i) => (
+              <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+            ))}
+          </div>
+          <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
+            {testimonial.badge}
+          </span>
+        </div>
+        <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6 line-clamp-4 h-[72px]">
+          "{testimonial.quote}"
+        </p>
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
+          <img src={testimonial.image} alt={testimonial.name} className="h-full w-full object-cover" />
+        </div>
+        <div>
+          <h5 className="text-xs font-bold text-brand-text leading-none">{testimonial.name}</h5>
+          <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">{testimonial.role} • {testimonial.location}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
 export const Landing = () => {
   const [featuredBooks, setFeaturedBooks] = useState([]);
   const [email, setEmail] = useState("");
@@ -256,15 +288,15 @@ export const Landing = () => {
             Discover free ebooks, AI-powered learning, smart summaries, quizzes, flashcards, and everything you need to learn faster.
           </p>
           
-          <div className="flex flex-wrap gap-4 mt-1">
-            <Link to="/marketplace">
-              <Button variant="primary" size="lg" className="font-bold h-12 px-6 rounded-full">
+          <div className="flex flex-col sm:flex-row gap-3 mt-1 w-full sm:w-auto">
+            <Link to="/marketplace" className="w-full sm:w-auto">
+              <Button variant="primary" size="lg" className="font-bold h-12 px-6 rounded-full w-full justify-center">
                 Browse Library
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/register?role=author">
-              <Button variant="ghost" size="lg" className="font-bold h-12 px-6 rounded-full text-brand-text hover:bg-brand-bg-secondary">
+            <Link to="/register?role=author" className="w-full sm:w-auto">
+              <Button variant="ghost" size="lg" className="font-bold h-12 px-6 rounded-full text-brand-text hover:bg-brand-bg-secondary w-full justify-center border border-brand-border">
                 Publish a Book
               </Button>
             </Link>
@@ -286,37 +318,45 @@ export const Landing = () => {
           </div>
 
           {/* Stat Numbers */}
-          <div className="w-full mt-6 py-6 border-t border-brand-border flex flex-wrap gap-6 lg:gap-8 items-center select-none">
-            <div className="flex items-center gap-3">
+          <div className="w-full mt-6 py-6 border-t border-brand-border grid grid-cols-2 gap-y-4 gap-x-6 sm:flex sm:flex-wrap sm:items-center sm:gap-6 lg:gap-8 select-none">
+            {/* Item 1: Rating */}
+            <div className="flex flex-col justify-center gap-1.5 text-left">
               <div className="flex gap-0.5 shrink-0">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                 ))}
               </div>
-              <div className="text-[11px] lg:text-xs leading-snug">
-                <p className="font-bold text-brand-text">4.9/5 Rating</p>
-                <p className="text-brand-text-secondary">
-                  <AnimatedCounter value="50000" />+ Readers
-                </p>
-              </div>
+              <p className="font-bold text-brand-text text-[11px] lg:text-xs leading-none">4.9/5 Rating</p>
             </div>
-            
-            <div className="hidden sm:block h-6 w-[1px] bg-brand-border" />
-            
-            <div className="text-[11px] lg:text-xs leading-snug text-center flex-1 sm:flex-none">
+
+            <div className="hidden sm:block h-6 w-[1px] bg-brand-border shrink-0" />
+
+            {/* Item 2: Readers */}
+            <div className="text-[11px] lg:text-xs leading-snug text-left">
+              <p className="font-bold text-brand-text">
+                <AnimatedCounter value="50000" />+ Readers
+              </p>
+              <p className="text-brand-text-secondary">Active Community</p>
+            </div>
+
+            <div className="hidden sm:block h-6 w-[1px] bg-brand-border shrink-0" />
+
+            {/* Item 3: eBooks */}
+            <div className="text-[11px] lg:text-xs leading-snug text-left">
               <p className="font-bold text-brand-text">
                 <AnimatedCounter value="10000" />+ eBooks
               </p>
               <p className="text-brand-text-secondary">Free Access</p>
             </div>
-            
-            <div className="hidden sm:block h-6 w-[1px] bg-brand-border" />
-            
-            <div className="text-[11px] lg:text-xs leading-snug text-center flex-1 sm:flex-none">
+
+            <div className="hidden sm:block h-6 w-[1px] bg-brand-border shrink-0" />
+
+            {/* Item 4: Guarantee */}
+            <div className="text-[11px] lg:text-xs leading-snug text-left">
               <p className="font-bold text-brand-text">
-                <AnimatedCounter value="100" />% Free Forever
+                <AnimatedCounter value="100" />% Free
               </p>
-              <p className="text-brand-text-secondary">First Year Guarantee</p>
+              <p className="text-brand-text-secondary">Forever Guarantee</p>
             </div>
           </div>
         </motion.div>
@@ -498,7 +538,15 @@ export const Landing = () => {
             </h2>
           </FadeUp>
           
-          <div className="relative w-full overflow-hidden py-4 flex flex-col gap-6">
+          {/* Mobile Testimonials (Horizontal swipeable snap-scroll) */}
+          <div className="sm:hidden flex overflow-x-auto gap-4 px-2 pb-6 snap-x snap-mandatory scrollbar-none scroll-smooth">
+            {testimonialsData.map((t, idx) => (
+              <TestimonialCard key={idx} testimonial={t} />
+            ))}
+          </div>
+
+          {/* Desktop/Tablet Testimonials (Dual scrolling Marquees) */}
+          <div className="hidden sm:flex flex-col gap-6 relative w-full overflow-hidden py-4">
             {/* Left and Right Fade-out Gradient Overlays */}
             <div className="absolute top-0 bottom-0 left-0 w-16 md:w-32 bg-gradient-to-r from-brand-bg-secondary to-transparent z-10 pointer-events-none" />
             <div className="absolute top-0 bottom-0 right-0 w-16 md:w-32 bg-gradient-to-l from-brand-bg-secondary to-transparent z-10 pointer-events-none" />
@@ -506,64 +554,14 @@ export const Landing = () => {
             {/* Row 1: Left to right (Standard) */}
             <Marquee pauseOnHover className="py-2" repeat={5}>
               {testimonialsData.slice(0, 5).map((t, idx) => (
-                <div key={idx} className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover">
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex gap-0.5">
-                        {[...Array(t.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                      <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
-                        {t.badge}
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6">
-                      "{t.quote}"
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
-                      <img src={t.image} alt={t.name} className="h-full w-full object-cover" />
-                    </div>
-                    <div>
-                      <h5 className="text-xs font-bold text-brand-text leading-none">{t.name}</h5>
-                      <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">{t.role} • {t.location}</p>
-                    </div>
-                  </div>
-                </div>
+                <TestimonialCard key={idx} testimonial={t} />
               ))}
             </Marquee>
 
             {/* Row 2: Right to left (Reverse) */}
             <Marquee reverse pauseOnHover className="py-2" repeat={5}>
               {testimonialsData.slice(5, 10).map((t, idx) => (
-                <div key={idx} className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover">
-                  <div>
-                    <div className="flex justify-between items-center mb-4">
-                      <div className="flex gap-0.5">
-                        {[...Array(t.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
-                      <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
-                        {t.badge}
-                      </span>
-                    </div>
-                    <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6">
-                      "{t.quote}"
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-11 w-11 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
-                      <img src={t.image} alt={t.name} className="h-full w-full object-cover" />
-                    </div>
-                    <div>
-                      <h5 className="text-xs font-bold text-brand-text leading-none">{t.name}</h5>
-                      <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">{t.role} • {t.location}</p>
-                    </div>
-                  </div>
-                </div>
+                <TestimonialCard key={idx} testimonial={t} />
               ))}
             </Marquee>
           </div>

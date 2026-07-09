@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import url('https://api.fontshare.com/v2/css?f[]=clash-display@300;400;500;600;700&display=swap');
 
 @import "tailwindcss";
@@ -31,16 +31,16 @@
   --primary: #2563EB;
   --primary-hover: #1D4ED8;
   --secondary: #A1A1AA;
-  --accent: #2563EB;
-  --success: #22C55E;
+  --accent: #3B82F6;
+  --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
   --bg: #09090B;
-  --bg-secondary: #18181B;
-  --card: #111113;
-  --border: #27272A;
-  --input-border: #27272A;
-  --text: #FAFAFA;
+  --bg-secondary: #111827;
+  --card: #18181B;
+  --border: rgba(255,255,255,0.08);
+  --input-border: rgba(255,255,255,0.08);
+  --text: #FFFFFF;
   --text-secondary: #A1A1AA;
   
   color-scheme: dark;
@@ -67,8 +67,8 @@
   --radius-brand-input: var(--radius-input);
   --radius-brand-img: var(--radius-image);
   
-  --font-display: "Clash Display", "Plus Jakarta Sans", "Inter", sans-serif;
-  --font-heading: "Plus Jakarta Sans", sans-serif;
+  --font-display: "Space Grotesk", "Clash Display", "Plus Jakarta Sans", sans-serif;
+  --font-heading: "Space Grotesk", sans-serif;
   --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   

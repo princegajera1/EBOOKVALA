@@ -118,7 +118,7 @@ export const ReaderDashboard = () => {
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="h-10 w-7 bg-[#111] rounded border border-brand-border/40 overflow-hidden shrink-0">
-                          <img src={b.coverURL} alt="" className="h-full w-full object-cover" />
+                          <img src={b.coverURL} alt={`Cover of the book ${b.title}`} decoding="async" className="h-full w-full object-cover" />
                         </div>
                         <div className="min-w-0 text-left">
                           <h4 className="text-xs font-bold text-brand-text group-hover:text-brand-accent transition-colors truncate">{b.title}</h4>
@@ -176,7 +176,10 @@ export const ReaderDashboard = () => {
           <div className="h-4 w-px bg-brand-border/60"></div>
 
           {/* Notification Bell */}
-          <button className="relative p-1.5 rounded-full border border-brand-border bg-brand-card hover:bg-brand-bg-secondary hover:scale-105 transition-all cursor-pointer shadow-sm text-brand-text-secondary hover:text-brand-text">
+          <button 
+            aria-label="View notifications"
+            className="relative p-1.5 rounded-full border border-brand-border bg-brand-card hover:bg-brand-bg-secondary hover:scale-105 transition-all cursor-pointer shadow-sm text-brand-text-secondary hover:text-brand-text"
+          >
             <span className="absolute top-0 right-0 flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-accent opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-accent"></span>
@@ -185,7 +188,10 @@ export const ReaderDashboard = () => {
           </button>
 
           {/* Theme Visual Toggle (Dark by default, looks cool) */}
-          <button className="p-1.5 rounded-full border border-brand-border bg-brand-card hover:bg-brand-bg-secondary hover:scale-105 transition-all cursor-pointer shadow-sm text-brand-text-secondary hover:text-brand-text">
+          <button 
+            aria-label="Toggle visual theme"
+            className="p-1.5 rounded-full border border-brand-border bg-brand-card hover:bg-brand-bg-secondary hover:scale-105 transition-all cursor-pointer shadow-sm text-brand-text-secondary hover:text-brand-text"
+          >
             <Moon className="h-4 w-4" />
           </button>
 
@@ -198,8 +204,8 @@ export const ReaderDashboard = () => {
           >
             <div className="h-7 w-7 rounded-full overflow-hidden bg-brand-card border border-brand-border/80">
               <img 
-                src={user?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || "Reader")}`} 
-                alt="" 
+                src={user?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.displayName || user?.name || "Reader")}`} 
+                alt={`Profile avatar of ${user?.displayName || "Reader"}`} 
                 className="h-full w-full object-cover" 
               />
             </div>

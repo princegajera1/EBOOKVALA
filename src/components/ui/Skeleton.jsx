@@ -6,7 +6,7 @@ export const Skeleton = ({ className, ...props }) => {
   return (
     <div
       className={twMerge(
-        "animate-pulse rounded-[12px] bg-[#F1F5F9]",
+        "animate-pulse rounded-[12px] bg-slate-200 dark:bg-zinc-800",
         className
       )}
       {...props}

@@ -1,4 +1,5 @@
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { gsap } from 'gsap';
 import './StaggeredMenu.css';
 
@@ -363,18 +364,42 @@ export const StaggeredMenu = ({
                         </span>
                       </button>
                     ) : (
-                      <a 
-                        className="sm-panel-item" 
-                        href={it.link} 
-                        onClick={closeMenu}
-                        aria-label={it.ariaLabel} 
-                        data-index={idx + 1}
-                      >
-                        <span className="sm-panel-itemLabel flex items-center gap-2">
-                          {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
-                          <span>{it.label}</span>
-                        </span>
-                      </a>
+                      (() => {
+                        const targetUrl = it.href || it.link || '#';
+                        const isExternal = targetUrl.startsWith('http://') || targetUrl.startsWith('https://') || targetUrl.startsWith('//') || targetUrl.startsWith('mailto:') || targetUrl.startsWith('tel:') || targetUrl.startsWith('#');
+                        
+                        if (!isExternal && targetUrl !== '#') {
+                          return (
+                            <Link 
+                              className="sm-panel-item" 
+                              to={targetUrl} 
+                              onClick={closeMenu}
+                              aria-label={it.ariaLabel} 
+                              data-index={idx + 1}
+                            >
+                              <span className="sm-panel-itemLabel flex items-center gap-2">
+                                {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
+                                <span>{it.label}</span>
+                              </span>
+                            </Link>
+                          );
+                        }
+
+                        return (
+                          <a 
+                            className="sm-panel-item" 
+                            href={targetUrl} 
+                            onClick={closeMenu}
+                            aria-label={it.ariaLabel} 
+                            data-index={idx + 1}
+                          >
+                            <span className="sm-panel-itemLabel flex items-center gap-2">
+                              {IconComponent && <IconComponent className="h-6 w-6 inline-block shrink-0 animate-fade-in" />}
+                              <span>{it.label}</span>
+                            </span>
+                          </a>
+                        );
+                      })()
                     )}
                   </li>
                 );

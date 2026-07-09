@@ -71,8 +71,8 @@ export const MarketLayout = () => {
   return (
     <div className="min-h-screen bg-brand-bg flex flex-col justify-between transition-colors duration-300 relative">
       
-      {/* 1. PillNav (Desktop Navigation: >= 1024px) */}
-      <header className="fixed top-4 left-4 right-4 z-40 hidden lg:block max-w-6xl mx-auto w-[calc(100%-2rem)]">
+      {/* 1. PillNav (Desktop + Tablet Navigation: >= 768px) */}
+      <header className="fixed top-4 left-4 right-4 z-40 hidden md:block max-w-6xl mx-auto w-[calc(100%-2rem)]">
         <PillNav 
           logo={logoImg} 
           logoAlt="EBOOKVALA" 
@@ -86,8 +86,8 @@ export const MarketLayout = () => {
         />
       </header>
 
-      {/* 2. StaggeredMenu (Mobile + Tablet Drawer Navigation: < 1024px) */}
-      <div className="lg:hidden">
+      {/* 2. StaggeredMenu (Mobile Drawer Navigation: < 768px) */}
+      <div className="md:hidden">
         <StaggeredMenu 
           isFixed 
           items={navItems} 

@@ -128,8 +128,9 @@ export const BookCard = ({ book, view = "grid" }) => {
           variants={cardVariants}
           onKeyDown={handleKeyDown}
           tabIndex={0}
-          whileHover={{ y: -4, boxShadow: "var(--shadow-brand-hover)" }}
-          transition={{ duration: 0.25, ease: "easeInOut" }}
+          whileHover={{ y: -6, boxShadow: "var(--shadow-brand-hover)" }}
+          whileTap={{ scale: 0.99 }}
+          transition={{ type: "spring", stiffness: 350, damping: 22 }}
           className="flex flex-col sm:flex-row gap-6 p-5 bg-brand-card border border-brand-border rounded-brand-card shadow-brand focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:outline-none transition-all duration-300 group relative text-left"
         >
           {/* Cover */}
@@ -137,8 +138,9 @@ export const BookCard = ({ book, view = "grid" }) => {
             <div className="relative aspect-[2/3] w-32 sm:w-40 bg-brand-bg border border-brand-border rounded-brand-img overflow-hidden shadow-sm">
               <img
                 src={book.coverURL}
-                alt={book.title}
+                alt={`Cover of the book ${book.title}`}
                 loading="lazy"
+                decoding="async"
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
 
@@ -172,7 +174,7 @@ export const BookCard = ({ book, view = "grid" }) => {
               {/* Author & Verification */}
               <div className="flex items-center gap-2 mt-2 select-none">
                 <div className="h-5 w-5 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary">
-                  <img src={getAuthorAvatar(book.authorId)} alt="" className="h-full w-full object-cover" />
+                  <img src={getAuthorAvatar(book.authorId)} alt={`Avatar of ${book.authorName}`} decoding="async" className="h-full w-full object-cover" />
                 </div>
                 <p className="text-[12px] text-brand-text-secondary flex items-center gap-1">
                   by <span className="font-semibold text-brand-text">{book.authorName}</span>
@@ -301,8 +303,9 @@ export const BookCard = ({ book, view = "grid" }) => {
         <Link to={`/book/${book.slug || book.id}`} className="relative aspect-[3/4] w-full bg-brand-bg overflow-hidden select-none block">
           <img
             src={book.coverURL}
-            alt={book.title}
+            alt={`Cover of the book ${book.title}`}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 rounded-t-brand-card"
           />
           
@@ -389,7 +392,7 @@ export const BookCard = ({ book, view = "grid" }) => {
             {/* Author Row */}
             <div className="flex items-center gap-2 mt-2 select-none">
               <div className="h-4.5 w-4.5 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
-                <img src={getAuthorAvatar(book.authorId)} alt="" className="h-full w-full object-cover" />
+                <img src={getAuthorAvatar(book.authorId)} alt={`Avatar of ${book.authorName}`} decoding="async" className="h-full w-full object-cover" />
               </div>
               <p className="text-[11px] text-brand-text-secondary truncate flex items-center gap-1">
                 by <span className="font-semibold text-brand-text">{book.authorName}</span>

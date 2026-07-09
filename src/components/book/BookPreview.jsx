@@ -204,6 +204,7 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
                   disabled={zoom <= 80}
                   className={`p-2 rounded-full disabled:opacity-30 cursor-pointer transition-all ${currentTheme.btnHover}`}
                   title="Zoom Out"
+                  aria-label="Zoom Out"
                 >
                   <ZoomOut className="h-4 w-4" />
                 </button>
@@ -215,6 +216,7 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
                   disabled={zoom >= 150}
                   className={`p-2 rounded-full disabled:opacity-30 cursor-pointer transition-all ${currentTheme.btnHover}`}
                   title="Zoom In"
+                  aria-label="Zoom In"
                 >
                   <ZoomIn className="h-4 w-4" />
                 </button>
@@ -225,6 +227,7 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
                   onClick={toggleFullscreen} 
                   className={`p-2 rounded-full hidden sm:block cursor-pointer transition-all ${currentTheme.btnHover}`}
                   title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                  aria-label={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
                 >
                   {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
                 </button>
@@ -232,6 +235,7 @@ export const BookPreview = ({ book, isOpen, onClose, onBuyNow }) => {
                   onClick={onClose} 
                   className={`p-2 rounded-full cursor-pointer transition-all ${currentTheme.btnHover}`}
                   title="Close Preview"
+                  aria-label="Close Preview"
                 >
                   <X className="h-4.5 w-4.5" />
                 </button>

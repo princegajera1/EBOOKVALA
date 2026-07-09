@@ -122,7 +122,7 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
             <div className="h-8 w-8 rounded-full overflow-hidden border border-brand-border shadow-sm select-none">
               <img
                 src={user?.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.displayName || "Admin")}`}
-                alt="Profile"
+                alt={`Profile avatar of ${user?.displayName || "Admin"}`}
                 className="h-full w-full object-cover"
                 draggable={false}
               />

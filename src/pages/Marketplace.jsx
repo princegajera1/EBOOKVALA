@@ -543,7 +543,7 @@ export const Marketplace = () => {
 
           {/* Book grid/list container */}
           {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
                 <BookCardSkeleton key={i} />
               ))}

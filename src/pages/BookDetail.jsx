@@ -544,7 +544,7 @@ export const BookDetail = () => {
                             className="flex gap-4 p-3.5 border border-brand-border rounded-[16px] bg-brand-card hover:shadow-brand hover:-translate-y-0.5 transition-all duration-300 group"
                           >
                             <div className="h-16 w-12 bg-brand-bg-secondary border border-brand-border rounded-[8px] overflow-hidden shrink-0 shadow-sm">
-                              <img src={rel.coverURL} alt="" className="h-full w-full object-cover" />
+                              <img src={rel.coverURL} alt={`Cover of the related book ${rel.title}`} decoding="async" className="h-full w-full object-cover" />
                             </div>
                             <div className="min-w-0 flex-grow flex flex-col justify-between py-0.5 text-left">
                               <div>

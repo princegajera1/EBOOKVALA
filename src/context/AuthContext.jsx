@@ -12,7 +12,7 @@ import {
   setPersistence,
   deleteUser
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 
 export const AuthContext = createContext();
@@ -121,6 +121,8 @@ export const AuthProvider = ({ children }) => {
         role: role,
         purchasedBooks: [],
         wishlist: [],
+        loginCount: 1,
+        lastLoginAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -210,11 +212,12 @@ export const AuthProvider = ({ children }) => {
 
       // Ensure Firestore user document exists BEFORE syncUserProfile is called
       // (avoids race condition where onAuthStateChanged fires with no doc yet)
-      const userDocSnap = await getDoc(doc(db, "users", firebaseUser.uid));
+      const userDocRef = doc(db, "users", firebaseUser.uid);
+      const userDocSnap = await getDoc(userDocRef);
       if (!userDocSnap.exists()) {
         const name = firebaseUser.displayName || (email.toLowerCase() === "admin@ebookvala.com" ? "Admin" : "EBOOKVALA Reader");
         const role = email.toLowerCase() === "admin@ebookvala.com" ? "admin" : "reader";
-        await setDoc(doc(db, "users", firebaseUser.uid), {
+        await setDoc(userDocRef, {
           uid: firebaseUser.uid,
           name: name,
           displayName: name,
@@ -223,9 +226,17 @@ export const AuthProvider = ({ children }) => {
           role: role,
           purchasedBooks: [],
           wishlist: [],
+          loginCount: 1,
+          lastLoginAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
         });
+      } else {
+        // Increment loginCount and update lastLoginAt for returning users
+        await updateDoc(userDocRef, {
+          lastLoginAt: serverTimestamp(),
+          loginCount: increment(1)
+        }).catch(err => console.error("Error updating user login metrics:", err));
       }
 
       // Sync profile into app state

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
-  ShieldCheck, Users, BookOpen, Award, Check, X, Search, Ban, Trash2, 
+  ShieldCheck, Users, BookOpen, Award, Check, X, Search, Ban, Trash2, UserCheck, 
   Plus, Settings, Grid, BarChart2, ShieldAlert, Edit, FileText, Upload, Download,
   Zap, Activity, Cpu, Database, DatabaseZap, Terminal, Bell, Lock, ToggleLeft,
   Sliders, Calendar, PlusCircle, ArrowRight, Play, Eye, Layers, DollarSign,
@@ -119,6 +119,12 @@ export const AdminDashboard = () => {
   const [currentPageUsers, setCurrentPageUsers] = useState(1);
   const [pageSizeUsers, setPageSizeUsers] = useState(10);
   const [filterUserRole, setFilterUserRole] = useState("all");
+
+  const [currentPageAllUsers, setCurrentPageAllUsers] = useState(1);
+  const [pageSizeAllUsers, setPageSizeAllUsers] = useState(10);
+  const [allUsersSearchQuery, setAllUsersSearchQuery] = useState("");
+  const [sortFieldAllUsers, setSortFieldAllUsers] = useState("createdAt");
+  const [sortOrderAllUsers, setSortOrderAllUsers] = useState("desc");
 
   const [currentPageReports, setCurrentPageReports] = useState(1);
   const [pageSizeReports, setPageSizeReports] = useState(10);
@@ -617,6 +623,7 @@ export const AdminDashboard = () => {
     { id: "books", label: "Books", icon: BookOpen },
     { id: "authors", label: "Authors", icon: ShieldCheck },
     { id: "users", label: "Readers", icon: Users },
+    { id: "all-users", label: "All Users", icon: UserCheck },
     { id: "categories", label: "Categories", icon: Grid },
     { id: "reports", label: "Reports", icon: ShieldAlert },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
@@ -2912,6 +2919,251 @@ export const AdminDashboard = () => {
                 <AlertCircle className="h-10 w-10 text-brand-text-secondary/35 mb-3.5" />
                 <h4 className="text-sm font-bold text-brand-text">No active sessions right now</h4>
                 <p className="text-xs text-brand-text-secondary mt-1 max-w-[280px]">We couldn't find any user sessions matching your filter criteria.</p>
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* 9.5. ALL USERS / LOGIN HISTORY TAB */}
+      {activeTab === "all-users" && (() => {
+        const formatDateTime = (val) => {
+          if (!val) return "—";
+          const d = new Date(val);
+          if (isNaN(d.getTime())) return "—";
+          return d.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+        };
+
+        const allUsersFiltered = usersList.filter(u => {
+          const name = (u.displayName || "").toLowerCase();
+          const email = (u.email || "").toLowerCase();
+          const query = allUsersSearchQuery.toLowerCase();
+          return name.includes(query) || email.includes(query);
+        });
+
+        const sortedAllUsers = [...allUsersFiltered].sort((a, b) => {
+          let fieldA = a[sortFieldAllUsers];
+          let fieldB = b[sortFieldAllUsers];
+
+          if (sortFieldAllUsers === "loginCount") {
+            fieldA = parseInt(fieldA, 10) || 0;
+            fieldB = parseInt(fieldB, 10) || 0;
+          } else {
+            fieldA = fieldA ? new Date(fieldA).getTime() : 0;
+            fieldB = fieldB ? new Date(fieldB).getTime() : 0;
+          }
+
+          if (fieldA < fieldB) return sortOrderAllUsers === "asc" ? -1 : 1;
+          if (fieldA > fieldB) return sortOrderAllUsers === "asc" ? 1 : -1;
+          return 0;
+        });
+
+        const totalAllUsersCount = sortedAllUsers.length;
+        const totalAllUsersPages = Math.ceil(totalAllUsersCount / pageSizeAllUsers) || 1;
+        const indexOfLastAllUser = currentPageAllUsers * pageSizeAllUsers;
+        const indexOfFirstAllUser = indexOfLastAllUser - pageSizeAllUsers;
+        const currentAllUsers = sortedAllUsers.slice(indexOfFirstAllUser, indexOfLastAllUser);
+
+        const handleSort = (field) => {
+          if (sortFieldAllUsers === field) {
+            setSortOrderAllUsers(prev => (prev === "asc" ? "desc" : "asc"));
+          } else {
+            setSortFieldAllUsers(field);
+            setSortOrderAllUsers("desc");
+          }
+          setCurrentPageAllUsers(1);
+        };
+
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-display font-black text-brand-text tracking-tight font-display">Users & Login History</h1>
+                <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Audit full registration list, historical logins, and active session statuses.</p>
+              </div>
+
+              <div className="flex items-center gap-3 px-4 py-2.5 rounded-[20px] bg-brand-card border border-brand-border shadow-sm select-none shrink-0">
+                <Users className="h-4.5 w-4.5 text-brand-primary" />
+                <div className="flex flex-col text-left">
+                  <span className="text-[10px] uppercase font-mono font-bold tracking-wider text-brand-text-secondary">Registered Users</span>
+                  <span className="text-sm font-black text-brand-text font-display leading-tight">{usersList.length} total</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                <input
+                  type="text"
+                  placeholder="Search by name or email..."
+                  value={allUsersSearchQuery}
+                  onChange={(e) => { setAllUsersSearchQuery(e.target.value); setCurrentPageAllUsers(1); }}
+                  className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
+                />
+              </div>
+
+              {allUsersSearchQuery && (
+                <button
+                  onClick={() => { setAllUsersSearchQuery(""); setCurrentPageAllUsers(1); }}
+                  className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
+                >
+                  Clear Search
+                </button>
+              )}
+            </div>
+
+            {currentAllUsers.length > 0 ? (
+              <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left text-brand-text-secondary border-collapse">
+                    <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none sticky top-0 z-10">
+                      <tr>
+                        <th className="py-4 px-5">User</th>
+                        <th className="py-4 px-5">Email</th>
+                        <th 
+                          className="py-4 px-5 cursor-pointer hover:bg-brand-bg-secondary/40 transition-colors select-none"
+                          onClick={() => handleSort("createdAt")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Registered
+                            {sortFieldAllUsers === "createdAt" && (
+                              <span>{sortOrderAllUsers === "asc" ? "▲" : "▼"}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="py-4 px-5 cursor-pointer hover:bg-brand-bg-secondary/40 transition-colors select-none"
+                          onClick={() => handleSort("lastLoginAt")}
+                        >
+                          <div className="flex items-center gap-1">
+                            Last Login
+                            {sortFieldAllUsers === "lastLoginAt" && (
+                              <span>{sortOrderAllUsers === "asc" ? "▲" : "▼"}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th 
+                          className="py-4 px-5 text-center cursor-pointer hover:bg-brand-bg-secondary/40 transition-colors select-none"
+                          onClick={() => handleSort("loginCount")}
+                        >
+                          <div className="flex items-center justify-center gap-1">
+                            Total Logins
+                            {sortFieldAllUsers === "loginCount" && (
+                              <span>{sortOrderAllUsers === "asc" ? "▲" : "▼"}</span>
+                            )}
+                          </div>
+                        </th>
+                        <th className="py-4 px-5 text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentAllUsers.map((usr) => {
+                        const avatarChar = (usr.displayName || usr.email || "U").charAt(0).toUpperCase();
+                        const isLive = liveSessions.some(s => {
+                          if (s.id !== usr.uid || s.status !== "Active") return false;
+                          const toMs = (val) => {
+                            if (!val) return 0;
+                            if (typeof val === "number") return val;
+                            if (val && typeof val.toMillis === "function") return val.toMillis();
+                            const parsed = new Date(val).getTime();
+                            return isNaN(parsed) ? 0 : parsed;
+                          };
+                          const lastSeenMs = toMs(s.lastSeen);
+                          return lastSeenMs > 0 && (Date.now() - lastSeenMs <= 90000);
+                        });
+
+                        return (
+                          <tr key={usr.uid} className="h-16 border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/20 transition-colors animate-fade-in">
+                            <td className="py-3 px-5">
+                              <div className="flex items-center gap-3">
+                                <div className="h-9 w-9 rounded-full bg-brand-primary/10 text-brand-primary border border-brand-primary/20 flex items-center justify-center text-xs font-black shrink-0">
+                                  {avatarChar}
+                                </div>
+                                <div className="flex flex-col text-left">
+                                  <span className="text-[12px] font-bold text-brand-text font-display leading-tight">{usr.displayName || "EBOOKVALA User"}</span>
+                                  {usr.role && (
+                                    <span className="text-[9px] font-mono font-bold uppercase text-brand-accent tracking-wider mt-0.5">{usr.role}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+
+                            <td className="py-4 px-5 font-mono text-[11px] text-brand-text">{usr.email}</td>
+                            <td className="py-4 px-5 font-semibold text-brand-text-secondary">{formatDateTime(usr.createdAt)}</td>
+                            <td className="py-4 px-5 font-semibold text-brand-text-secondary">{formatDateTime(usr.lastLoginAt)}</td>
+                            <td className="py-4 px-5 text-center font-mono font-bold text-brand-text text-[11px]">{usr.loginCount || 0}</td>
+                            <td className="py-4 px-5 text-right">
+                              {isLive ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold bg-brand-success/10 text-brand-success select-none">
+                                  <span className="relative flex h-1.5 w-1.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-success opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-brand-success"></span>
+                                  </span>
+                                  LIVE NOW
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold bg-brand-text-secondary/10 text-brand-text-secondary select-none">
+                                  OFFLINE
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {totalAllUsersPages > 1 && (
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-5 py-4 bg-brand-bg-secondary select-none border-t border-brand-border">
+                    <span className="text-[10px] font-bold text-brand-text-secondary uppercase">
+                      Page {currentPageAllUsers} of {totalAllUsersPages} • Total {totalAllUsersCount} records
+                    </span>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentPageAllUsers(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPageAllUsers === 1}
+                        className="h-8.5 px-4 text-xs font-bold rounded-full border-brand-border select-none cursor-pointer"
+                      >
+                        Prev
+                      </Button>
+                      
+                      <div className="flex gap-1">
+                        {Array.from({ length: totalAllUsersPages }, (_, i) => i + 1).map((pNum) => (
+                          <button
+                            key={pNum}
+                            onClick={() => setCurrentPageAllUsers(pNum)}
+                            className={`h-8.5 w-8.5 rounded-full text-xs font-bold flex items-center justify-center transition-all cursor-pointer ${
+                              currentPageAllUsers === pNum
+                                ? "bg-brand-accent text-white shadow-sm"
+                                : "text-brand-text-secondary hover:text-brand-text hover:bg-brand-border/40"
+                            }`}
+                          >
+                            {pNum}
+                          </button>
+                        ))}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => setCurrentPageAllUsers(prev => Math.min(prev + 1, totalAllUsersPages))}
+                        disabled={currentPageAllUsers === totalAllUsersPages}
+                        className="h-8.5 px-4 text-xs font-bold rounded-full border-brand-border select-none cursor-pointer"
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-20 text-center select-none bg-brand-card border border-brand-border rounded-[20px] shadow-sm">
+                <AlertCircle className="h-10 w-10 text-brand-text-secondary/35 mb-3.5" />
+                <h4 className="text-sm font-bold text-brand-text">No user records found</h4>
+                <p className="text-xs text-brand-text-secondary mt-1 max-w-[280px]">We couldn't find any registered accounts matching your search query.</p>
               </div>
             )}
           </div>

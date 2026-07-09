@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, LogOut } from "lucide-react";
 import { useAuth } from "../../hooks/useAuth";
+import { useApp } from "../../store/AppContext";
 
 const EXPANDED_WIDTH = 228;
 const COLLAPSED_WIDTH = 72;
@@ -167,6 +168,7 @@ const SidebarContent = ({
   showProfile = true,
 }) => {
   const { user, logout } = useAuth();
+  const { rtdbAdminSynced } = useApp();
   const navigate = useNavigate();
   const hasNavLogout = links.some((l) => l.action === "logout");
 
@@ -179,6 +181,7 @@ const SidebarContent = ({
 
   useEffect(() => {
     if (user?.role !== "admin") return;
+    if (!rtdbAdminSynced) return;
 
     let active = true;
     let unsubscribeRtdb;
@@ -246,7 +249,7 @@ const SidebarContent = ({
       active = false;
       if (unsubscribeRtdb) unsubscribeRtdb();
     };
-  }, [user]);
+  }, [user, rtdbAdminSynced]);
 
   const handleLogout = () => {
     logout();

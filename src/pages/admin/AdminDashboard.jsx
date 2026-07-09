@@ -21,6 +21,7 @@ import { uploadFile } from "../../services/storage";
 import { toast } from "react-hot-toast";
 import { SearchBox } from "../../components/ui/SearchBox";
 import { useTheme } from "../../hooks/useTheme";
+import { useApp } from "../../store/AppContext";
 
 const DOWNLOADS_TREND = Array.from({ length: 30 }).map((_, i) => ({
   day: `Day ${i + 1}`,
@@ -34,6 +35,7 @@ export const AdminDashboard = () => {
   const navigate = useNavigate();
   
   const { updateTheme } = useTheme();
+  const { rtdbAdminSynced } = useApp();
   useEffect(() => {
     updateTheme("dark");
   }, []);
@@ -552,6 +554,8 @@ export const AdminDashboard = () => {
 
   // Firebase Realtime Database Listener for Live Sessions
   useEffect(() => {
+    if (!rtdbAdminSynced) return;
+
     let active = true;
     let unsubscribe;
 
@@ -581,7 +585,7 @@ export const AdminDashboard = () => {
       active = false;
       if (unsubscribe) unsubscribe();
     };
-  }, []);
+  }, [rtdbAdminSynced]);
 
 
 

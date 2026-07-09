@@ -24,6 +24,7 @@ export const AppProvider = ({ children }) => {
   
   // Payment Simulation Overlay States
   const [activePayment, setActivePayment] = useState(null);
+  const [rtdbAdminSynced, setRtdbAdminSynced] = useState(false);
 
   // Helper to apply theme classes to documentElement
   const applyTheme = (t) => {
@@ -203,8 +204,18 @@ export const AppProvider = ({ children }) => {
     if (user && user.role === "admin") {
       import("firebase/database").then(({ getDatabase, ref, set }) => {
         const db = getDatabase();
-        set(ref(db, `users/${user.uid}/role`), "admin");
-      }).catch(err => console.error("Admin role sync error:", err));
+        set(ref(db, `users/${user.uid}/role`), "admin")
+          .then(() => setRtdbAdminSynced(true))
+          .catch(err => {
+            console.error("Admin role sync error:", err);
+            setRtdbAdminSynced(false);
+          });
+      }).catch(err => {
+        console.error("Admin role DB import error:", err);
+        setRtdbAdminSynced(false);
+      });
+    } else {
+      setRtdbAdminSynced(false);
     }
   }, [user]);
 
@@ -269,6 +280,7 @@ export const AppProvider = ({ children }) => {
         theme,
         activePayment,
         setActivePayment,
+        rtdbAdminSynced,
         toggleTheme,
         updateTheme,
         login,

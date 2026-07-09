@@ -181,7 +181,7 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0.5rem;
 }
 
 .sm-panel-itemWrap {
@@ -203,7 +203,7 @@
   background: transparent;
   border: none;
   outline: none;
-  height: 3.5rem;
+  height: 2.75rem;
   width: 100%;
 }
 

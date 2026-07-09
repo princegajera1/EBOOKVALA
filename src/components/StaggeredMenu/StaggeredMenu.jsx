@@ -333,7 +333,7 @@ export const StaggeredMenu = ({
       <header className="staggered-menu-header" aria-label="Main navigation header">
         <div className="sm-logo" aria-label="Logo">
           <span className="font-display font-black tracking-tight select-none text-[19px]">
-            <span className={open ? "text-white" : "text-brand-text"}>EBOOK</span>
+            <span className="text-brand-text">EBOOK</span>
             <span className="text-[#3B82F6]">VALA</span>
           </span>
         </div>

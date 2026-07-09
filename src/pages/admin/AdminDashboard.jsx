@@ -38,7 +38,7 @@ export const AdminDashboard = () => {
   const { rtdbAdminSynced } = useApp();
   useEffect(() => {
     updateTheme("dark");
-  }, []);
+  }, [updateTheme]);
 
   // Database states
   const [books, setBooks] = useState([]);
@@ -306,18 +306,7 @@ export const AdminDashboard = () => {
     }
   };
 
-  const handleVerifyAuthor = async (authorId, status) => {
-    try {
-      await dbService.updateAuthor(authorId, { 
-        isVerified: status === "approve", 
-        verificationStatus: status === "approve" ? "approved" : "unverified" 
-      });
-      toast.success(status === "approve" ? "Author verified!" : "Verification rejected.");
-      loadAdminData();
-    } catch (err) {
-      toast.error("Action failed.");
-    }
-  };
+
 
   const handleToggleUserRole = async (uid, currentRole) => {
     const newRole = currentRole === "author" ? "reader" : "author";
@@ -479,29 +468,7 @@ export const AdminDashboard = () => {
     }
   };
 
-  // Categories CRUD
-  const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return;
-    try {
-      await dbService.createCategory(newCategoryName);
-      toast.success("Category added!");
-      setNewCategoryName("");
-      loadAdminData();
-    } catch (err) {
-      toast.error("Failed to create category.");
-    }
-  };
 
-  const handleDeleteCategory = async (id) => {
-    if (!window.confirm("Delete this category?")) return;
-    try {
-      await dbService.deleteCategory(id);
-      toast.success("Category deleted.");
-      loadAdminData();
-    } catch (err) {
-      toast.error("Failed to delete category.");
-    }
-  };
 
   // Custom Field Builder CRUD
   const handleCreateCustomField = (e) => {
@@ -2908,7 +2875,8 @@ export const AdminDashboard = () => {
           { id: "security", label: "Security & Auth" },
           { id: "storage", label: "Media & Storage" },
           { id: "legal", label: "Legal Policies" },
-          { id: "system", label: "System Parameters" }
+          { id: "system", label: "System Parameters" },
+          { id: "custom-fields", label: "Dynamic Fields" }
         ];
 
         return (
@@ -3131,6 +3099,65 @@ export const AdminDashboard = () => {
                           className="h-4.5 w-4.5 text-brand-accent rounded border-brand-border focus:ring-brand-accent cursor-pointer accent-brand-accent"
                         />
                       </div>
+                    </div>
+                  )}
+
+                  {/* Dynamic Custom Fields Sub-Tab */}
+                  {settingsSubTab === "custom-fields" && (
+                    <div className="flex flex-col gap-5 animate-fade-in w-full text-left">
+                      <div className="flex items-center justify-between border-b border-brand-border/40 pb-3.5 mb-2">
+                        <div>
+                          <p className="text-xs font-bold text-brand-text">Dynamic Meta Fields</p>
+                          <p className="text-[10px] text-brand-text-secondary mt-0.5">Manage custom book metadata attributes.</p>
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="primary" 
+                          onClick={() => {
+                            setFieldForm({ id: "", label: "", type: "text", required: false, options: "", defaultValue: "" });
+                            setIsFieldModalOpen(true);
+                          }}
+                          className="h-9 px-4 text-xs font-bold rounded-full shadow-sm"
+                        >
+                          Add Custom Field
+                        </Button>
+                      </div>
+
+                      {customFields.length > 0 ? (
+                        <div className="flex flex-col gap-3">
+                          {customFields.map((field) => (
+                            <div key={field.id} className="flex items-center justify-between p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
+                              <div>
+                                <p className="text-xs font-bold text-brand-text flex items-center gap-2">
+                                  {field.label}
+                                  <span className="font-mono text-[9px] bg-brand-border text-brand-text-secondary px-1.5 py-0.5 rounded font-bold uppercase">
+                                    {field.id}
+                                  </span>
+                                </p>
+                                <p className="text-[10px] text-brand-text-secondary mt-1.5 font-mono">
+                                  Type: <span className="font-bold text-brand-accent">{field.type}</span> • Required: <span className="font-bold">{field.required ? "Yes" : "No"}</span> {field.defaultValue && `• Default: "${field.defaultValue}"`}
+                                </p>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                onClick={() => {
+                                  if (window.confirm(`Delete custom field "${field.label}"?`)) {
+                                    handleDeleteCustomField(field.id);
+                                  }
+                                }}
+                                className="h-8.5 w-8.5 p-0 text-brand-danger hover:bg-brand-danger/10 rounded-full flex items-center justify-center cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-6 text-brand-text-secondary text-xs">
+                          No dynamic fields configured.
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

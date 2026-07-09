@@ -82,14 +82,14 @@ const PillNav = ({
           {isRouterLink(homeItem.href) ? (
             <Link className="pill-logo-text" to={homeItem.href} aria-label="Home">
               <span className="font-display font-black tracking-tight select-none text-xl">
-                <span className="text-zinc-950 dark:text-white">EBOOK</span>
+                <span className="text-brand-text">EBOOK</span>
                 <span className="text-[#3B82F6]">VALA</span>
               </span>
             </Link>
           ) : (
             <a className="pill-logo-text" href={homeItem.href || '#'} aria-label="Home">
               <span className="font-display font-black tracking-tight select-none text-xl">
-                <span className="text-zinc-950 dark:text-white">EBOOK</span>
+                <span className="text-brand-text">EBOOK</span>
                 <span className="text-[#3B82F6]">VALA</span>
               </span>
             </a>

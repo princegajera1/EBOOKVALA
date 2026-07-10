@@ -52,7 +52,7 @@ const SidebarNavItem = ({
           isLogout
             ? "text-brand-danger hover:bg-brand-danger/8 hover:text-brand-danger font-medium"
             : isActive
-              ? "text-white bg-brand-bg-secondary font-semibold"
+              ? "text-brand-text bg-brand-bg-secondary font-semibold"
               : "text-brand-text-secondary hover:bg-brand-bg-secondary/80 hover:text-brand-text font-medium"
         }
       `}

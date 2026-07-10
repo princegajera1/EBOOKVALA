@@ -697,18 +697,13 @@ export const AdminDashboard = () => {
   const getTopCategoriesData = () => {
     const countMap = {};
     books.forEach(b => {
-      if (b.category) {
-        countMap[b.category] = (countMap[b.category] || 0) + 1;
-      }
+      const cats = Array.isArray(b.categories) ? b.categories : (b.category ? [b.category] : []);
+      cats.forEach(cat => {
+        if (cat) {
+          countMap[cat] = (countMap[cat] || 0) + 1;
+        }
+      });
     });
-    if (Object.keys(countMap).length === 0) {
-      return [
-        { name: "Fiction", value: 4 },
-        { name: "Sci-Fi", value: 3 },
-        { name: "Biography", value: 2 },
-        { name: "Self-Help", value: 2 }
-      ];
-    }
     return Object.entries(countMap).map(([name, value]) => ({ name, value }));
   };
   const topCategoriesData = getTopCategoriesData();
@@ -726,13 +721,6 @@ export const AdminDashboard = () => {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name, downloads]) => ({ name, downloads }));
-    if (sorted.length === 0) {
-      return [
-        { name: "Amara K.", downloads: 12 },
-        { name: "Rohan G.", downloads: 9 },
-        { name: "Prince G.", downloads: 8 }
-      ];
-    }
     return sorted;
   };
   const topAuthorsData = getTopAuthorsData();
@@ -953,7 +941,7 @@ export const AdminDashboard = () => {
                   { label: "Pending Reports", value: books.filter(b => b.status === "flagged" || b.reported).length || 2, trend: "-15.0%", isPositive: false, icon: ShieldAlert, seed: 8 }
                 ].map((card, idx) => {
                   const sparklineData = Array.from({ length: 8 }).map((_, i) => ({
-                    value: Math.floor(10 + Math.sin(i + card.seed) * 5 + Math.random() * 5)
+                    value: Math.floor(10 + Math.sin(i + card.seed) * 8)
                   }));
                   return (
                     <div key={idx} className="group bg-brand-card border border-brand-border rounded-[20px] p-5 shadow-brand hover:-translate-y-0.5 transition-all duration-200">
@@ -1598,8 +1586,8 @@ export const AdminDashboard = () => {
             const signupCount = usersList.filter(u => u.createdAt && new Date(u.createdAt).toDateString() === d.toDateString()).length;
             data.push({
               name: dayName,
-              Downloads: downloadCount || Math.floor(1 + Math.random() * 3),
-              Signups: signupCount || Math.floor(1 + Math.random() * 2)
+              Downloads: downloadCount * 10,
+              Signups: signupCount * 10
             });
           }
           return data;
@@ -1620,9 +1608,9 @@ export const AdminDashboard = () => {
             }
           });
           return [
-            { name: "Desktop", value: desktop || 4 },
-            { name: "Mobile", value: mobile || 3 },
-            { name: "Tablet", value: tablet || 1 }
+            { name: "Desktop", value: desktop },
+            { name: "Mobile", value: mobile },
+            { name: "Tablet", value: tablet }
           ];
         };
         const deviceBreakdownData = getDeviceBreakdownData();

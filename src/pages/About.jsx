@@ -37,9 +37,9 @@ export const About = () => {
       image: princeAvatar
     },
     {
-      name: "Amara Dev",
-      role: "Curator & Editorial Lead",
-      quote: "Curating high-value tech, SaaS, and self-help titles. Our standard is simple: if we wouldn't spend a weekend reading it, it doesn't get cataloged.",
+      name: "Prince Bhanderi",
+      role: "Social Media Executive",
+      quote: "Amplifying our message and growing the EBOOKVALA community. I focus on keeping our social presence clean, helpful, and engaging across all platforms, connecting curious minds with high-fidelity knowledge.",
       image: amaraAvatar
     }
   ];

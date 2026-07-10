@@ -107,7 +107,7 @@ export const AdminDashboard = () => {
     }
   };
 
-  const [newCategoryName, setNewCategoryName] = useState("");
+  // const [newCategoryName, setNewCategoryName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoadingData, setIsLoadingData] = useState(true);
 
@@ -126,6 +126,7 @@ export const AdminDashboard = () => {
   const [sortFieldAllUsers, setSortFieldAllUsers] = useState("createdAt");
   const [sortOrderAllUsers, setSortOrderAllUsers] = useState("desc");
 
+  /*
   const [currentPageReports, setCurrentPageReports] = useState(1);
   const [pageSizeReports, setPageSizeReports] = useState(10);
   const [filterReportStatus, setFilterReportStatus] = useState("all");
@@ -134,6 +135,7 @@ export const AdminDashboard = () => {
     { id: "rep-1", type: "Book", targetId: "book-1", targetName: "Atomic Habits", reportedBy: "john.doe@gmail.com", reason: "Copyright violation", status: "pending", createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
     { id: "rep-2", type: "Review", targetId: "rev-12", targetName: "Great book but layout is bad", reportedBy: "alex.read@gmail.com", reason: "Spam / Abusive language", status: "pending", createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() },
   ]);
+  */
 
   // Notifications Dispatch States
   const [notifTitle, setNotifTitle] = useState("");
@@ -160,10 +162,12 @@ export const AdminDashboard = () => {
   const [pageSizeAuthors, setPageSizeAuthors] = useState(5);
 
   // Categories Page States
+  /*
   const [newCategorySlug, setNewCategorySlug] = useState("");
   const [editingCategory, setEditingCategory] = useState(null);
   const [currentPageCategories, setCurrentPageCategories] = useState(1);
   const [pageSizeCategories, setPageSizeCategories] = useState(5);
+  */
 
   // Live Tracker States
   const [liveTrackerSearch, setLiveTrackerSearch] = useState("");
@@ -625,8 +629,6 @@ export const AdminDashboard = () => {
     { id: "authors", label: "Authors", icon: ShieldCheck },
     { id: "users", label: "Readers", icon: Users },
     { id: "all-users", label: "All Users", icon: UserCheck },
-    { id: "categories", label: "Categories", icon: Grid },
-    { id: "reports", label: "Reports", icon: ShieldAlert },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
     { id: "live-tracker", label: "Live Tracker", icon: Zap },
     { id: "activity", label: "Activity", icon: Activity },
@@ -1986,376 +1988,19 @@ export const AdminDashboard = () => {
         );
       })()}
 
-      {/* CATEGORIES MANAGEMENT TAB */}
+      {/* CATEGORIES MANAGEMENT TAB REMOVED */}
+      {/* 
       {activeTab === "categories" && (() => {
-        const handleAddCategory = async (e) => {
-          e.preventDefault();
-          if (!newCategoryName.trim()) {
-            toast.error("Category name is required.");
-            return;
-          }
-          try {
-            const addedCat = await dbService.createCategory(newCategoryName.trim());
-            setCategories(prev => [...prev, addedCat]);
-            setNewCategoryName("");
-            toast.success("Category created successfully!");
-          } catch (err) {
-            toast.error("Failed to add category.");
-          }
-        };
-
-        const handleDeleteCategory = async (catId) => {
-          try {
-            await dbService.deleteCategory(catId);
-            setCategories(prev => prev.filter(c => c.id !== catId));
-            toast.success("Category deleted.");
-          } catch (err) {
-            toast.error("Failed to delete category.");
-          }
-        };
-
-        const categoriesFiltered = categories.filter(c => {
-          return c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                 c.slug.toLowerCase().includes(searchQuery.toLowerCase());
-        });
-
-        const totalCategoriesCount = categoriesFiltered.length;
-        const totalCategoriesPages = Math.ceil(totalCategoriesCount / pageSizeCategories) || 1;
-        const indexOfLastCategory = currentPageCategories * pageSizeCategories;
-        const indexOfFirstCategory = indexOfLastCategory - pageSizeCategories;
-        const currentCategories = categoriesFiltered.slice(indexOfFirstCategory, indexOfLastCategory);
-
-        return (
-          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
-            <div>
-              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">eBook Categories</h1>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Active genre categories config matrix.</p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Form creation */}
-              <form onSubmit={handleAddCategory} className="lg:col-span-5 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
-                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Create Category</h3>
-                
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold text-brand-text-secondary uppercase">Category Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter category name (e.g. Technology)..."
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-[10px] px-3.5 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-medium"
-                  />
-                </div>
-
-                <Button type="submit" variant="primary" className="h-9 w-full rounded-full text-xs font-bold mt-2">
-                  Create Category Tag
-                </Button>
-              </form>
-
-              {/* Table view */}
-              <div className="lg:col-span-7 flex flex-col gap-4">
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
-                  <input
-                    type="text"
-                    placeholder="Search category tags..."
-                    value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageCategories(1); }}
-                    className="w-full h-9 bg-brand-card border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
-                  />
-                </div>
-
-                <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs text-left text-brand-text-secondary">
-                      <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
-                        <tr>
-                          <th className="py-4 px-5">Name</th>
-                          <th className="py-4 px-5">Slug</th>
-                          <th className="py-4 px-5">Item Count</th>
-                          <th className="py-4 px-5 text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentCategories.length > 0 ? (
-                          currentCategories.map((c) => (
-                            <tr key={c.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
-                              <td className="py-4 px-5 font-bold text-brand-text font-display">{c.name}</td>
-                              <td className="py-4 px-5 font-mono text-[10.5px]">{c.slug}</td>
-                              <td className="py-4 px-5 font-bold text-brand-text">{c.count || 0} books</td>
-                              <td className="py-4 px-5 text-right">
-                                <button 
-                                  onClick={() => handleDeleteCategory(c.id)}
-                                  className="px-2.5 py-1.5 rounded-full bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20 text-[10px] font-bold cursor-pointer transition-colors"
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
-                              No categories configured.
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Pagination Controls */}
-                {totalCategoriesCount > 0 && (
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium mt-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-brand-text-secondary">Rows per page:</span>
-                      <select
-                        value={pageSizeCategories}
-                        onChange={(e) => { setPageSizeCategories(Number(e.target.value)); setCurrentPageCategories(1); }}
-                        className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
-                      >
-                        {[5, 10, 20].map((size) => (
-                          <option key={size} value={size}>{size}</option>
-                        ))}
-                      </select>
-                      <span className="text-brand-text-secondary/60 ml-2">
-                        Showing {indexOfFirstCategory + 1} to {Math.min(indexOfLastCategory, totalCategoriesCount)} of {totalCategoriesCount} categories
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setCurrentPageCategories(prev => Math.max(prev - 1, 1))}
-                        disabled={currentPageCategories === 1}
-                        className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      >
-                        &larr;
-                      </button>
-
-                      {Array.from({ length: totalCategoriesPages }).map((_, i) => {
-                        const pNum = i + 1;
-                        return (
-                          <button
-                            key={pNum}
-                            onClick={() => setCurrentPageCategories(pNum)}
-                            className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
-                              currentPageCategories === pNum
-                                ? "border-brand-accent bg-brand-accent text-brand-text"
-                                : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
-                            }`}
-                          >
-                            {pNum}
-                          </button>
-                        );
-                      })}
-
-                      <button
-                        onClick={() => setCurrentPageCategories(prev => Math.min(prev + 1, totalCategoriesPages))}
-                        disabled={currentPageCategories === totalCategoriesPages}
-                        className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                      >
-                        &rarr;
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        );
+        // ... (Render logic commented out)
       })()}
+      */}
 
+      {/* REPORTS MODERATION TAB REMOVED */}
+      {/* 
       {activeTab === "reports" && (() => {
-        const handleDismissReport = (reportId) => {
-          setReports(prev => prev.filter(r => r.id !== reportId));
-          toast.success("Report dismissed.");
-        };
-
-        const handleResolveAction = (reportId, actionLabel) => {
-          setReports(prev => prev.filter(r => r.id !== reportId));
-          toast.success(`Action taken: ${actionLabel}. Report resolved.`);
-        };
-
-        const reportsFiltered = reports.filter(r => {
-          const matchesSearch = 
-            r.targetName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            r.reason?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            r.reportedBy?.toLowerCase().includes(searchQuery.toLowerCase());
-          const matchesStatus = filterReportStatus === "all" || r.status === filterReportStatus;
-          return matchesSearch && matchesStatus;
-        });
-
-        const totalReportsCount = reportsFiltered.length;
-        const totalReportsPages = Math.ceil(totalReportsCount / pageSizeReports) || 1;
-        const indexOfLastReport = currentPageReports * pageSizeReports;
-        const indexOfFirstReport = indexOfLastReport - pageSizeReports;
-        const currentReports = reportsFiltered.slice(indexOfFirstReport, indexOfLastReport);
-
-        return (
-          <div className="flex flex-col gap-6 text-left animate-fade-in">
-            <div>
-              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Moderation Queue</h1>
-              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Content flags, copyright notices, and warning triggers.</p>
-            </div>
-
-            {/* Filters Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
-              <div className="flex flex-wrap items-center gap-3 w-full">
-                <div className="relative w-full sm:w-60">
-                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
-                  <input
-                    type="text"
-                    placeholder="Search reports, reasons..."
-                    value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPageReports(1); }}
-                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold placeholder:text-brand-text-secondary/30"
-                  />
-                </div>
-
-                <select
-                  value={filterReportStatus}
-                  onChange={(e) => { setFilterReportStatus(e.target.value); setCurrentPageReports(1); }}
-                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
-                >
-                  <option value="all">All Reports</option>
-                  <option value="pending">Pending</option>
-                  <option value="resolved">Resolved</option>
-                </select>
-
-                {(searchQuery || filterReportStatus !== "all") && (
-                  <button
-                    onClick={() => { setSearchQuery(""); setFilterReportStatus("all"); setCurrentPageReports(1); }}
-                    className="text-xs text-brand-text-secondary hover:text-brand-text font-bold transition-colors cursor-pointer select-none"
-                  >
-                    Reset Filters
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Table Container */}
-            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left text-brand-text-secondary">
-                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
-                    <tr>
-                      <th className="py-4 px-5">Reported Target</th>
-                      <th className="py-4 px-5">Type</th>
-                      <th className="py-4 px-5">Reason</th>
-                      <th className="py-4 px-5">Reported By</th>
-                      <th className="py-4 px-5 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {currentReports.length > 0 ? (
-                      currentReports.map((r) => (
-                        <tr key={r.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
-                          <td className="py-4 px-5 font-bold text-brand-text font-display">{r.targetName}</td>
-                          <td className="py-4 px-5 capitalize">
-                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
-                              r.type === "Book" ? "bg-brand-accent/10 text-brand-accent" : "bg-brand-warning/10 text-brand-warning"
-                            }`}>
-                              {r.type}
-                            </span>
-                          </td>
-                          <td className="py-4 px-5 font-semibold text-brand-text-secondary">{r.reason}</td>
-                          <td className="py-4 px-5 font-mono">{r.reportedBy}</td>
-                          <td className="py-4 px-5 text-right">
-                            <div className="flex gap-1.5 justify-end select-none">
-                              <button 
-                                onClick={() => handleDismissReport(r.id)}
-                                className="px-2.5 py-1.5 rounded-full border border-brand-border text-brand-text hover:bg-brand-bg-secondary text-[10px] font-bold cursor-pointer transition-colors"
-                              >
-                                Dismiss
-                              </button>
-                              <button 
-                                onClick={() => handleResolveAction(r.id, "Warn User")}
-                                className="px-2.5 py-1.5 rounded-full bg-brand-warning/10 text-brand-warning hover:bg-brand-warning/20 text-[10px] font-bold cursor-pointer transition-colors"
-                              >
-                                Warn User
-                              </button>
-                              <button 
-                                onClick={() => handleResolveAction(r.id, "Delete Target")}
-                                className="px-2.5 py-1.5 rounded-full bg-brand-danger/10 text-brand-danger hover:bg-brand-danger/20 text-[10px] font-bold cursor-pointer transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center font-semibold italic text-brand-text-secondary select-none">
-                          No flags pending review.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Pagination Controls */}
-            {totalReportsCount > 0 && (
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 select-none text-[11px] font-medium">
-                <div className="flex items-center gap-2">
-                  <span className="text-brand-text-secondary">Rows per page:</span>
-                  <select
-                    value={pageSizeReports}
-                    onChange={(e) => { setPageSizeReports(Number(e.target.value)); setCurrentPageReports(1); }}
-                    className="h-8 bg-brand-card border border-brand-border rounded-[8px] px-2 text-xs text-brand-text font-bold focus:outline-none cursor-pointer"
-                  >
-                    {[5, 10, 20, 50].map((size) => (
-                      <option key={size} value={size}>{size}</option>
-                    ))}
-                  </select>
-                  <span className="text-brand-text-secondary/60 ml-2">
-                    Showing {indexOfFirstReport + 1} to {Math.min(indexOfLastReport, totalReportsCount)} of {totalReportsCount} flags
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => setCurrentPageReports(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPageReports === 1}
-                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                  >
-                    &larr;
-                  </button>
-
-                  {Array.from({ length: totalReportsPages }).map((_, i) => {
-                    const pNum = i + 1;
-                    return (
-                      <button
-                        key={pNum}
-                        onClick={() => setCurrentPageReports(pNum)}
-                        className={`h-8 w-8 flex items-center justify-center rounded-[8px] border font-bold transition-colors cursor-pointer ${
-                          currentPageReports === pNum
-                            ? "border-brand-accent bg-brand-accent text-brand-text"
-                            : "border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text"
-                        }`}
-                      >
-                        {pNum}
-                      </button>
-                    );
-                  })}
-
-                  <button
-                    onClick={() => setCurrentPageReports(prev => Math.min(prev + 1, totalReportsPages))}
-                    disabled={currentPageReports === totalReportsPages}
-                    className="h-8 w-8 flex items-center justify-center rounded-[8px] border border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
-                  >
-                    &rarr;
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        );
+        // ... (Render logic commented out)
       })()}
+      */}
 
       {/* ACTIVITY LOGS TAB */}
       {activeTab === "activity" && (() => {

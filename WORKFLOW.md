@@ -32,16 +32,31 @@ We maintain a strict separation between development/staging and production branc
 
 ---
 
-## 2. Environment Variables Setup
+## 2. Environment Variables & Firebase Project Scoping
 
-Sensitive keys must never be hardcoded in source files. All keys and API endpoints are loaded dynamically from environment variables.
+We maintain separate Firebase projects for development/testing and production. **Never treat staging databases as sources of truth for live production data.**
 
-### Local Development
+### Environment Scopes
+| Environment | Firebase Project ID | Purpose | URL |
+| :--- | :--- | :--- | :--- |
+| **Local Development** | `ebookvala-53c0d` | Code tweaks, local tests, and mock seeding. | `http://localhost:5173` |
+| **Staging / Preview** | `ebookvala-53c0d` | Validation of builds on Vercel preview deploys. | Vercel Preview URLs |
+| **Live Production** | `ebookvala-official` | Single Source of Truth for real users, books, and sales. | `https://ebookvala-lts4-black.vercel.app` |
+
+> [!WARNING]
+> Users, authors, or books created in local development or staging/preview environments **will not** be visible in production. Any data that needs to be live in production must be created directly on the production site, or manually migrated by an administrator.
+
+### Local Development Setup
 *   Create a `.env.local` file at the root (this file is `.gitignore`d).
 *   Use `.env.example` as a template for the keys that need to be defined.
+*   By default, local development points to `ebookvala-53c0d`.
 
 ### Production & Preview (Vercel)
-Ensure the following variables are configured under your Vercel Project settings:
+Ensure the following variables are configured under your Vercel Project settings.
+*   **Production Environment Variables**: Must point to `ebookvala-official` credentials.
+*   **Preview Environment Variables**: Must point to `ebookvala-53c0d` credentials.
+
+Variables to configure:
 *   `VITE_FIREBASE_API_KEY`
 *   `VITE_FIREBASE_AUTH_DOMAIN`
 *   `VITE_FIREBASE_PROJECT_ID`

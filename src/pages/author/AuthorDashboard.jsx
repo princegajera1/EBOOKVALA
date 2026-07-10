@@ -139,7 +139,7 @@ export const AuthorDashboard = () => {
   // Upload Wizard states (with new schema fields)
   const [wizardStep, setWizardStep] = useState(1);
   const [newBook, setNewBook] = useState({
-    title: "", subtitle: "", description: "", aiDescription: "",
+    title: "", subtitle: "", authorName: "", description: "", aiDescription: "",
     categories: [], tags: [], language: "English", isbn: "",
     publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
     coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
@@ -161,6 +161,16 @@ export const AuthorDashboard = () => {
     const tab = searchParams.get("tab");
     if (tab) setActiveTab(tab);
   }, [searchParams]);
+
+  // Prefill author name with user's display name
+  useEffect(() => {
+    if (user && !newBook.authorName) {
+      setNewBook(prev => ({
+        ...prev,
+        authorName: prev.authorName || user.displayName || ""
+      }));
+    }
+  }, [user]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
@@ -235,6 +245,10 @@ export const AuthorDashboard = () => {
       toast.error("Please enter a book title.");
       return;
     }
+    if (!newBook.authorName || !newBook.authorName.trim()) {
+      toast.error("Please enter an author name.");
+      return;
+    }
     if (newBook.categories.length === 0) {
       toast.error("Please select at least one category.");
       return;
@@ -272,13 +286,13 @@ export const AuthorDashboard = () => {
         await dbService.createBook({
           ...payload,
           authorId: user.uid,
-          authorName: user.displayName
+          authorName: payload.authorName.trim() || user.displayName
         });
         toast.success("eBook created successfully!", { id: toastId });
       }
       
       setNewBook({
-        title: "", subtitle: "", description: "", aiDescription: "",
+        title: "", subtitle: "", authorName: authorProfile?.displayName || user.displayName || "", description: "", aiDescription: "",
         categories: [], tags: [], language: "English", isbn: "",
         publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
         coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
@@ -300,6 +314,7 @@ export const AuthorDashboard = () => {
     setNewBook({
       title: book.title || "",
       subtitle: book.subtitle || "",
+      authorName: book.authorName || "",
       description: book.description || "",
       aiDescription: book.aiDescription || "",
       categories: book.categories || [],
@@ -762,6 +777,13 @@ export const AuthorDashboard = () => {
                 required
               />
               <Input
+                label="Author Name"
+                placeholder="e.g. Amara Dev"
+                value={newBook.authorName || ""}
+                onChange={(e) => setNewBook(prev => ({ ...prev, authorName: e.target.value }))}
+                required
+              />
+              <Input
                 label="Subtitle"
                 placeholder="e.g. A practical guide to building highly resilient web applications."
                 value={newBook.subtitle}
@@ -790,7 +812,7 @@ export const AuthorDashboard = () => {
               <div className="flex justify-end mt-2">
                 <Button 
                   onClick={() => setWizardStep(2)} 
-                  disabled={!newBook.title.trim()}
+                  disabled={!newBook.title.trim() || !newBook.authorName || !newBook.authorName.trim()}
                   variant="primary"
                   className="rounded-full text-xs font-bold h-11 px-6 shadow-sm"
                 >
@@ -1046,6 +1068,11 @@ export const AuthorDashboard = () => {
                 <div className="text-left min-w-0 flex-1">
                   <h4 className="text-sm font-bold text-brand-text font-display truncate">{newBook.title}</h4>
                   <p className="text-xs text-brand-text-secondary mt-0.5 truncate">{newBook.subtitle}</p>
+                  {newBook.authorName && (
+                    <p className="text-[11px] text-brand-text-secondary mt-1 font-medium">
+                      by <span className="font-semibold text-brand-text">{newBook.authorName}</span>
+                    </p>
+                  )}
                   <div className="flex gap-1.5 mt-2 flex-wrap">
                     <span className="bg-brand-accent/10 text-brand-accent text-[9px] font-bold rounded-full px-2.5 py-0.5 tracking-wider uppercase">
                       {newBook.categories[0] || "Uncategorized"}

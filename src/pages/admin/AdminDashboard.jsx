@@ -5,7 +5,7 @@ import {
   Plus, Settings, Grid, BarChart2, ShieldAlert, Edit, FileText, Upload, Download,
   Zap, Activity, Cpu, Database, DatabaseZap, Terminal, Bell, Lock, ToggleLeft,
   Sliders, Calendar, PlusCircle, ArrowRight, Play, Eye, Layers, DollarSign,
-  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles, HelpCircle
+  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles, HelpCircle, Home
 } from "lucide-react";
 import { 
   AreaChart, Area, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -619,6 +619,7 @@ export const AdminDashboard = () => {
 
 
   const sidebarLinks = [
+    { id: "home", label: "Home", icon: Home, to: "/" },
     { id: "overview", label: "Dashboard", icon: BarChart2 },
     { id: "books", label: "Books", icon: BookOpen },
     { id: "authors", label: "Authors", icon: ShieldCheck },

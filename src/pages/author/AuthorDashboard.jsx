@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { 
   BarChart2, BookOpen, Upload, Star, Users, Settings, Download,
   ArrowRight, ArrowLeft, Sparkles, Check, CheckCircle2, 
-  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages, Bookmark
+  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages, Bookmark, Home
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
@@ -466,6 +466,7 @@ export const AuthorDashboard = () => {
   };
 
   const sidebarLinks = [
+    { id: "home", label: "Home", icon: Home, to: "/" },
     { id: "overview", label: "Dashboard", icon: BarChart2 },
     { id: "books", label: "My Books", icon: BookOpen },
 

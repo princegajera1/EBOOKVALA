@@ -19,12 +19,17 @@ const SidebarNavItem = ({
   onLogout,
   layoutIdPrefix = "",
 }) => {
+  const navigate = useNavigate();
   const Icon = link.icon;
   const isLogout = link.action === "logout";
 
   const handleClick = () => {
     if (isLogout) {
       onLogout?.();
+      return;
+    }
+    if (link.to) {
+      navigate(link.to);
       return;
     }
     onTabChange?.(link.id);

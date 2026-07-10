@@ -7,13 +7,13 @@ import { getDatabase } from "firebase/database";
 
 // Firebase Configuration using verified project keys
 const firebaseConfig = {
-  apiKey: "AIzaSyDDNoQJeIxLTTNPpUyMMWlPf3DAyE4A6R8",
-  authDomain: "ebookvala-53c0d.firebaseapp.com",
-  projectId: "ebookvala-53c0d",
-  storageBucket: "ebookvala-53c0d.firebasestorage.app",
-  messagingSenderId: "931188621419",
-  appId: "1:931188621419:web:1cf9545a8eb521071f712e",
-  measurementId: "G-YSF5JQNZWY"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase App

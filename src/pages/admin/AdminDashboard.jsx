@@ -677,7 +677,7 @@ export const AdminDashboard = () => {
       d.setDate(today.getDate() - i);
       const dayName = days[d.getDay()];
       const count = orders.filter(o => o.createdAt && new Date(o.createdAt).toDateString() === d.toDateString()).length;
-      data.push({ name: dayName, reads: count || Math.floor(1 + Math.random() * 3) });
+      data.push({ name: dayName, reads: count * 10 });
     }
     return data;
   };
@@ -688,7 +688,7 @@ export const AdminDashboard = () => {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     return months.map((m, idx) => {
       const count = usersList.filter(u => u.createdAt && new Date(u.createdAt).getMonth() === idx).length;
-      return { name: m, users: count || Math.floor(1 + (idx * 2) % 5) };
+      return { name: m, users: count * 10 };
     });
   };
   const monthlyGrowthData = getMonthlyGrowthData();

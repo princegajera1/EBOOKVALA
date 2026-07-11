@@ -17,6 +17,7 @@ import {
   increment
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { deleteFile } from "./storage";
 
 // Original Mock Seed Data to initialize Firestore if empty
 const SEED_AUTHORS = [
@@ -263,13 +264,17 @@ export const dbService = {
       try {
         // Primary: orderBy query (requires Firestore index on createdAt)
         const snap = await getDocs(query(colRef, orderBy("createdAt", "desc")));
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return snap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(b => !b.isDeleted);
       } catch (indexErr) {
         // Fallback: fetch all docs and sort in-memory (if index missing)
         console.warn("getBooks orderBy index missing, falling back to in-memory sort:", indexErr.code);
         const snap = await getDocs(colRef);
         const books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        return books.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        return books
+          .filter(b => !b.isDeleted)
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
       }
     } catch (error) {
       console.error("Firestore getBooks error:", error);
@@ -403,9 +408,81 @@ export const dbService = {
     return { id: snap.id, ...snap.data() };
   },
   
-  deleteBook: async (id) => {
+  deleteBook: async (id, uid = "") => {
+    const docRef = doc(db, "books", id);
+    await updateDoc(docRef, {
+      isDeleted: true,
+      deletedAt: new Date().toISOString(),
+      deletedBy: uid
+    });
+    return true;
+  },
+
+  restoreBook: async (id) => {
+    const docRef = doc(db, "books", id);
+    await updateDoc(docRef, {
+      isDeleted: false,
+      deletedAt: null,
+      deletedBy: null
+    });
+    return true;
+  },
+
+  permanentlyDeleteBook: async (id) => {
+    try {
+      const snap = await getDoc(doc(db, "books", id));
+      if (snap.exists()) {
+        const bookData = snap.data();
+        if (bookData.coverURL) {
+          await deleteFile(bookData.coverURL);
+        }
+        if (bookData.pdfURL) {
+          await deleteFile(bookData.pdfURL);
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to delete storage files for book:", id, err);
+    }
     await deleteDoc(doc(db, "books", id));
     return true;
+  },
+
+  getDeletedBooks: async () => {
+    try {
+      const colRef = collection(db, "books");
+      const snap = await getDocs(query(colRef, where("isDeleted", "==", true)));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      console.error("Firestore getDeletedBooks error:", error);
+      return [];
+    }
+  },
+
+  purgeExpiredSoftDeletedBooks: async () => {
+    try {
+      const colRef = collection(db, "books");
+      const snap = await getDocs(query(colRef, where("isDeleted", "==", true)));
+      const now = new Date();
+      const purgePromises = [];
+      
+      snap.docs.forEach(docSnap => {
+        const bookData = docSnap.data();
+        if (bookData.deletedAt) {
+          const deletedDate = new Date(bookData.deletedAt);
+          const diffMs = now - deletedDate;
+          const diffDays = diffMs / (1000 * 60 * 60 * 24);
+          if (diffDays >= 30) {
+            purgePromises.push(dbService.permanentlyDeleteBook(docSnap.id));
+          }
+        }
+      });
+
+      if (purgePromises.length > 0) {
+        await Promise.all(purgePromises);
+      }
+    } catch (err) {
+      console.warn("Failed to purge expired soft deleted books:", err);
+    }
   },
 
   // AUTHORS

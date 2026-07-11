@@ -132,6 +132,57 @@ export const AuthorDashboard = () => {
   // Book deletion state
   const [bookToDelete, setBookToDelete] = useState(null);
 
+  // Recycle Bin States & Handlers
+  const [deletedBooks, setDeletedBooks] = useState([]);
+  const [loadingRecycleBin, setLoadingRecycleBin] = useState(false);
+  const [recycleBookToPermanentDelete, setRecycleBookToPermanentDelete] = useState(null);
+
+  const loadRecycleBinData = async () => {
+    if (!user) return;
+    setLoadingRecycleBin(true);
+    try {
+      await dbService.purgeExpiredSoftDeletedBooks();
+      const allDeleted = await dbService.getDeletedBooks();
+      const authorDeleted = allDeleted.filter(b => b.authorId === user.uid);
+      setDeletedBooks(authorDeleted);
+    } catch (err) {
+      console.error("Failed to load recycle bin books:", err);
+    } finally {
+      setLoadingRecycleBin(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "recycle-bin") {
+      loadRecycleBinData();
+    }
+  }, [activeTab, user]);
+
+  const handleRestoreBook = async (bookId, title) => {
+    const toastId = toast.loading(`Restoring "${title}"...`);
+    try {
+      await dbService.restoreBook(bookId);
+      toast.success(`"${title}" restored successfully!`, { id: toastId });
+      await loadRecycleBinData();
+      await loadAuthorData();
+    } catch (err) {
+      toast.error("Failed to restore eBook.", { id: toastId });
+    }
+  };
+
+  const handlePermanentDeleteBook = async () => {
+    if (!recycleBookToPermanentDelete) return;
+    const toastId = toast.loading(`Permanently purging "${recycleBookToPermanentDelete.title}"...`);
+    try {
+      await dbService.permanentlyDeleteBook(recycleBookToPermanentDelete.id);
+      toast.success(`"${recycleBookToPermanentDelete.title}" permanently deleted!`, { id: toastId });
+      setRecycleBookToPermanentDelete(null);
+      await loadRecycleBinData();
+    } catch (err) {
+      toast.error("Failed to delete eBook permanently.", { id: toastId });
+    }
+  };
+
   // Chart metric toggle + real data state
   const [chartMetric, setChartMetric] = useState("downloads"); // downloads | sales
   const [chartData, setChartData] = useState(buildEmptyChartBins());
@@ -370,20 +421,19 @@ export const AuthorDashboard = () => {
 
   const handleDeleteBook = async () => {
     if (!bookToDelete) return;
-    const toastId = toast.loading("Deleting eBook and associated storage files...");
+    const toastId = toast.loading("Moving eBook to Recycle Bin...");
     try {
-      await dbService.deleteBook(bookToDelete.id);
-      if (bookToDelete.coverURL && !bookToDelete.coverURL.includes("unsplash.com")) {
-        await deleteFile(bookToDelete.coverURL);
-      }
-      if (bookToDelete.pdfURL && bookToDelete.pdfURL !== "/demo-preview.pdf") {
-        await deleteFile(bookToDelete.pdfURL);
-      }
-      toast.success("eBook deleted successfully!", { id: toastId });
+      await dbService.deleteBook(bookToDelete.id, user.uid);
+      toast.success("eBook moved to Recycle Bin! It will be kept for 30 days.", { id: toastId });
       setBookToDelete(null);
       loadAuthorData();
+      
+      // Reload recycle bin list if currently in it
+      if (activeTab === "recycle-bin") {
+        loadRecycleBinData();
+      }
     } catch (err) {
-      toast.error("Failed to delete eBook.", { id: toastId });
+      toast.error("Failed to move eBook to Recycle Bin.", { id: toastId });
     }
   };
 
@@ -469,7 +519,7 @@ export const AuthorDashboard = () => {
     { id: "home", label: "Home", icon: Home, to: "/" },
     { id: "overview", label: "Dashboard", icon: BarChart2 },
     { id: "books", label: "My Books", icon: BookOpen },
-
+    { id: "recycle-bin", label: "Recycle Bin", icon: Trash2 },
     { id: "upload", label: "Publish", icon: Upload },
     { id: "analytics", label: "Analytics", icon: BarChart2 },
     // { id: "reviews", label: "Reviews", icon: Star },
@@ -1157,23 +1207,129 @@ export const AuthorDashboard = () => {
         />
       )}
 
+      {/* 7. RECYCLE BIN TAB */}
+      {activeTab === "recycle-bin" && (
+        <div className="flex flex-col gap-6 text-left animate-fade-in w-full">
+          <div>
+            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Recycle Bin</h1>
+            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">
+              Items here will be permanently deleted after 30 days. You can restore them to normal state anytime before expiration.
+            </p>
+          </div>
+
+          {loadingRecycleBin ? (
+            <div className="animate-pulse flex flex-col gap-4">
+              {Array.from({ length: 3 }).map((_, idx) => (
+                <div key={idx} className="h-20 bg-brand-border/20 rounded-[16px] w-full" />
+              ))}
+            </div>
+          ) : deletedBooks.length === 0 ? (
+            <div className="text-center py-16 border border-dashed border-brand-border rounded-[20px] bg-brand-card p-6 select-none font-display">
+              <Trash2 className="mx-auto h-8 w-8 text-brand-text-secondary opacity-60 mb-2" />
+              <p className="text-xs font-bold text-brand-text">Recycle Bin is empty</p>
+              <p className="text-[10px] text-brand-text-secondary mt-1 leading-relaxed">
+                When you delete books, they will be kept here for 30 days.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {deletedBooks.map((book) => {
+                const deletedDate = new Date(book.deletedAt);
+                const expiryDate = new Date(deletedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+                const diffMs = expiryDate - new Date();
+                const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+                
+                return (
+                  <div key={book.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-brand-border bg-brand-card rounded-[20px] shadow-sm select-none">
+                    <div className="flex items-center gap-4">
+                      <div className="h-16 w-12 bg-brand-bg-secondary border border-brand-border rounded-[8px] overflow-hidden shrink-0 shadow-sm">
+                        <img 
+                          src={book.coverURL || "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=120&h=170&q=80"} 
+                          alt={book.title} 
+                          className="h-full w-full object-cover" 
+                        />
+                      </div>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-bold text-brand-text font-display">{book.title}</h4>
+                        <p className="text-[10px] text-brand-text-secondary mt-1 font-mono">
+                          Removed: {new Date(book.deletedAt).toLocaleDateString()}
+                        </p>
+                        <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-2 border ${
+                          diffDays <= 5 
+                            ? "bg-brand-danger/10 border-brand-danger/25 text-brand-danger animate-pulse" 
+                            : "bg-amber-500/10 border-amber-500/25 text-amber-500"
+                        }`}>
+                          {diffDays} {diffDays === 1 ? "day" : "days"} left
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-stretch sm:self-center">
+                      <Button 
+                        onClick={() => handleRestoreBook(book.id, book.title)}
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1 sm:flex-initial h-9 rounded-full px-4 text-xs font-bold border-brand-border hover:bg-brand-bg-secondary cursor-pointer"
+                      >
+                        Restore
+                      </Button>
+                      <Button 
+                        onClick={() => setRecycleBookToPermanentDelete(book)}
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 sm:flex-initial h-9 rounded-full px-4 text-xs font-bold text-brand-danger hover:bg-brand-danger/10 cursor-pointer"
+                      >
+                        Delete Permanently
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Permanent Delete Confirmation Modal */}
+      {recycleBookToPermanentDelete && (
+        <Modal
+          isOpen={!!recycleBookToPermanentDelete}
+          onClose={() => setRecycleBookToPermanentDelete(null)}
+          title="Delete Permanently"
+        >
+          <div className="flex flex-col gap-4 text-left font-display">
+            <p className="text-xs text-brand-text-secondary leading-relaxed">
+              Are you sure you want to permanently delete <strong className="text-brand-text">"{recycleBookToPermanentDelete.title}"</strong>? This will remove the document from Firestore and permanently delete its files (cover and PDF) from Supabase Storage. <span className="text-brand-danger font-bold">This action is irreversible.</span>
+            </p>
+            <div className="flex justify-end gap-2 mt-4 select-none">
+              <Button onClick={() => setRecycleBookToPermanentDelete(null)} variant="outline" className="rounded-full text-xs font-bold h-10 px-5 border-brand-border">
+                Cancel
+              </Button>
+              <Button onClick={handlePermanentDeleteBook} className="bg-brand-danger hover:bg-brand-danger/90 rounded-full text-xs font-bold h-10 px-5 text-white">
+                Delete Permanently
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
       {/* Delete Confirmation Modal */}
       {bookToDelete && (
         <Modal
           isOpen={!!bookToDelete}
           onClose={() => setBookToDelete(null)}
-          title="Delete Publication"
+          title="Move to Recycle Bin"
         >
           <div className="flex flex-col gap-4 text-left font-display">
             <p className="text-xs text-brand-text-secondary leading-relaxed">
-              Are you sure you want to permanently delete <strong className="text-brand-text">"{bookToDelete.title}"</strong>? This will remove the document from Firestore and permanently delete its files (cover and PDF) from Supabase Storage. This action cannot be undone.
+              Are you sure you want to remove <strong className="text-brand-text">"{bookToDelete.title}"</strong>? It will be moved to the Recycle Bin and can be restored anytime within 30 days.
             </p>
             <div className="flex justify-end gap-2 mt-4 select-none">
               <Button onClick={() => setBookToDelete(null)} variant="outline" className="rounded-full text-xs font-bold h-10 px-5 border-brand-border">
                 Cancel
               </Button>
               <Button onClick={handleDeleteBook} className="bg-brand-danger hover:bg-brand-danger/90 rounded-full text-xs font-bold h-10 px-5 text-white">
-                Delete Permanently
+                Move to Recycle Bin
               </Button>
             </div>
           </div>

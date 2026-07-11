@@ -22,6 +22,7 @@ import { toast } from "react-hot-toast";
 import { SearchBox } from "../../components/ui/SearchBox";
 import { useTheme } from "../../hooks/useTheme";
 import { useApp } from "../../store/AppContext";
+import { useAuth } from "../../hooks/useAuth";
 
 const DOWNLOADS_TREND = Array.from({ length: 30 }).map((_, i) => ({
   day: `Day ${i + 1}`,
@@ -36,6 +37,7 @@ export const AdminDashboard = () => {
   
   const { updateTheme } = useTheme();
   const { rtdbAdminSynced } = useApp();
+  const { user, updateProfile } = useAuth();
   useEffect(() => {
     updateTheme("dark");
   }, [updateTheme]);
@@ -172,7 +174,7 @@ export const AdminDashboard = () => {
   // Live Tracker States
   const [liveTrackerSearch, setLiveTrackerSearch] = useState("");
   const [liveTrackerStatusFilter, setLiveTrackerStatusFilter] = useState("all");
-  const [settingsSubTab, setSettingsSubTab] = useState("general");
+  const [settingsSubTab, setSettingsSubTab] = useState("profile");
 
   // eBook Editor Modal States
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
@@ -207,7 +209,84 @@ export const AdminDashboard = () => {
       { id: "est_mins", label: "Estimated Reading Time (Mins)", type: "number", required: true, options: "", defaultValue: "120" }
     ];
   });
-  
+  // Admin Public Profile States
+  const [adminDisplayName, setAdminDisplayName] = useState("");
+  const [adminPhotoURL, setAdminPhotoURL] = useState("");
+  const [adminBio, setAdminBio] = useState("");
+  const [adminTwitter, setAdminTwitter] = useState("");
+  const [adminGithub, setAdminGithub] = useState("");
+  const [adminWebsite, setAdminWebsite] = useState("");
+  const [isSavingAdminProfile, setIsSavingAdminProfile] = useState(false);
+  const [isUploadingAdminAvatar, setIsUploadingAdminAvatar] = useState(false);
+
+  const handleAdminAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File is too large. Max size is 2MB.");
+      return;
+    }
+
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid file format. Please upload JPG, PNG or WebP.");
+      return;
+    }
+
+    setIsUploadingAdminAvatar(true);
+    const toastId = toast.loading("Uploading avatar image...");
+    try {
+      const uploadedUrl = await uploadFile("covers", "avatars", file, user.uid);
+      setAdminPhotoURL(uploadedUrl);
+      toast.success("Avatar uploaded successfully!", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload avatar image.", { id: toastId });
+    } finally {
+      setIsUploadingAdminAvatar(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      setAdminDisplayName(user.displayName || "");
+      setAdminPhotoURL(user.photoURL || "");
+      setAdminBio(user.bio || "");
+      setAdminTwitter(user.socialLinks?.twitter || "");
+      setAdminGithub(user.socialLinks?.github || "");
+      setAdminWebsite(user.socialLinks?.website || "");
+    }
+  }, [user]);
+
+  const handleSaveAdminProfile = async (e) => {
+    e.preventDefault();
+    if (!adminDisplayName.trim()) {
+      toast.error("Please enter a valid display name.");
+      return;
+    }
+    setIsSavingAdminProfile(true);
+    const toastId = toast.loading("Saving admin profile...");
+    try {
+      await updateProfile({
+        displayName: adminDisplayName,
+        photoURL: adminPhotoURL,
+        bio: adminBio,
+        socialLinks: {
+          twitter: adminTwitter,
+          github: adminGithub,
+          website: adminWebsite
+        }
+      });
+      toast.success("Profile saved successfully!", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save profile.", { id: toastId });
+    } finally {
+      setIsSavingAdminProfile(false);
+    }
+  };
+
   const [isFieldModalOpen, setIsFieldModalOpen] = useState(false);
   const [fieldForm, setFieldForm] = useState({
     id: "",
@@ -298,7 +377,24 @@ export const AdminDashboard = () => {
   // Book Approvals
   const handleApproveBook = async (bookId) => {
     try {
+      const book = await dbService.getBookById(bookId);
       await dbService.updateBook(bookId, { status: "published", publishedAt: new Date().toISOString() });
+      
+      if (book) {
+        // Trigger Author Notification: Category "Books", type "Book Approved"
+        await dbService.createNotification({
+          userId: book.authorId,
+          role: "author",
+          category: "Books",
+          type: "Book Approved",
+          title: "eBook Approved & Published",
+          message: `Congratulations! Your eBook "${book.title}" has been approved and is now live.`,
+          link: `/book/${book.slug || book.id}`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }).catch(err => console.warn("Failed to create book approval notification:", err));
+      }
+
       toast.success("eBook approved and published!");
       loadAdminData();
     } catch (err) {
@@ -308,7 +404,24 @@ export const AdminDashboard = () => {
 
   const handleRejectBook = async (bookId) => {
     try {
+      const book = await dbService.getBookById(bookId);
       await dbService.updateBook(bookId, { status: "rejected", rejectionReason: "Violates content guidelines" });
+      
+      if (book) {
+        // Trigger Author Notification: Category "Books", type "Book Rejected"
+        await dbService.createNotification({
+          userId: book.authorId,
+          role: "author",
+          category: "Books",
+          type: "Book Rejected",
+          title: "eBook Submission Rejected",
+          message: `Your eBook "${book.title}" submission was rejected. Reason: Violates content guidelines.`,
+          link: `/author/dashboard?tab=books`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }).catch(err => console.warn("Failed to create book rejection notification:", err));
+      }
+
       toast.success("eBook rejected.");
       loadAdminData();
     } catch (err) {
@@ -1780,6 +1893,22 @@ export const AdminDashboard = () => {
             const nextStatus = currentStatus === "approved" ? "pending" : "approved";
             await dbService.updateAuthor(authorUid, { verificationStatus: nextStatus });
             setAuthors(prev => prev.map(a => a.uid === authorUid ? { ...a, verificationStatus: nextStatus } : a));
+            
+            // Trigger Author Notification: Category "Verification", type "Verification Approved" or "Verification Pending"
+            await dbService.createNotification({
+              userId: authorUid,
+              role: "author",
+              category: "Verification",
+              type: nextStatus === "approved" ? "Verification Approved" : "Verification Pending",
+              title: nextStatus === "approved" ? "Author Verification Approved" : "Verification Pending Review",
+              message: nextStatus === "approved"
+                ? "Congratulations! Your author profile has been verified. You now have a verified badge."
+                : "Your author verification status is pending review.",
+              link: `/author/dashboard?tab=settings`,
+              isRead: false,
+              createdAt: new Date().toISOString()
+            }).catch(err => console.warn("Failed to create verification change notification:", err));
+
             toast.success(`Verification status updated to ${nextStatus}.`);
           } catch (e) {
             toast.error("Failed to update status.");
@@ -2807,6 +2936,7 @@ export const AdminDashboard = () => {
       {/* 10. SITE SETTINGS TAB */}
       {activeTab === "settings" && (() => {
         const subTabs = [
+          { id: "profile", label: "Public Profile" },
           { id: "general", label: "General & Branding" },
           { id: "seo", label: "SEO Config" },
           { id: "email", label: "Email & SMTP" },
@@ -2824,7 +2954,7 @@ export const AdminDashboard = () => {
               <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Configure global parameters, SEO keywords, security rules, and system details.</p>
             </div>
 
-            <form onSubmit={handleSaveSettings} className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand">
+            <form onSubmit={settingsSubTab === "profile" ? handleSaveAdminProfile : handleSaveSettings} className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand">
               {/* Left Column: Sub-Tab Buttons */}
               <div className="md:col-span-4 flex flex-col gap-1 border-r border-brand-border/40 pr-0 md:pr-4">
                 {subTabs.map((tab) => (
@@ -2846,6 +2976,83 @@ export const AdminDashboard = () => {
               {/* Right Column: Active Form Fields */}
               <div className="md:col-span-8 flex flex-col gap-5 min-h-[300px] justify-between">
                 <div className="flex flex-col gap-5">
+                  {/* Public Profile Sub-Tab */}
+                  {settingsSubTab === "profile" && (
+                    <div className="flex flex-col gap-5 animate-fade-in text-left">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+                        <div className="sm:col-span-6">
+                          <Input 
+                            label="Admin Display Name"
+                            value={adminDisplayName}
+                            onChange={(e) => setAdminDisplayName(e.target.value)}
+                            required
+                          />
+                        </div>
+                        
+                        <div className="sm:col-span-6 flex items-center gap-4">
+                          <div className="h-14 w-14 rounded-full overflow-hidden border border-brand-border shrink-0 bg-brand-bg-secondary flex items-center justify-center shadow-sm">
+                            {adminPhotoURL ? (
+                              <img src={adminPhotoURL} alt="Avatar preview" className="h-full w-full object-cover" />
+                            ) : (
+                              <span className="text-[10px] font-mono font-black text-brand-text-secondary/60">No Pic</span>
+                            )}
+                          </div>
+                          
+                          <div className="flex-grow text-left">
+                            <label className="block text-xs font-bold text-brand-text-secondary mb-1">Public Creator Avatar</label>
+                            <input 
+                              type="file" 
+                              accept="image/jpeg,image/png,image/webp" 
+                              onChange={handleAdminAvatarUpload}
+                              disabled={isUploadingAdminAvatar}
+                              className="hidden" 
+                              id="admin-avatar-upload"
+                            />
+                            <label 
+                              htmlFor="admin-avatar-upload"
+                              className="inline-flex items-center justify-center px-4 py-2 border border-brand-border rounded-full text-[11px] font-bold text-brand-text hover:bg-brand-bg-secondary cursor-pointer select-none transition-colors border-dashed"
+                            >
+                              {isUploadingAdminAvatar ? "Uploading Avatar..." : "Choose Profile Photo"}
+                            </label>
+                            <p className="text-[9px] text-brand-text-secondary/70 mt-1">JPG, PNG or WebP format up to 2MB.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-left">
+                        <label className="text-xs font-bold text-brand-text-secondary">Public Creator Bio</label>
+                        <textarea 
+                          rows={3}
+                          placeholder="Tell your readers about your work..."
+                          value={adminBio}
+                          onChange={(e) => setAdminBio(e.target.value)}
+                          className="w-full bg-brand-bg border border-brand-border rounded-[14px] p-3 text-sm focus:outline-none focus:border-brand-accent text-brand-text placeholder:text-brand-text-secondary/45"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-brand-border/40 pt-4">
+                        <Input 
+                          label="Twitter Username" 
+                          placeholder="e.g. twitter_handle"
+                          value={adminTwitter}
+                          onChange={(e) => setAdminTwitter(e.target.value)}
+                        />
+                        <Input 
+                          label="GitHub Username" 
+                          placeholder="e.g. github_handle"
+                          value={adminGithub}
+                          onChange={(e) => setAdminGithub(e.target.value)}
+                        />
+                        <Input 
+                          label="Personal Website Link" 
+                          placeholder="e.g. mywebsite.com"
+                          value={adminWebsite}
+                          onChange={(e) => setAdminWebsite(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* General & Branding Sub-Tab */}
                   {settingsSubTab === "general" && (
                     <div className="flex flex-col gap-5 animate-fade-in">
@@ -3100,8 +3307,10 @@ export const AdminDashboard = () => {
                   )}
                 </div>
 
-                <Button type="submit" variant="primary" className="h-11 w-full sm:w-fit mt-4 rounded-full text-xs font-bold px-6 shadow-sm self-start">
-                  Save Platform Settings
+                <Button type="submit" variant="primary" className="h-11 w-full sm:w-fit mt-4 rounded-full text-xs font-bold px-6 shadow-sm self-start" disabled={isSavingAdminProfile}>
+                  {settingsSubTab === "profile" 
+                    ? (isSavingAdminProfile ? "Saving Profile..." : "Save Profile Details") 
+                    : "Save Platform Settings"}
                 </Button>
               </div>
             </form>

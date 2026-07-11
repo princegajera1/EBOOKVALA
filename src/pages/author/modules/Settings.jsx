@@ -7,6 +7,8 @@ import {
 import { Button } from "../../../components/ui/Button";
 import { Input } from "../../../components/ui/Input";
 import { toast } from "react-hot-toast";
+import { dbService } from "../../../services/db";
+import { uploadFile } from "../../../services/storage";
 
 // Seed languages dictionary
 const LOCALIZATION_MOCK = {
@@ -68,41 +70,128 @@ export const Settings = ({
   const [displayName, setDisplayName] = useState(authorProfile.displayName || "");
   const [photoURL, setPhotoURL] = useState(authorProfile.photoURL || "");
   const [bio, setBio] = useState(authorProfile.bio || "");
-  const [twitter, setTwitter] = useState("");
-  const [github, setGithubLink] = useState("");
-  const [website, setWebsite] = useState("");
+  const [twitter, setTwitter] = useState(authorProfile.socialLinks?.twitter || "");
+  const [github, setGithubLink] = useState(authorProfile.socialLinks?.github || "");
+  const [website, setWebsite] = useState(authorProfile.socialLinks?.website || "");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verifiedStatus, setVerifiedStatus] = useState("unverified"); // unverified | pending | verified
+  const [verifiedStatus, setVerifiedStatus] = useState(authorProfile.verificationStatus || "unverified"); // unverified | pending | verified
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("File is too large. Max size is 2MB.");
+      return;
+    }
+
+    // Validate file type
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Invalid file format. Please upload JPG, PNG or WebP.");
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    const toastId = toast.loading("Uploading avatar image...");
+    try {
+      const uid = authorProfile.uid || authorProfile.id;
+      const uploadedUrl = await uploadFile("covers", "avatars", file, uid);
+      setPhotoURL(uploadedUrl);
+      toast.success("Avatar uploaded successfully!", { id: toastId });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload avatar image.", { id: toastId });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     if (authorProfile) {
       setDisplayName(authorProfile.displayName || "");
       setPhotoURL(authorProfile.photoURL || "");
       setBio(authorProfile.bio || "");
+      setTwitter(authorProfile.socialLinks?.twitter || "");
+      setGithubLink(authorProfile.socialLinks?.github || "");
+      setWebsite(authorProfile.socialLinks?.website || "");
+      setVerifiedStatus(authorProfile.verificationStatus || "unverified");
     }
   }, [authorProfile]);
 
-  const handleSaveProfile = (e) => {
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    if (onSaveProfile) {
-      onSaveProfile({
-        ...authorProfile,
-        displayName,
-        bio,
-        photoURL
-      });
+    const toastId = toast.loading("Saving profile details...");
+    try {
+      if (onSaveProfile) {
+        await onSaveProfile({
+          ...authorProfile,
+          displayName,
+          bio,
+          photoURL,
+          socialLinks: {
+            twitter,
+            github,
+            website
+          }
+        });
+      }
+      toast.success("Profile details saved! 👤", { id: toastId });
+    } catch (err) {
+      toast.error("Failed to save profile details.", { id: toastId });
     }
-    toast.success("Profile details saved! 👤");
   };
 
-  const handleRequestVerification = () => {
+  const handleRequestVerification = async () => {
     setIsVerifying(true);
-    const toastId = toast.loading("Submitting verification request details...");
-    setTimeout(() => {
-      setIsVerifying(false);
+    const toastId = toast.loading("Submitting verification request...");
+    try {
+      if (onSaveProfile) {
+        await onSaveProfile({
+          ...authorProfile,
+          verificationStatus: "pending"
+        });
+      }
       setVerifiedStatus("pending");
+      
+      // Trigger Author Notification: Category "Verification", type "Verification Pending"
+      await dbService.createNotification({
+        userId: authorProfile.uid || authorProfile.id,
+        role: "author",
+        category: "Verification",
+        type: "Verification Pending",
+        title: "Verification Pending Review",
+        message: "Your profile verification request has been submitted and is pending review.",
+        link: `/author/dashboard?tab=settings`,
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+
+      // Trigger Admin Notification: Category "User", type "Author Verification Request"
+      const adminsSnap = await dbService.getUsers(); // Get all users
+      const admins = adminsSnap.filter(u => u.role === "admin");
+      for (const admin of admins) {
+        await dbService.createNotification({
+          userId: admin.uid || admin.id,
+          role: "admin",
+          category: "User",
+          type: "Author Verification Request",
+          title: "Author Verification Request",
+          message: `Author "${displayName}" has requested profile verification.`,
+          link: `/admin/dashboard?tab=authors`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+
       toast.success("Verification request submitted! 🛡️", { id: toastId });
-    }, 1500);
+    } catch (err) {
+      toast.error("Failed to submit verification request.", { id: toastId });
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   // --- 2. NOTIFICATIONS SECTION ---
@@ -304,18 +393,44 @@ export const Settings = ({
               </div>
 
               <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Input 
-                    label="Author Display Name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    required
-                  />
-                  <Input 
-                    label="Public Photo/Avatar URL"
-                    value={photoURL}
-                    onChange={(e) => setPhotoURL(e.target.value)}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-5 items-center">
+                  <div className="sm:col-span-6">
+                    <Input 
+                      label="Author Display Name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="sm:col-span-6 flex items-center gap-4">
+                    <div className="h-14 w-14 rounded-full overflow-hidden border border-brand-border shrink-0 bg-brand-bg-secondary flex items-center justify-center shadow-sm">
+                      {photoURL ? (
+                        <img src={photoURL} alt="Avatar preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[10px] font-mono font-black text-brand-text-secondary/60">No Pic</span>
+                      )}
+                    </div>
+                    
+                    <div className="flex-grow text-left">
+                      <label className="block text-xs font-bold text-brand-text-secondary mb-1">Public Creator Avatar</label>
+                      <input 
+                        type="file" 
+                        accept="image/jpeg,image/png,image/webp" 
+                        onChange={handleAvatarUpload}
+                        disabled={isUploadingAvatar}
+                        className="hidden" 
+                        id="author-avatar-upload"
+                      />
+                      <label 
+                        htmlFor="author-avatar-upload"
+                        className="inline-flex items-center justify-center px-4 py-2 border border-brand-border rounded-full text-[11px] font-bold text-brand-text hover:bg-brand-bg-secondary cursor-pointer select-none transition-colors border-dashed"
+                      >
+                        {isUploadingAvatar ? "Uploading Avatar..." : "Choose Profile Photo"}
+                      </label>
+                      <p className="text-[9px] text-brand-text-secondary/70 mt-1">JPG, PNG or WebP format up to 2MB.</p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex flex-col gap-1.5 text-left">

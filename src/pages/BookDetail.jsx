@@ -499,7 +499,11 @@ export const BookDetail = () => {
                       <h4 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-4 font-mono">About the Author</h4>
                       <div className="flex items-center gap-3.5 mb-4">
                         <div className="h-13 w-13 rounded-full border border-brand-border overflow-hidden bg-brand-bg-secondary shrink-0">
-                          <img src={author.photoURL} alt={author.displayName} className="h-full w-full object-cover" />
+                          <img 
+                            src={author.photoURL || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(author.displayName || "Author")}`} 
+                            alt={author.displayName} 
+                            className="h-full w-full object-cover" 
+                          />
                         </div>
                         <div>
                           <h5 className="font-display font-bold text-brand-text leading-none">{author.displayName}</h5>

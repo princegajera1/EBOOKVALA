@@ -12,7 +12,7 @@ import {
   setPersistence,
   deleteUser
 } from "firebase/auth";
-import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, increment, serverTimestamp, collection, getDocs, query, where } from "firebase/firestore";
 import { auth, db } from "../lib/firebase";
 
 export const AuthContext = createContext();
@@ -146,6 +146,29 @@ export const AuthProvider = ({ children }) => {
           totalSales: 0,
           createdAt: new Date().toISOString()
         });
+      }
+
+      // Trigger Admin notification: Category "User", type "New User Registered" or "New Author Registered"
+      try {
+        const q = query(collection(db, "users"), where("role", "==", "admin"));
+        const adminsSnap = await getDocs(q);
+        for (const adminDoc of adminsSnap.docs) {
+          const docRef = doc(collection(db, "notifications"));
+          await setDoc(docRef, {
+            id: docRef.id,
+            userId: adminDoc.id,
+            role: "admin",
+            category: "User",
+            type: role === "author" ? "New Author Registered" : "New User Registered",
+            title: role === "author" ? "New Author Registered" : "New User Registered",
+            message: `${role === "author" ? "Author" : "Reader"} "${name}" has registered an account.`,
+            link: `/admin/dashboard?tab=all-users`,
+            isRead: false,
+            createdAt: new Date().toISOString()
+          });
+        }
+      } catch (err) {
+        console.warn("Failed to create admin notification on registration:", err);
       }
 
       // Send verification email (non-blocking, ignore errors on fake domains)

@@ -1145,6 +1145,13 @@ export const AuthorDashboard = () => {
           onSaveProfile={async (updatedProfile) => {
             setAuthorProfile(updatedProfile);
             await dbService.updateAuthor(user.uid, updatedProfile);
+            // Sync with auth user profile document in Firestore and local state
+            await updateProfile({
+              displayName: updatedProfile.displayName,
+              photoURL: updatedProfile.photoURL,
+              bio: updatedProfile.bio,
+              socialLinks: updatedProfile.socialLinks
+            });
           }}
           books={books}
         />

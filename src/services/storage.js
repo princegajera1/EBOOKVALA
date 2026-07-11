@@ -7,7 +7,7 @@ import { supabase } from "../lib/supabase";
  * @param {File} file - The file object to upload
  * @returns {Promise<string>} The public URL of the uploaded file
  */
-export const uploadFile = async (bucket, folder, file) => {
+export const uploadFile = async (bucket, folder, file, customName = null) => {
   if (!supabase) {
     throw new Error("Supabase is not configured. Please define VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY in your .env file.");
   }
@@ -16,8 +16,12 @@ export const uploadFile = async (bucket, folder, file) => {
 
   // Generate a unique path to avoid collisions
   const fileExtension = file.name.split(".").pop();
-  const cleanName = file.name.split(".").slice(0, -1).join(".").replace(/[^a-zA-Z0-9]/g, "_");
-  const uniqueName = `${Date.now()}_${Math.floor(Math.random() * 10000)}_${cleanName}.${fileExtension}`;
+  const cleanName = customName 
+    ? customName.replace(/[^a-zA-Z0-9]/g, "_")
+    : file.name.split(".").slice(0, -1).join(".").replace(/[^a-zA-Z0-9]/g, "_");
+  const uniqueName = customName 
+    ? `${cleanName}.${fileExtension}`
+    : `${Date.now()}_${Math.floor(Math.random() * 10000)}_${cleanName}.${fileExtension}`;
   const path = folder ? `${folder}/${uniqueName}` : uniqueName;
 
   const { data, error } = await supabase.storage.from(bucket).upload(path, file, {

@@ -348,6 +348,47 @@ export const dbService = {
       slug: bookData.slug || generatedSlug
     };
     await setDoc(newBookRef, newBook);
+
+    // Trigger Author notification: Category "Books", type "Book Submitted Successfully" or "Book Published"
+    try {
+      const isPublished = newBook.status === "published";
+      await dbService.createNotification({
+        userId: newBook.authorId,
+        role: "author",
+        category: "Books",
+        type: isPublished ? "Book Published" : "Book Submitted Successfully",
+        title: isPublished ? "eBook Published" : "eBook Submitted Successfully",
+        message: isPublished
+          ? `Your eBook "${newBook.title}" has been published and is now live!`
+          : `Your eBook "${newBook.title}" has been submitted successfully and is under review.`,
+        link: `/author/dashboard?tab=books`,
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn("Failed to create author book submission notification:", err);
+    }
+
+    // Trigger Admin notification: Category "Books", type "New Book Submitted" (all admins)
+    try {
+      const adminsSnap = await getDocs(query(collection(db, "users"), where("role", "==", "admin")));
+      for (const adminDoc of adminsSnap.docs) {
+        await dbService.createNotification({
+          userId: adminDoc.id,
+          role: "admin",
+          category: "Books",
+          type: "New Book Submitted",
+          title: "New Book Submitted",
+          message: `Author "${newBook.authorName || "An author"}" has submitted a new book "${newBook.title}".`,
+          link: `/admin/dashboard?tab=books`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to create admin book submission notification:", err);
+    }
+
     return newBook;
   },
   
@@ -457,18 +498,56 @@ export const dbService = {
     };
     await setDoc(newReviewRef, newReview);
     
-    // Update book rating & review count asynchronously
+    // Update book rating & review count asynchronously and notify author
     try {
+      const bookDocRef = doc(db, "books", reviewData.bookId);
+      const bookSnap = await getDoc(bookDocRef);
+      let bookData = null;
+      if (bookSnap.exists()) {
+        bookData = bookSnap.data();
+      }
+
       const reviewsSnap = await getDocs(query(collection(db, "reviews"), where("bookId", "==", reviewData.bookId)));
       const bookReviews = reviewsSnap.docs.map(d => d.data());
       const avgRating = bookReviews.reduce((sum, r) => sum + r.rating, 0) / bookReviews.length;
       
-      await updateDoc(doc(db, "books", reviewData.bookId), {
+      await updateDoc(bookDocRef, {
         rating: parseFloat(avgRating.toFixed(1)),
         reviewCount: bookReviews.length
       });
+
+      if (bookData) {
+        // Trigger Author notification: Category "Reviews", type "New Review"
+        await dbService.createNotification({
+          userId: bookData.authorId,
+          role: "author",
+          category: "Reviews",
+          type: "New Review",
+          title: "New Review Received",
+          message: `A reader left a ${reviewData.rating}-star review on your book "${bookData.title}".`,
+          link: `/author/dashboard?tab=overview`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }).catch(err => console.warn("Failed to create review notification for author:", err));
+
+        // Trigger Admin notification: Category "Reports", type "Fake Review Detected" (trigger pending backend event)
+        // Note: Dispatched placeholder for fake review detection rules
+        /*
+        await dbService.createNotification({
+          userId: "admin_uid",
+          role: "admin",
+          category: "Reports",
+          type: "Fake Review Detected",
+          title: "Fake Review Detected",
+          message: `Suspicious review detected on "${bookData.title}".`,
+          link: `/admin/dashboard?tab=reports`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+        */
+      }
     } catch (err) {
-      console.error("Failed to update rating statistics on book:", err);
+      console.error("Failed to update rating statistics on book or create notifications:", err);
     }
     
     return newReview;
@@ -550,7 +629,7 @@ export const dbService = {
       console.warn("Could not record purchase in reader profile:", err);
     }
     
-    // Update Book Sales & Author balance in Firestore
+    // Update Book Sales & Author balance in Firestore and trigger notifications
     try {
       const bookDocRef = doc(db, "books", orderData.bookId);
       const bookSnap = await getDoc(bookDocRef);
@@ -574,9 +653,59 @@ export const dbService = {
             totalSales: (authorData.totalSales || 0) + 1
           });
         }
+
+        // Trigger Author notification: Category "Earnings", type "New Sale"
+        await dbService.createNotification({
+          userId: authorId,
+          role: "author",
+          category: "Earnings",
+          type: "New Sale",
+          title: "New Sale Received",
+          message: `Congratulations! A reader has purchased your book "${orderData.bookTitle}".`,
+          link: `/author/dashboard?tab=overview`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }).catch(err => console.warn("Failed to create author sale notification:", err));
       }
     } catch (err) {
       console.warn("Could not update sales stats or author cut:", err);
+    }
+
+    // Trigger Reader notification: Category "Library", type "Book Purchased Successfully"
+    try {
+      await dbService.createNotification({
+        userId: orderData.readerId,
+        role: "reader",
+        category: "Library",
+        type: "Book Purchased Successfully",
+        title: "Book Purchased Successfully",
+        message: `You have successfully added "${orderData.bookTitle}" to your library. Happy reading!`,
+        link: `/book/${orderData.bookId}`,
+        isRead: false,
+        createdAt: new Date().toISOString()
+      });
+    } catch (err) {
+      console.warn("Failed to create reader purchase notification:", err);
+    }
+
+    // Trigger Admin notification: Category "Payments", type "New Purchase" (all admins)
+    try {
+      const adminsSnap = await getDocs(query(collection(db, "users"), where("role", "==", "admin")));
+      for (const adminDoc of adminsSnap.docs) {
+        await dbService.createNotification({
+          userId: adminDoc.id,
+          role: "admin",
+          category: "Payments",
+          type: "New Purchase",
+          title: "New Purchase",
+          message: `A new purchase has been processed for "${orderData.bookTitle}". Amount: $${orderData.amount || 0}.`,
+          link: `/admin/dashboard?tab=books`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to create admin purchase notification:", err);
     }
     
     return newOrder;
@@ -712,6 +841,24 @@ export const dbService = {
     await setDoc(docRef, updateData, { merge: true });
     const snap = await getDoc(docRef);
     return { uid: snap.id, ...snap.data() };
+  },
+
+  // NOTIFICATIONS
+  createNotification: async (notifData) => {
+    try {
+      const docRef = doc(collection(db, "notifications"));
+      const newNotif = {
+        id: docRef.id,
+        isRead: false,
+        createdAt: new Date().toISOString(),
+        ...notifData
+      };
+      await setDoc(docRef, newNotif);
+      return newNotif;
+    } catch (err) {
+      console.error("Error creating notification in dbService:", err);
+      throw err;
+    }
   },
 
   // CATEGORIES

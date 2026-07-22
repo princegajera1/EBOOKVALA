@@ -1,5 +1,5 @@
 import React, { useEffect, lazy, Suspense } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "./context/AuthContext";
@@ -92,7 +92,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <AppProvider>
-          <BrowserRouter>
+          <HashRouter>
             <ScrollToTop />
             
             {/* Global ShapeGrid Background */}
@@ -171,7 +171,7 @@ function App() {
             </Routes>
               </Suspense>
             </div>
-          </BrowserRouter>
+          </HashRouter>
         
         {/* Sleek, Minimal React Hot Toast */}
         <Toaster

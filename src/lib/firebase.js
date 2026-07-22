@@ -23,6 +23,10 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 const database = getDatabase(app);
 
+// TODO (Capacitor Native Auth): For Google/OAuth login redirect handling in native apps,
+// ensure "capacitor://localhost" and "http://localhost" are added to Authorized Domains in Firebase Console:
+// (Firebase Console > Authentication > Settings > Authorized domains)
+
 // Initialize Analytics (only in browser environments where supported)
 let analytics = null;
 if (typeof window !== "undefined") {

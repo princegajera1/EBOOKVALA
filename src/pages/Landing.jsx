@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { 
-  ArrowRight, Star, Mail,
+  ArrowRight, Star, Mail, ChevronLeft, ChevronRight,
   ShieldCheck, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
@@ -14,7 +14,7 @@ import { CategoriesSection } from "../components/sections/CategoriesSection";
 import { FadeUp } from "../components/common/FadeUp";
 import { BookCard } from "../components/book/BookCard";
 import { HeroImageStack } from "../components/common/HeroImageStack";
-import { Marquee } from "../components/ui/marquee";
+import { toast } from "react-hot-toast";
 import princeAvatar from "../assets/testimonials/prince.png";
 import amaraAvatar from "../assets/testimonials/amara.png";
 import rohanAvatar from "../assets/testimonials/rohan.png";
@@ -148,38 +148,36 @@ const testimonialsData = [
   }
 ];
 
-
 const TestimonialCard = ({ testimonial }) => {
   return (
-    <div className="bg-brand-card border border-brand-border rounded-brand-card p-6 shadow-brand flex flex-col justify-between w-80 md:w-[360px] shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover snap-center">
+    <div className="bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card p-3.5 sm:p-6 shadow-brand flex flex-col justify-between w-full shrink-0 text-left select-none group transition-all duration-300 hover:shadow-brand-hover h-full">
       <div>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-2 sm:mb-4">
           <div className="flex gap-0.5">
             {[...Array(testimonial.rating)].map((_, i) => (
-              <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+              <Star key={i} className="h-3 sm:h-3.5 w-3 sm:w-3.5 fill-amber-400 text-amber-400" />
             ))}
           </div>
-          <span className="text-[10px] font-bold text-brand-success bg-brand-success/10 px-2.5 py-0.5 rounded-full select-none">
+          <span className="text-[9px] sm:text-[10px] font-bold text-brand-success bg-brand-success/10 px-2 sm:px-2.5 py-0.5 rounded-full select-none">
             {testimonial.badge}
           </span>
         </div>
-        <p className="text-xs sm:text-sm text-brand-text-secondary leading-relaxed italic mb-6 line-clamp-4 h-[72px]">
+        <p className="text-[11px] sm:text-xs text-brand-text-secondary leading-relaxed italic mb-3 sm:mb-6 line-clamp-3 sm:line-clamp-4 min-h-[54px] sm:h-[72px]">
           "{testimonial.quote}"
         </p>
       </div>
-      <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
           <img src={testimonial.image} alt={testimonial.name} className="h-full w-full object-cover" />
         </div>
-        <div>
-          <h5 className="text-xs font-bold text-brand-text leading-none">{testimonial.name}</h5>
-          <p className="text-[10px] text-brand-text-secondary mt-1.5 font-semibold">{testimonial.role} • {testimonial.location}</p>
+        <div className="min-w-0">
+          <h5 className="text-[11px] sm:text-xs font-bold text-brand-text leading-none truncate">{testimonial.name}</h5>
+          <p className="text-[9px] sm:text-[10px] text-brand-text-secondary mt-1 font-semibold truncate">{testimonial.role} • {testimonial.location}</p>
         </div>
       </div>
     </div>
   );
 };
-
 
 export const Landing = () => {
   const [featuredBooks, setFeaturedBooks] = useState([]);
@@ -188,7 +186,15 @@ export const Landing = () => {
   const [heroSearchQuery, setHeroSearchQuery] = useState("");
   const [recentlyAdded, setRecentlyAdded] = useState([]);
   
-  const carouselRef = useRef(null);
+  // Carousel states
+  const recentlyAddedRef = useRef(null);
+  const [canScrollLeftRecently, setCanScrollLeftRecently] = useState(false);
+  const [canScrollRightRecently, setCanScrollRightRecently] = useState(true);
+
+  const [testimonialPage, setTestimonialPage] = useState(0);
+  const [isAutoAdvancing, setIsAutoAdvancing] = useState(true);
+  const totalTestimonialPages = Math.ceil(testimonialsData.length / 2); // 5 pages (10 items, 2 per view)
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -199,20 +205,57 @@ export const Landing = () => {
       setFeaturedBooks(published.filter(b => b.isFeatured));
 
       // Recently added (sorted by date or ID descending)
-      const sortedByDate = [...published].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 4);
+      const sortedByDate = [...published].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
       setRecentlyAdded(sortedByDate);
     };
     fetchData();
   }, []);
 
-  const handleCarouselScroll = (direction) => {
-    if (carouselRef.current) {
-      const scrollAmount = 340;
-      carouselRef.current.scrollBy({
+  // --------------------------------------------------------------------------
+  // Point 4: Recently Added Books Carousel Scroll & State
+  // --------------------------------------------------------------------------
+  const updateRecentlyScrollState = () => {
+    if (recentlyAddedRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = recentlyAddedRef.current;
+      setCanScrollLeftRecently(scrollLeft > 10);
+      setCanScrollRightRecently(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  const handleRecentlyScroll = (direction) => {
+    if (recentlyAddedRef.current) {
+      const scrollAmount = 320;
+      recentlyAddedRef.current.scrollBy({
         left: direction === "next" ? scrollAmount : -scrollAmount,
         behavior: "smooth"
       });
+      setTimeout(updateRecentlyScrollState, 350);
     }
+  };
+
+  // --------------------------------------------------------------------------
+  // Point 6: Testimonials Auto-Advance (Every 2s, pauses on user interaction)
+  // --------------------------------------------------------------------------
+  useEffect(() => {
+    if (!isAutoAdvancing) return;
+    const timer = setInterval(() => {
+      setTestimonialPage((prev) => (prev + 1) % totalTestimonialPages);
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [isAutoAdvancing, totalTestimonialPages]);
+
+  const handleTestimonialNav = (direction) => {
+    setIsAutoAdvancing(false);
+    if (direction === "next") {
+      setTestimonialPage((prev) => (prev + 1) % totalTestimonialPages);
+    } else if (direction === "prev") {
+      setTestimonialPage((prev) => (prev - 1 + totalTestimonialPages) % totalTestimonialPages);
+    } else if (typeof direction === "number") {
+      setTestimonialPage(direction);
+    }
+
+    // Resume auto-advance after 4 seconds of inactivity
+    setTimeout(() => setIsAutoAdvancing(true), 4000);
   };
 
   const handleHeroSearch = (e) => {
@@ -227,7 +270,6 @@ export const Landing = () => {
     const subscriberEmail = email.trim().toLowerCase();
     if (!subscriberEmail) return;
 
-    // 1. Try to save subscriber to Firestore (non-blocking)
     try {
       await addDoc(collection(db, "subscribers"), {
         email: subscriberEmail,
@@ -237,7 +279,6 @@ export const Landing = () => {
       console.warn("Firestore subscription save failed (non-blocking):", firestoreErr);
     }
 
-    // 2. Dispatch welcome email securely (blocking success/error)
     try {
       const emailRes = await fetch("/api/send-email", {
         method: "POST",
@@ -266,8 +307,8 @@ export const Landing = () => {
   return (
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
-      {/* 1. PREMIUM HERO SECTION */}
-      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pt-4 pb-6 lg:pt-6 lg:pb-8 scroll-mt-20 overflow-hidden">
+      {/* 1. PREMIUM HERO SECTION (Fixed scroll overlap with scroll-mt and relative z-0) */}
+      <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pt-8 sm:pt-10 pb-6 lg:pt-8 lg:pb-8 scroll-mt-28 overflow-hidden z-0">
         
         {/* Left Content */}
         <motion.div 
@@ -278,25 +319,26 @@ export const Landing = () => {
         >
 
           <h1 
-            className="text-4xl sm:text-6xl lg:text-[70px] font-display font-black text-brand-text leading-[1.05] tracking-tight"
+            className="text-3xl sm:text-5xl lg:text-[64px] font-display font-black text-brand-text leading-[1.08] tracking-tight"
           >
             The <span className="text-brand-accent">Future of Reading</span> <br className="hidden sm:inline" />
             Starts Here.
           </h1>
           
-          <p className="text-base sm:text-lg font-medium text-brand-text-secondary leading-relaxed max-w-xl">
+          <p className="text-sm sm:text-base lg:text-lg font-medium text-brand-text-secondary leading-relaxed max-w-xl">
             Discover free ebooks, AI-powered learning, smart summaries, quizzes, flashcards, and everything you need to learn faster.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-3 mt-1 w-full sm:w-auto">
-            <Link to="/marketplace" className="w-full sm:w-auto">
-              <Button variant="primary" size="lg" className="font-bold h-12 px-6 rounded-full w-full justify-center">
+          {/* Point 3: Hero CTA Buttons — Inline side-by-side on mobile and desktop */}
+          <div className="flex flex-row items-center gap-2.5 sm:gap-3 mt-1 w-full max-w-md">
+            <Link to="/marketplace" className="flex-1">
+              <Button variant="primary" size="lg" className="font-bold h-11 sm:h-12 px-3 sm:px-6 text-xs sm:text-sm rounded-full w-full justify-center whitespace-nowrap">
                 Browse Library
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-1.5 h-3.5 sm:h-4 w-3.5 sm:w-4 shrink-0" />
               </Button>
             </Link>
-            <Link to="/register?role=author" className="w-full sm:w-auto">
-              <Button variant="ghost" size="lg" className="font-bold h-12 px-6 rounded-full text-brand-text hover:bg-brand-bg-secondary w-full justify-center border border-brand-border">
+            <Link to="/register?role=author" className="flex-1">
+              <Button variant="ghost" size="lg" className="font-bold h-11 sm:h-12 px-3 sm:px-6 text-xs sm:text-sm rounded-full text-brand-text hover:bg-brand-bg-secondary w-full justify-center border border-brand-border whitespace-nowrap">
                 Publish a Book
               </Button>
             </Link>
@@ -371,8 +413,6 @@ export const Landing = () => {
           <HeroImageStack />
         </motion.div>
 
-
-
       </section>
 
       {/* Stripe-style Trust Bar */}
@@ -400,16 +440,49 @@ export const Landing = () => {
         </div>
       </div>
 
-      {/* 2. RECENTLY ADDED */}
+      {/* 2. Point 4: RECENTLY ADDED BOOKS WITH CAROUSEL ARROWS & SPACING */}
       {recentlyAdded.length > 0 && (
-        <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">
-          <div className="max-w-7xl mx-auto px-6 w-full text-left">
-            <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">New Arrivals</span>
-            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-8 tracking-tight">Recently Added Books</h2>
+        <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px] relative">
+          <div className="max-w-7xl mx-auto px-6 w-full text-left relative">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">New Arrivals</span>
+                <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 tracking-tight">Recently Added Books</h2>
+              </div>
+              
+              {/* Carousel Navigation Arrows */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleRecentlyScroll("prev")}
+                  disabled={!canScrollLeftRecently}
+                  className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-brand-border/80 bg-brand-card/90 shadow-sm flex items-center justify-center text-brand-text transition-all duration-200 cursor-pointer ${
+                    !canScrollLeftRecently ? "opacity-30 cursor-not-allowed" : "hover:bg-brand-card hover:scale-105"
+                  }`}
+                  aria-label="Previous books"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => handleRecentlyScroll("next")}
+                  disabled={!canScrollRightRecently}
+                  className={`h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-brand-border/80 bg-brand-card/90 shadow-sm flex items-center justify-center text-brand-text transition-all duration-200 cursor-pointer ${
+                    !canScrollRightRecently ? "opacity-30 cursor-not-allowed" : "hover:bg-brand-card hover:scale-105"
+                  }`}
+                  aria-label="Next books"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
             
-            <div className="flex md:grid overflow-x-auto md:overflow-x-visible pb-4 md:pb-0 gap-6 sm:gap-8 grid-cols-2 md:grid-cols-4 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-6 px-6 md:mx-0 md:px-0 select-none">
+            {/* Scrollable Row with increased card breathing room */}
+            <div 
+              ref={recentlyAddedRef}
+              onScroll={updateRecentlyScrollState}
+              className="flex overflow-x-auto pb-4 gap-6 sm:gap-8 lg:gap-10 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-6 px-6 select-none"
+            >
               {recentlyAdded.map((book) => (
-                <div key={book.id} className="snap-center shrink-0 w-[240px] sm:w-[280px] md:w-auto">
+                <div key={book.id} className="snap-start shrink-0 w-[240px] sm:w-[270px] md:w-[290px] p-0.5">
                   <BookCard book={book} />
                 </div>
               ))}
@@ -418,7 +491,7 @@ export const Landing = () => {
         </div>
       )}
 
-      {/* 4. VALUE PROPOSITION GRID (Replaces PricingSection) */}
+      {/* 4. Point 5: PLATFORM BENEFITS SECTION — 2-COLUMN GRID + COMPACT CARDS */}
       <div className="bg-brand-bg border-t border-brand-border pt-10 md:pt-14 pb-12 md:pb-16 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
@@ -428,80 +501,81 @@ export const Landing = () => {
             <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 tracking-tight">
               Platform Benefits
             </h2>
-            <p className="text-sm sm:text-base text-brand-text-secondary mt-3 mb-12 max-w-md mx-auto font-normal leading-relaxed">
+            <p className="text-xs sm:text-base text-brand-text-secondary mt-2.5 mb-8 sm:mb-12 max-w-md mx-auto font-normal leading-relaxed">
               Enjoy 100% free access to all core features for our launching year. No subscriptions required.
             </p>
           </FadeUp>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          {/* 2-Column Grid on Mobile (<768px), 3-Column on Desktop (>=768px) */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 md:gap-8">
             <FadeUp delay={0.1} className="h-full">
-              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-5 shrink-0">
-                  <Sparkles className="h-5.5 w-5.5" />
+              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
+                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-2.5 sm:mb-4 shrink-0">
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Free Forever (First Year)</h3>
-                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
-                  Join during our initial release period and secure a full year of open library access completely free of charge. No hidden fees or plans.
+                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Free Forever</h3>
+                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
+                  Join during our release period and secure open library access completely free of charge. No hidden fees.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.16} className="h-full">
-              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-5 shrink-0">
-                  <BookOpen className="h-5.5 w-5.5" />
+              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
+                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-2.5 sm:mb-4 shrink-0">
+                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Unlimited Reading</h3>
-                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
-                  Read as many books as you want. Explore tech specifications, startup ARR roadmaps, and self-help classics from cover to cover without limits.
+                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Unlimited Reading</h3>
+                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
+                  Read as many books as you want. Explore tech specifications, startup ARR roadmaps, and self-help classics.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.22} className="h-full">
-              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="h-12 w-12 rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-5 shrink-0">
-                  <Download className="h-5.5 w-5.5" />
+              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
+                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-2.5 sm:mb-4 shrink-0">
+                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Unlimited Downloads</h3>
-                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
-                  Keep your books stored locally. Instantly download PDF and EPUB files to access your reading material on any device, offline, anytime.
+                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Unlimited Downloads</h3>
+                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
+                  Keep your books stored locally. Instantly download PDF and EPUB files to access your reading material offline.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.28} className="h-full">
-              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="h-12 w-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-5 shrink-0">
-                  <BrainCircuit className="h-5.5 w-5.5" />
+              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
+                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-2.5 sm:mb-4 shrink-0">
+                  <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Unlimited AI Features</h3>
-                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
-                  Enhance your learning. Access floating AI assistants to explain complex lines, generate flashcards, construct study mind maps, and translate blocks.
+                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">AI Assistant</h3>
+                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
+                  Enhance your learning. Access floating AI assistants to explain complex lines, generate flashcards, and mind maps.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.34} className="h-full">
-              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="h-12 w-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 mb-5 shrink-0">
-                  <Users className="h-5.5 w-5.5" />
+              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
+                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 mb-2.5 sm:mb-4 shrink-0">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Community Driven</h3>
-                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
-                  Connect directly with authors. Rate titles, publish helpful reviews, follow creators, and share curated collections with other readers in real time.
+                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Community Driven</h3>
+                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
+                  Connect directly with authors. Rate titles, publish helpful reviews, follow creators, and share curated collections.
                 </p>
               </div>
             </FadeUp>
 
             <FadeUp delay={0.4} className="h-full">
-              <div className="h-[260px] p-7 bg-brand-card border border-brand-border rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-1 transition-all duration-300 flex flex-col">
-                <div className="h-12 w-12 rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-5 shrink-0">
-                  <BookMarked className="h-5.5 w-5.5" />
+              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
+                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-2.5 sm:mb-4 shrink-0">
+                  <BookMarked className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <h3 className="text-base font-bold text-brand-text font-display shrink-0">Open Library</h3>
-                <p className="text-xs sm:text-[13px] text-brand-text-secondary mt-2.5 leading-relaxed line-clamp-4">
-                  Enjoy clean layouts without visual clutter, banner ads, paywall overlays, or upgrade request warnings. A workspace designed purely for readers.
+                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Open Library</h3>
+                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
+                  Enjoy clean layouts without visual clutter, banner ads, or paywall overlays. Designed purely for readers.
                 </p>
               </div>
             </FadeUp>
@@ -524,46 +598,70 @@ export const Landing = () => {
         </section>
       </div>
 
-
-
-      {/* 7. TESTIMONIALS */}
+      {/* 7. Point 6: WHAT READERS SAY — 2 CARDS PER VIEW + 2s AUTO-ADVANCE + ARROWS */}
       <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center select-none">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Wall of Love</span>
           </FadeUp>
           <FadeUp delay={0.05}>
-            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-12 tracking-tight">
-              What Readers Say
-            </h2>
+            <div className="flex items-center justify-between mt-3 mb-8">
+              <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text tracking-tight text-left">
+                What Readers Say
+              </h2>
+
+              {/* Navigation Arrows */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleTestimonialNav("prev")}
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-brand-border/80 bg-brand-card/90 shadow-sm flex items-center justify-center text-brand-text hover:bg-brand-card hover:scale-105 transition-all duration-200 cursor-pointer"
+                  aria-label="Previous testimonials"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  onClick={() => handleTestimonialNav("next")}
+                  className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border border-brand-border/80 bg-brand-card/90 shadow-sm flex items-center justify-center text-brand-text hover:bg-brand-card hover:scale-105 transition-all duration-200 cursor-pointer"
+                  aria-label="Next testimonials"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
           </FadeUp>
           
-          {/* Mobile Testimonials (Horizontal swipeable snap-scroll) */}
-          <div className="sm:hidden flex overflow-x-auto gap-4 px-2 pb-6 snap-x snap-mandatory scrollbar-none scroll-smooth">
-            {testimonialsData.map((t, idx) => (
-              <TestimonialCard key={idx} testimonial={t} />
-            ))}
+          {/* 2-Card View Container with Smooth AnimatePresence Slide/Fade */}
+          <div className="relative overflow-hidden w-full py-2">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={testimonialPage}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.35, ease: "easeInOut" }}
+                className="grid grid-cols-2 gap-3 sm:gap-6 w-full"
+              >
+                {testimonialsData
+                  .slice(testimonialPage * 2, testimonialPage * 2 + 2)
+                  .map((t, idx) => (
+                    <TestimonialCard key={idx} testimonial={t} />
+                  ))}
+              </motion.div>
+            </AnimatePresence>
           </div>
 
-          {/* Desktop/Tablet Testimonials (Dual scrolling Marquees) */}
-          <div className="hidden sm:flex flex-col gap-6 relative w-full overflow-hidden py-4">
-            {/* Left and Right Fade-out Gradient Overlays */}
-            <div className="absolute top-0 bottom-0 left-0 w-16 md:w-32 bg-gradient-to-r from-brand-bg-secondary to-transparent z-10 pointer-events-none" />
-            <div className="absolute top-0 bottom-0 right-0 w-16 md:w-32 bg-gradient-to-l from-brand-bg-secondary to-transparent z-10 pointer-events-none" />
-            
-            {/* Row 1: Left to right (Standard) */}
-            <Marquee pauseOnHover className="py-2" repeat={5}>
-              {testimonialsData.slice(0, 5).map((t, idx) => (
-                <TestimonialCard key={idx} testimonial={t} />
-              ))}
-            </Marquee>
-
-            {/* Row 2: Right to left (Reverse) */}
-            <Marquee reverse pauseOnHover className="py-2" repeat={5}>
-              {testimonialsData.slice(5, 10).map((t, idx) => (
-                <TestimonialCard key={idx} testimonial={t} />
-              ))}
-            </Marquee>
+          {/* Page Indicators (Dots) */}
+          <div className="flex justify-center items-center gap-2 mt-6">
+            {[...Array(totalTestimonialPages)].map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleTestimonialNav(idx)}
+                className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                  testimonialPage === idx ? "w-6 bg-brand-accent" : "w-2 bg-brand-border/80 hover:bg-brand-text-secondary"
+                }`}
+                aria-label={`Go to testimonial page ${idx + 1}`}
+              />
+            ))}
           </div>
         </section>
       </div>

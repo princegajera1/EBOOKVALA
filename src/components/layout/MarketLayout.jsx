@@ -42,22 +42,8 @@ export const MarketLayout = () => {
 
   if (isAuthenticated) {
     navItems.push({ label: "Dashboard", href: getDashboardLink() });
-    navItems.push({ 
-      label: "Toggle Theme", 
-      icon: theme === "dark" ? Sun : Moon, 
-      ariaLabel: "Toggle Theme", 
-      href: "#", 
-      onClick: toggleTheme 
-    });
     navItems.push({ label: "Log Out", href: "#", onClick: handleSignOut });
   } else {
-    navItems.push({ 
-      label: "Toggle Theme", 
-      icon: theme === "dark" ? Sun : Moon, 
-      ariaLabel: "Toggle Theme", 
-      href: "#", 
-      onClick: toggleTheme 
-    });
     navItems.push({ label: "Log In", href: "/login" });
     navItems.push({ label: "Register", href: "/register" });
   }
@@ -72,7 +58,7 @@ export const MarketLayout = () => {
     <div className="min-h-screen bg-brand-bg flex flex-col justify-between transition-colors duration-300 relative">
       
       {/* 1. PillNav (Desktop + Tablet Navigation: >= 768px) */}
-      <header className="fixed top-4 left-4 right-4 z-40 hidden md:block max-w-6xl mx-auto w-[calc(100%-2rem)]">
+      <header className="fixed top-4 left-4 right-4 z-50 hidden md:block max-w-6xl mx-auto w-[calc(100%-2rem)]">
         <PillNav 
           logo={logoImg} 
           logoAlt="EBOOKVALA" 
@@ -103,7 +89,7 @@ export const MarketLayout = () => {
       <MobileDockNav />
       
       {/* Main Content Area: Added extra padding-top to prevent overlaps with floating headers */}
-      <main className={`flex-grow pt-24 lg:pt-32 lg:pb-12 bg-brand-bg overflow-hidden relative z-10 ${
+      <main className={`flex-grow pt-20 sm:pt-24 lg:pt-32 lg:pb-12 bg-brand-bg overflow-hidden relative z-10 ${
         location.pathname.startsWith("/book/") || location.pathname.startsWith("/read/")
           ? "pb-4"
           : "pb-28"

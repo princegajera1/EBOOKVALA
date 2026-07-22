@@ -40,15 +40,21 @@
 
 /* Header style containing logo and hamburger button */
 .staggered-menu-header {
-  position: absolute;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.25rem 1.5rem;
+  padding: 0.85rem 1.25rem;
   z-index: 50;
   pointer-events: auto;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .sm-logo {

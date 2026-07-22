@@ -245,7 +245,7 @@ export const BookDetail = () => {
             <div>
               {/* Category Badges */}
               <div className="flex flex-wrap gap-2 mb-3">
-                {book.categories.map((cat, idx) => (
+                {(book.categories || []).map((cat, idx) => (
                   <span key={idx} className="bg-brand-accent/10 text-brand-accent text-[9px] font-extrabold tracking-wider uppercase rounded-full px-3 py-1">
                     {cat}
                   </span>

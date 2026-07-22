@@ -372,30 +372,30 @@ export const BookCard = ({ book, view = "grid" }) => {
         </Link>
 
         {/* Card Body */}
-        <div className="p-3 flex-grow flex flex-col justify-between gap-1.5 text-left">
+        <div className="p-2.5 sm:p-3 flex-grow flex flex-col justify-between gap-1 text-left">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <span className="inline-block text-[9px] font-extrabold tracking-wider uppercase text-brand-accent">
+              <span className="inline-block text-[8.5px] sm:text-[9px] font-extrabold tracking-wider uppercase text-brand-accent truncate">
                 {(book.categories && book.categories[0]) || "eBook"}
               </span>
-              <span className="text-[9px] font-bold text-brand-text-secondary uppercase">
+              <span className="text-[8.5px] sm:text-[9px] font-bold text-brand-text-secondary uppercase shrink-0 ml-1">
                 {book.language || "English"}
               </span>
             </div>
             
             <Link to={`/book/${book.slug || book.id}`} className="hover:text-brand-accent transition-colors block">
-              <h4 className="text-sm font-bold text-brand-text leading-snug line-clamp-2 h-9 font-display">
+              <h4 className="text-xs sm:text-sm font-bold text-brand-text leading-snug line-clamp-2 min-h-[32px] sm:min-h-[36px] font-display">
                 {book.title}
               </h4>
             </Link>
             
             {/* Author Row */}
-            <div className="flex items-center gap-2 mt-2 select-none">
-              <div className="h-4.5 w-4.5 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
+            <div className="flex items-center gap-1.5 mt-1.5 select-none">
+              <div className="h-4 w-4 sm:h-4.5 sm:w-4.5 rounded-full overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
                 <img src={getAuthorAvatar(book.authorId)} alt={`Avatar of ${book.authorName}`} decoding="async" className="h-full w-full object-cover" />
               </div>
-              <p className="text-[11px] text-brand-text-secondary truncate flex items-center gap-1">
-                by <span className="font-semibold text-brand-text">{book.authorName}</span>
+              <p className="text-[10px] sm:text-[11px] text-brand-text-secondary truncate flex items-center gap-1">
+                by <span className="font-semibold text-brand-text truncate">{book.authorName}</span>
                 {isAuthorVerified(book.authorId) && (
                   <span className="inline-flex items-center justify-center h-3 w-3 rounded-full bg-brand-primary text-brand-bg text-[7px] font-bold shrink-0">
                     <Check className="h-2 w-2" strokeWidth={4} />
@@ -405,61 +405,63 @@ export const BookCard = ({ book, view = "grid" }) => {
             </div>
 
             {/* Badges / Rating Row */}
-            <div className="flex items-center gap-2.5 mt-2.5 select-none text-[10px] text-brand-text-secondary font-medium">
-              <div className="flex items-center gap-0.5">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+            <div className="flex items-center gap-1 sm:gap-2.5 mt-2 select-none text-[9px] sm:text-[10px] text-brand-text-secondary font-medium">
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 fill-amber-400 text-amber-400" />
                 <span className="font-bold text-brand-text">{book.rating || "New"}</span>
               </div>
               <span>•</span>
-              <div className="flex items-center gap-0.5">
-                <Clock className="h-3 w-3" />
+              <div className="flex items-center gap-0.5 shrink-0">
+                <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                 <span>{book.readingTimeMinutes || book.pages}m</span>
               </div>
-              <span>•</span>
-              <span className="px-1.5 py-0.5 rounded bg-brand-bg-secondary font-semibold text-brand-text">{difficulty}</span>
+              <span className="hidden sm:inline">•</span>
+              <span className="hidden sm:inline px-1.5 py-0.5 rounded bg-brand-bg-secondary font-semibold text-brand-text truncate">{difficulty}</span>
             </div>
           </div>
 
           {/* Action Row */}
-          <div className="flex items-center justify-between mt-1 pt-3 border-t border-brand-border/60">
-            <span className="text-[11px] font-bold text-brand-success bg-brand-success/10 px-2 py-0.5 rounded-full">
+          <div className="flex items-center justify-between mt-1 pt-2 border-t border-brand-border/60">
+            <span className="text-[9.5px] sm:text-[11px] font-bold text-brand-success bg-brand-success/10 px-1.5 sm:px-2 py-0.5 rounded-full">
               Free
             </span>
             
-            {book && (book.pdfURL || book.pdf_url) && (
-              <button
-                onClick={async (e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  try {
-                    await dbService.incrementBookDownloads(book.id);
-                    toast.success("Starting download...");
-                    const link = document.createElement("a");
-                    link.href = book.pdfURL || book.pdf_url;
-                    link.setAttribute("download", `${book.title}.pdf`);
-                    link.target = "_blank";
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  } catch (err) {
-                    console.error("Error triggering download:", err);
-                    toast.error("Failed to download.");
-                  }
-                }}
-                className="text-xs text-brand-accent hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-accent/5 transition-colors"
-                title="Download eBook PDF"
-              >
-                Download
-              </button>
-            )}
+            <div className="flex items-center gap-1">
+              {book && (book.pdfURL || book.pdf_url) && (
+                <button
+                  onClick={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                      await dbService.incrementBookDownloads(book.id);
+                      toast.success("Starting download...");
+                      const link = document.createElement("a");
+                      link.href = book.pdfURL || book.pdf_url;
+                      link.setAttribute("download", `${book.title}.pdf`);
+                      link.target = "_blank";
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    } catch (err) {
+                      console.error("Error triggering download:", err);
+                      toast.error("Failed to download.");
+                    }
+                  }}
+                  className="text-[10.5px] sm:text-xs text-brand-accent hover:underline font-bold font-sans cursor-pointer py-0.5 px-1.5 rounded hover:bg-brand-accent/5 transition-colors"
+                  title="Download eBook PDF"
+                >
+                  Download
+                </button>
+              )}
 
-            <Link to={`/read/${book.slug || book.id}`}>
-              <button
-                className="text-xs text-brand-success hover:underline font-bold font-sans cursor-pointer py-1 px-2 rounded-md hover:bg-brand-success/5 transition-colors"
-              >
-                Read Now
-              </button>
-            </Link>
+              <Link to={`/read/${book.slug || book.id}`}>
+                <button
+                  className="text-[10.5px] sm:text-xs text-brand-success hover:underline font-bold font-sans cursor-pointer py-0.5 px-1.5 rounded hover:bg-brand-success/5 transition-colors"
+                >
+                  Read
+                </button>
+              </Link>
+            </div>
           </div>
         </div>
       </motion.div>

@@ -24,8 +24,8 @@ export const BookGrid = ({
     return (
       <div className={
         view === "list"
-          ? "flex flex-col gap-6"
-          : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+          ? "flex flex-col gap-4 sm:gap-6"
+          : "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6"
       }>
         {Array.from({ length: skeletonCount }).map((_, i) => (
           view === "list" ? (
@@ -49,8 +49,8 @@ export const BookGrid = ({
       animate="visible"
       className={
         view === "list"
-          ? "flex flex-col gap-6"
-          : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6"
+          ? "flex flex-col gap-4 sm:gap-6"
+          : "grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6"
       }
     >
       {books.map((book) => (

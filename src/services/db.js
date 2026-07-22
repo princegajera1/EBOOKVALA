@@ -286,9 +286,16 @@ export const dbService = {
     await ensureSeeded();
     try {
       const docSnap = await getDoc(doc(db, "books", id));
-      return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } : null;
+      if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() };
+      }
+      const seedMatch = SEED_BOOKS.find(b => b.id === id || b.slug === id);
+      if (seedMatch) return seedMatch;
+      return null;
     } catch (error) {
       console.error("Firestore getBookById error:", error);
+      const seedMatch = SEED_BOOKS.find(b => b.id === id || b.slug === id);
+      if (seedMatch) return seedMatch;
       return null;
     }
   },
@@ -307,9 +314,14 @@ export const dbService = {
       if (!snap.empty) {
         return { id: snap.docs[0].id, ...snap.docs[0].data() };
       }
+      // 3. Third try: fallback to SEED_BOOKS array directly
+      const seedMatch = SEED_BOOKS.find(b => b.id === slug || b.slug === slug);
+      if (seedMatch) return seedMatch;
       return null;
     } catch (error) {
       console.error("Firestore getBookBySlug error:", error);
+      const seedMatch = SEED_BOOKS.find(b => b.id === slug || b.slug === slug);
+      if (seedMatch) return seedMatch;
       return null;
     }
   },

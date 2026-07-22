@@ -343,18 +343,21 @@ export const Marketplace = () => {
           Access our open digital library of premium developer editions, SaaS design architectures, and founder-focused self-help books. 100% free forever for the first year.
         </p>
       </div>
-      {/* Mobile-Native Swipeable Category chips */}
-      <div className="lg:hidden w-full overflow-x-auto flex gap-2 pb-4 mb-3 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-6 px-6 select-none">
+      {/* Category Pills Bar (Responsive Horizontal Scroll for all breakpoints) */}
+      <div className="w-full overflow-x-auto flex items-center gap-2 sm:gap-2.5 pb-4 mb-4 scrollbar-none snap-x snap-mandatory scroll-smooth select-none">
+        <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest shrink-0 mr-1 hidden sm:inline">
+          Categories:
+        </span>
         {["Technology", "Business", "Self-Help", "Fiction", "Romance", "Design"].map((cat) => {
           const isSelected = selectedCategories.includes(cat);
           return (
             <button
               key={cat}
               onClick={() => handleCategoryToggle(cat)}
-              className={`snap-center shrink-0 text-xs font-bold px-4 py-2 rounded-full border transition-all active-tap cursor-pointer ${
+              className={`snap-start shrink-0 text-xs font-bold px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full border transition-all duration-200 active-tap cursor-pointer ${
                 isSelected 
-                  ? "bg-brand-primary text-brand-bg border-brand-primary" 
-                  : "bg-brand-card text-brand-text-secondary border-brand-border hover:border-brand-text"
+                  ? "bg-brand-accent text-white border-brand-accent shadow-sm" 
+                  : "bg-brand-card text-brand-text-secondary border-brand-border/80 hover:border-brand-accent/50 hover:text-brand-text"
               }`}
             >
               {cat}
@@ -366,7 +369,7 @@ export const Marketplace = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start">
         
         {/* LEFT SIDEBAR FILTERS (Desktop Only) */}
-        <aside className="hidden lg:block lg:col-span-3 bg-brand-card border border-brand-border rounded-brand-card p-6 sticky top-24 shadow-brand select-none text-left">
+        <aside className="hidden lg:block lg:col-span-3 bg-brand-card border border-brand-border rounded-[20px] p-6 sticky top-24 shadow-brand select-none text-left">
           <FiltersContent />
         </aside>
 
@@ -374,7 +377,7 @@ export const Marketplace = () => {
         <section className="lg:col-span-9 flex flex-col gap-6">
           
           {/* Top Search & Filter Bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-brand-card border border-brand-border rounded-brand-card p-4 shadow-brand select-none text-left">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-brand-card border border-brand-border/80 rounded-[20px] p-4 shadow-brand hover:shadow-brand-hover transition-all select-none text-left">
             
             {/* Instant Search Bar */}
             <div ref={searchContainerRef} className="relative flex-grow max-w-md">
@@ -543,7 +546,7 @@ export const Marketplace = () => {
 
           {/* Book grid/list container */}
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
               {Array.from({ length: 8 }).map((_, i) => (
                 <BookCardSkeleton key={i} />
               ))}

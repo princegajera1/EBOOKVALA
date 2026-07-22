@@ -47,7 +47,9 @@ export const Reader = () => {
   const [book, setBook] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("pdf"); // default to pdf mode
+  const [viewMode, setViewMode] = useState("text"); // default to interactive text mode for best multi-platform compatibility
+  const [pdfLoading, setPdfLoading] = useState(true);
+  const [pdfError, setPdfError] = useState(false);
 
   // Reader Settings
   const [readerTheme, setReaderTheme] = useState("sepia"); // light | dark | sepia
@@ -82,6 +84,20 @@ export const Reader = () => {
   // Text to Speech
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechUtteranceRef = useRef(null);
+
+  useEffect(() => {
+    if (viewMode === "pdf") {
+      setPdfLoading(true);
+      setPdfError(false);
+      const timer = setTimeout(() => {
+        if (window.Capacitor?.isNativePlatform?.()) {
+          setPdfLoading(false);
+          setPdfError(true);
+        }
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [viewMode]);
 
   const handleDownloadBook = async () => {
     if (!book) return;
@@ -131,7 +147,8 @@ export const Reader = () => {
         setChapters(generateMockContent(found.title));
         
         const fileUrl = found.pdfURL || found.pdf_url;
-        if (!fileUrl || fileUrl.trim() === "") {
+        const isCapacitorNative = Boolean(window.Capacitor?.isNativePlatform?.());
+        if (!fileUrl || fileUrl.trim() === "" || isCapacitorNative) {
           setViewMode("text");
         } else {
           setViewMode("pdf");
@@ -348,6 +365,43 @@ export const Reader = () => {
 
         <div className="flex items-center gap-2">
 
+          {/* Mode Switcher Toggle (eBook Text Mode vs PDF View) */}
+          <div className="flex items-center border border-inherit rounded-full p-0.5 bg-black/5 dark:bg-white/5 select-none">
+            <button
+              onClick={() => setViewMode("text")}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "text"
+                  ? "bg-brand-accent text-white shadow-sm"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">eBook Mode</span>
+            </button>
+            <button
+              onClick={() => setViewMode("pdf")}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === "pdf"
+                  ? "bg-brand-accent text-white shadow-sm"
+                  : "opacity-70 hover:opacity-100"
+              }`}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">PDF View</span>
+            </button>
+          </div>
+
+          {/* AI Tutor Toggle */}
+          <button
+            onClick={() => setShowAiPanel(!showAiPanel)}
+            className={`p-2 rounded-full transition-colors cursor-pointer ${
+              showAiPanel ? "bg-brand-accent/20 text-brand-accent" : "hover:bg-black/5"
+            }`}
+            title="AI Reading Tutor"
+          >
+            <BrainCircuit className="h-4.5 w-4.5" />
+          </button>
+
           {/* Reader settings dropdown */}
           {viewMode === "text" && (
             <div className="relative">
@@ -445,7 +499,7 @@ export const Reader = () => {
               title="Download PDF File"
             >
               <Download className="h-3.5 w-3.5" />
-              <span>Download</span>
+              <span className="hidden sm:inline">Download</span>
             </button>
           )}
 
@@ -496,35 +550,78 @@ export const Reader = () => {
         {/* PDF / Text Viewport */}
         {viewMode === "pdf" ? (
           (() => {
-            const pdfUrl = book?.pdfURL || book?.pdf_url;
-            const isPdfValid = pdfUrl && pdfUrl.trim() !== "";
+            const rawPdfUrl = book?.pdfURL || book?.pdf_url;
+            const isPdfValid = rawPdfUrl && rawPdfUrl.trim() !== "";
             
-            if (!isPdfValid) {
+            if (!isPdfValid || pdfError) {
               return (
-                <div className="flex-grow flex flex-col items-center justify-center p-8 bg-brand-bg-secondary text-brand-text select-none text-center">
-                  <div className="max-w-md p-8 rounded-[24px] border border-brand-border bg-brand-card shadow-brand flex flex-col items-center gap-4">
-                    <div className="h-14 w-14 rounded-full bg-brand-danger/10 border border-brand-danger/25 text-brand-danger flex items-center justify-center shadow-sm">
-                      <FileText className="h-6 w-6" />
+                <div className="flex-grow flex flex-col items-center justify-center p-6 sm:p-10 bg-brand-bg-secondary text-brand-text select-none text-center animate-fade-in w-full">
+                  <div className="max-w-md w-full p-8 rounded-[24px] border border-brand-border bg-brand-card shadow-brand flex flex-col items-center gap-4">
+                    <div className="h-14 w-14 rounded-full bg-brand-accent/10 border border-brand-accent/25 text-brand-accent flex items-center justify-center shadow-sm">
+                      <BookOpen className="h-6 w-6" />
                     </div>
-                    <h3 className="text-lg font-display font-black">File not available</h3>
+                    <h3 className="text-lg font-display font-black text-brand-text">
+                      {!isPdfValid ? "No PDF Uploaded" : "PDF Preview Unavailable"}
+                    </h3>
                     <p className="text-xs text-brand-text-secondary leading-relaxed max-w-xs">
-                      This eBook does not have a PDF document uploaded. Switch to <strong>Text Mode</strong> to read the text preview instead!
+                      {!isPdfValid 
+                        ? "This eBook does not have an external PDF file uploaded." 
+                        : "Inline PDF rendering inside Android WebView is not supported natively. Enjoy reading this eBook in Interactive Reader Mode with AI Tutor, audio narration, and text customization!"}
                     </p>
-                    <Button onClick={() => setViewMode("text")} variant="primary" className="rounded-full text-xs font-bold px-6 h-10 shadow-sm mt-2">
-                      Switch to Text Mode
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full mt-2">
+                      <Button 
+                        onClick={() => setViewMode("text")} 
+                        variant="primary" 
+                        className="flex-1 rounded-full text-xs font-bold h-10 shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        Switch to eBook Mode
+                      </Button>
+                      {isPdfValid && (
+                        <Button 
+                          onClick={handleDownloadBook} 
+                          variant="outline" 
+                          className="rounded-full text-xs font-bold h-10 border-brand-border flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Download className="h-4 w-4" />
+                          Download PDF
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             }
 
+            // Resolve full URL
+            let fullPdfUrl = rawPdfUrl;
+            if (rawPdfUrl.startsWith("/")) {
+              fullPdfUrl = window.location.origin + rawPdfUrl;
+            }
+            
+            // For external http/https URLs, Google Docs Viewer provides universal inline PDF rendering on mobile WebViews
+            const iframeSrc = (fullPdfUrl.startsWith("http://") || fullPdfUrl.startsWith("https://")) && !fullPdfUrl.includes("localhost")
+              ? `https://docs.google.com/viewer?url=${encodeURIComponent(fullPdfUrl)}&embedded=true`
+              : fullPdfUrl;
+
             return (
-              <div className="flex-grow relative bg-[#2a2a2e] flex items-stretch">
+              <div className="flex-grow relative bg-brand-bg-secondary flex flex-col items-stretch justify-center overflow-hidden w-full">
+                {pdfLoading && (
+                  <div className="absolute inset-0 z-10 bg-brand-card/90 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-brand-text select-none">
+                    <RefreshCw className="h-7 w-7 text-brand-accent animate-spin" />
+                    <p className="text-xs font-bold text-brand-text-secondary">Loading PDF document...</p>
+                  </div>
+                )}
                 <iframe 
-                  src={pdfUrl} 
-                  className="w-full border-none" 
+                  src={iframeSrc} 
+                  className="w-full h-full flex-grow border-none" 
                   title={book.title}
-                  style={{ minHeight: "calc(100vh - 64px)" }}
+                  style={{ minHeight: "calc(100vh - 128px)" }}
+                  onLoad={() => setPdfLoading(false)}
+                  onError={() => {
+                    setPdfLoading(false);
+                    setPdfError(true);
+                  }}
                 />
               </div>
             );

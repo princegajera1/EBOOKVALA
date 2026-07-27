@@ -132,6 +132,34 @@ export const PlanCheckoutModal = ({ isOpen, onClose, plan, user, onProceedToPaym
     }
   };
 
+  const handleSimulatedTestPay = (e) => {
+    e.preventDefault();
+    if (!fullName.trim() || !phone.trim() || !email.trim()) {
+      toast.error("Please fill in your name, email, and phone number.");
+      return;
+    }
+
+    const billingData = {
+      fullName: fullName.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      country,
+      state: stateName,
+      gstin: gstin.trim(),
+      billingCycle,
+      rawPrice,
+      discountAmount,
+      gstAmount,
+      finalTotal,
+      appliedCoupon: appliedCoupon ? appliedCoupon.code : null,
+      isSimulated: true
+    };
+
+    if (onProceedToPayment) {
+      onProceedToPayment(plan, billingData, true); // true for simulated
+    }
+  };
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md select-none">
@@ -428,14 +456,25 @@ export const PlanCheckoutModal = ({ isOpen, onClose, plan, user, onProceedToPaym
                     </div>
                   </div>
 
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    className="w-full rounded-xl py-3 text-xs font-bold mt-6 shadow-brand flex items-center justify-center gap-2"
-                  >
-                    Proceed to Payment (₹{finalTotal})
-                    <CreditCard className="h-4 w-4" />
-                  </Button>
+                  <div className="space-y-2.5 mt-6">
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      className="w-full rounded-xl py-3 text-xs font-bold shadow-brand flex items-center justify-center gap-2"
+                    >
+                      Proceed to Razorpay (₹{finalTotal})
+                      <CreditCard className="h-4 w-4" />
+                    </Button>
+
+                    <button
+                      type="button"
+                      onClick={handleSimulatedTestPay}
+                      className="w-full py-2.5 text-[11px] font-extrabold rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 fill-emerald-400" />
+                      Instant Demo Pay & Activate (₹{finalTotal})
+                    </button>
+                  </div>
                 </div>
 
               </div>

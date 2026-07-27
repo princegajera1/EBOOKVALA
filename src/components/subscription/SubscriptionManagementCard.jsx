@@ -135,6 +135,50 @@ export const SubscriptionManagementCard = ({ user, onUpgradeClick }) => {
         </div>
       </div>
 
+      {/* Included Active Features List */}
+      <div className="mb-5 p-4 bg-brand-bg-secondary/60 border border-brand-border rounded-2xl">
+        <span className="text-[10px] font-mono font-bold text-brand-accent uppercase tracking-wider block mb-2.5">
+          Active {activePlanName.toUpperCase()} Plan Features & Perks:
+        </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+          {(activePlanName === "pro" ? [
+            "Full Audiobooks Library Access",
+            "Human Voice AI Narrations",
+            "Priority Customer Support 24/7",
+            "AI Chat with Book (Unlimited)",
+            "AI Flashcards & Quiz Generator",
+            "Export Notes & Highlights"
+          ] : activePlanName === "plus" ? [
+            "AI Chat with Book (Unlimited)",
+            "Instant AI Book & Chapter Summaries",
+            "AI Flashcards & Quiz Generator",
+            "Multi-Language AI Translator",
+            "Unlimited Devices Sync",
+            "Zero Ads Experience"
+          ] : activePlanName === "reader" ? [
+            "Unlimited Offline Downloads",
+            "Bookmarks, Highlights & Notes Sync",
+            "Reading Streak & Goal Tracker",
+            "Up to 4 Devices Sync",
+            "Zero Ads Experience"
+          ] : activePlanName === "starter" ? [
+            "Access to 10,000+ Premium eBooks",
+            "Zero Ads Experience",
+            "Multi-Device Sync (2 Devices)",
+            "Standard Reader Customization"
+          ] : [
+            "Access to 500+ Public eBooks",
+            "Standard Web Reader",
+            "Single Device Access"
+          ]).map((feat, i) => (
+            <div key={i} className="flex items-center gap-2 text-[11px] text-brand-text-secondary">
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+              <span>{feat}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Footer Controls: Auto Renew & Cancel Subscription */}
       {activePlanName !== "free" && subscription?.status !== "cancelled" && (
         <div className="pt-4 border-t border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">

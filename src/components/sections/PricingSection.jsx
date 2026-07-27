@@ -186,9 +186,48 @@ export const PricingSection = () => {
     navigate("/dashboard");
   };
 
-  // Handle Paid Plan Razorpay Checkout (Proceed to Payment)
-  const handleProceedToPayment = async (plan, billingData) => {
+  // Handle Paid Plan Payment (Razorpay or Instant Simulated Demo Pay)
+  const handleProceedToPayment = async (plan, billingData, isSimulated = false) => {
     setIsCheckoutModalOpen(false);
+
+    // 1. Instant Demo Pay Simulation
+    if (isSimulated || billingData.isSimulated) {
+      const toastId = toast.loading(`Processing instant demo subscription for ${plan.name} Plan...`);
+      const paymentId = `pay_demo_${Math.random().toString(36).substring(2, 10)}`;
+      const orderId = `ord_demo_${Math.random().toString(36).substring(2, 10)}`;
+
+      let createdSub = null;
+      try {
+        if (user?.uid) {
+          createdSub = await dbService.createSubscriptionRecord({
+            userId: user.uid,
+            plan,
+            billingData,
+            paymentId,
+            orderId
+          });
+        }
+      } catch (dbErr) {
+        console.error("Subscription save error:", dbErr);
+      }
+
+      toast.success(`Demo payment of ₹${billingData.finalTotal} completed! ✨`, { id: toastId });
+
+      const details = {
+        planName: plan.name,
+        amount: billingData.finalTotal,
+        paymentId,
+        orderId,
+        renewDate: createdSub?.renewDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        billingCycle: billingData.billingCycle
+      };
+
+      setSubscriptionDetails(details);
+      setIsSuccessModalOpen(true);
+      return;
+    }
+
+    // 2. Razorpay Live / Test SDK Checkout
     const toastId = toast.loading(`Initiating Razorpay payment for ₹${billingData.finalTotal}...`);
 
     try {
@@ -200,7 +239,6 @@ export const PricingSection = () => {
         onSuccess: async (response) => {
           toast.dismiss(toastId);
 
-          // Phase 3: Create subscription record in database
           let createdSub = null;
           try {
             if (user?.uid) {
@@ -229,14 +267,14 @@ export const PricingSection = () => {
           setIsSuccessModalOpen(true);
         },
         onCancel: () => {
-          toast.error("Subscription payment cancelled. Click Retry Payment to try again.", { id: toastId });
-          setIsCheckoutModalOpen(true); // Re-open checkout modal on cancel so details aren't lost!
+          toast.error("Subscription payment cancelled. Try Instant Demo Pay or select standard Netbanking / UPI.", { id: toastId });
+          setIsCheckoutModalOpen(true);
         }
       });
     } catch (err) {
       if (err.message !== "Payment cancelled by user") {
-        toast.error(err.message || "Payment failed. Retaining entered billing details.", { id: toastId });
-        setIsCheckoutModalOpen(true); // Retain entered billing details on failure!
+        toast.error(err.message || "Payment failed. Use Instant Demo Pay to test activation.", { id: toastId });
+        setIsCheckoutModalOpen(true);
       } else {
         toast.dismiss(toastId);
       }

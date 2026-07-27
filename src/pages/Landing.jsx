@@ -368,45 +368,57 @@ export const Landing = () => {
             />
           </div>
 
-          {/* SECTION 1: REDESIGNED MINIMAL STATS BAR (4 columns, top border line, bold numbers, AI item in gradient) */}
-          <div className="w-full mt-6 pt-6 border-t border-brand-border grid grid-cols-2 md:grid-cols-4 gap-6 select-none">
+          {/* SECTION 1: REDESIGNED STATS BAR WITH DESCRIPTIONS (Image 1 Specs) */}
+          <div className="w-full mt-8 pt-6 border-t border-brand-border grid grid-cols-2 md:grid-cols-4 gap-6 select-none bg-brand-card/40 p-4 sm:p-6 rounded-[20px] border border-brand-border/60">
             {/* Item 1: eBooks */}
             <div className="flex flex-col text-left">
-              <span className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight">
+              <span className="text-2xl sm:text-3xl font-montserrat font-black text-brand-text tracking-tight">
                 <AnimatedCounter value="10000" />+
               </span>
-              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+              <span className="text-xs font-montserrat font-bold text-brand-text/90 mt-1">
                 Premium eBooks
+              </span>
+              <span className="text-[10.5px] text-brand-text-secondary mt-0.5 leading-snug font-sans">
+                Curated technical, self-help & business books
               </span>
             </div>
 
             {/* Item 2: Readers */}
             <div className="flex flex-col text-left">
-              <span className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight">
+              <span className="text-2xl sm:text-3xl font-montserrat font-black text-brand-text tracking-tight">
                 <AnimatedCounter value="50000" />+
               </span>
-              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+              <span className="text-xs font-montserrat font-bold text-brand-text/90 mt-1">
                 Happy Readers
+              </span>
+              <span className="text-[10.5px] text-brand-text-secondary mt-0.5 leading-snug font-sans">
+                Active readers learning across India
               </span>
             </div>
 
             {/* Item 3: Rating */}
             <div className="flex flex-col text-left">
-              <span className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight flex items-center gap-1">
+              <span className="text-2xl sm:text-3xl font-montserrat font-black text-brand-text tracking-tight flex items-center gap-1.5">
                 4.9/5 <span className="text-amber-400 text-xl">⭐</span>
               </span>
-              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+              <span className="text-xs font-montserrat font-bold text-brand-text/90 mt-1">
                 User Rating
+              </span>
+              <span className="text-[10.5px] text-brand-text-secondary mt-0.5 leading-snug font-sans">
+                Verified feedback from community readers
               </span>
             </div>
 
             {/* Item 4: AI Powered */}
             <div className="flex flex-col text-left">
-              <span className="text-2xl sm:text-3xl font-display font-black tracking-tight bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+              <span className="text-2xl sm:text-3xl font-montserrat font-black tracking-tight text-[#A855F7]">
                 AI Powered
               </span>
-              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+              <span className="text-xs font-montserrat font-bold text-brand-text/90 mt-1">
                 Smart Learning
+              </span>
+              <span className="text-[10.5px] text-brand-text-secondary mt-0.5 leading-snug font-sans">
+                Instant chapter summaries & AI reader assistance
               </span>
             </div>
           </div>

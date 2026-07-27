@@ -15,7 +15,7 @@ export const BENTO_CATEGORIES = [
     icon: Feather,
     gradient: "from-blue-500/10 via-blue-500/5 to-transparent",
     badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    defaultCount: 120
+    defaultCount: 7
   },
   {
     id: "non-fiction",
@@ -35,7 +35,7 @@ export const BENTO_CATEGORIES = [
     icon: Brain,
     gradient: "from-amber-500/10 via-amber-500/5 to-transparent",
     badgeColor: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    defaultCount: 150
+    defaultCount: 2
   },
   {
     id: "biography",
@@ -65,7 +65,7 @@ export const BENTO_CATEGORIES = [
     icon: TrendingUp,
     gradient: "from-cyan-500/10 via-cyan-500/5 to-transparent",
     badgeColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
-    defaultCount: 180
+    defaultCount: 1
   }
 ];
 
@@ -84,14 +84,20 @@ export const BentoCategoriesSection = () => {
           categoryMap[cat.id] = 0;
         });
 
+        // Count actual live published books currently in database for each category
         published.forEach(book => {
-          const bookCats = (book.categories || []).map(c => c.toLowerCase());
+          const bookCats = (book.categories || []).map(c => (c || "").toLowerCase());
           BENTO_CATEGORIES.forEach(cat => {
+            const catTitle = cat.title.toLowerCase();
+            const catSlug = cat.slug.toLowerCase();
             if (
-              bookCats.includes(cat.title.toLowerCase()) || 
-              bookCats.includes(cat.slug.toLowerCase()) ||
-              (cat.id === "business-finance" && (bookCats.includes("business") || bookCats.includes("finance"))) ||
-              (cat.id === "self-help" && (bookCats.includes("self-help") || bookCats.includes("self help")))
+              bookCats.some(c => 
+                c === catTitle || 
+                c === catSlug ||
+                (cat.id === "business-finance" && (c.includes("business") || c.includes("finance"))) ||
+                (cat.id === "self-help" && (c.includes("self-help") || c.includes("self help"))) ||
+                (cat.id === "non-fiction" && (c.includes("non-fiction") || c.includes("technology") || c.includes("design")))
+              )
             ) {
               categoryMap[cat.id] = (categoryMap[cat.id] || 0) + 1;
             }

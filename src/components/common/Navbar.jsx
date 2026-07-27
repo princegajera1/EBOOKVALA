@@ -190,8 +190,8 @@ export const Navbar = () => {
       <nav
         className={`fixed top-0 left-0 right-0 z-50 flex items-center transition-all duration-300 ${
           isScrolled 
-            ? "h-14 md:h-16 bg-brand-bg/85 backdrop-blur-md shadow-brand border-b border-brand-border/40" 
-            : "h-20 bg-brand-bg border-b border-brand-border"
+            ? "h-18 md:h-20 bg-brand-bg/85 backdrop-blur-md shadow-brand border-b border-brand-border/40" 
+            : "h-24 md:h-28 bg-brand-bg border-b border-brand-border"
         }`}
       >
         {/* Thin Scroll Progress Indicator */}
@@ -204,24 +204,24 @@ export const Navbar = () => {
           {/* Left Column: Logo */}
           <Link 
             to="/" 
-            className="flex items-center gap-2.5 group select-none hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-lg shrink-0"
+            className="flex items-center gap-3 group select-none hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-lg shrink-0"
           >
             <img 
               src="/logo.png" 
               alt="EbookVala Logo" 
               className={`object-contain transition-all duration-300 ${
-                isScrolled ? "h-8 w-8" : "h-10 w-10 md:h-11 md:w-11"
-              } drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] group-hover:scale-105`} 
+                isScrolled ? "h-10 w-10 md:h-12 md:w-12" : "h-14 w-14 md:h-16 md:w-16"
+              } drop-shadow-[0_2px_12px_rgba(59,130,246,0.4)] group-hover:scale-105`} 
             />
             <div className="flex flex-col text-left leading-tight">
-              <div className={`font-extrabold tracking-tight font-display transition-all duration-300 ${
-                isScrolled ? "text-lg" : "text-xl md:text-2xl"
+              <div className={`font-black tracking-tight font-display transition-all duration-300 ${
+                isScrolled ? "text-xl md:text-2xl" : "text-2xl md:text-3xl"
               }`}>
                 <span className="text-brand-text group-hover:text-brand-text/90 transition-colors">Ebook</span>
                 <span className="text-[#3B82F6] group-hover:text-[#2563EB] transition-colors">Vala</span>
               </div>
-              <span className={`text-[10px] md:text-[11px] font-medium tracking-wide text-brand-text-secondary/80 font-sans transition-all duration-300 ${
-                isScrolled ? "hidden sm:inline-block text-[9px]" : "inline-block"
+              <span className={`text-[11px] md:text-[12px] font-semibold tracking-wide text-brand-text-secondary/90 font-sans transition-all duration-300 ${
+                isScrolled ? "hidden sm:inline-block text-[10px]" : "inline-block"
               }`}>
                 Next-Gen Marketplace
               </span>

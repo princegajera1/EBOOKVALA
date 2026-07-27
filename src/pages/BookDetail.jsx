@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Star, Heart, Eye, Check, Download, BookOpen, Share2, 
   BrainCircuit, Award, ChevronRight, MessageSquare, ShieldCheck, 
-  HelpCircle, ChevronDown, RefreshCw, Compass
+  HelpCircle, ChevronDown, RefreshCw, Compass, CreditCard
 } from "lucide-react";
 import { dbService } from "../services/db";
 import { useWishlist } from "../hooks/useWishlist";
@@ -12,6 +12,7 @@ import { useApp } from "../store/AppContext";
 import { BookPreview } from "../components/book/BookPreview";
 import { Button } from "../components/ui/Button";
 import { toast } from "react-hot-toast";
+import { initiateRazorpayCheckout } from "../services/razorpay";
 
 // Seed flashcards template
 const MOCK_FLASHCARDS = [
@@ -193,6 +194,52 @@ export const BookDetail = () => {
     }
   };
 
+  const handleBuyWithRazorpay = async () => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+    const bookPrice = book.price && book.price > 0 ? book.price : 499;
+    const toastId = toast.loading("Opening Razorpay Payment Gateway...");
+    try {
+      await initiateRazorpayCheckout({
+        amount: bookPrice,
+        title: book.title,
+        description: `eBook Purchase: ${book.title}`,
+        user: user,
+        onSuccess: async (razorpayResponse) => {
+          toast.loading("Verifying payment & unlocking book...", { id: toastId });
+          const paymentId = razorpayResponse.razorpay_payment_id || `rzp_${Date.now()}`;
+          await dbService.createOrder({
+            bookId: book.id,
+            bookTitle: book.title,
+            bookCover: book.coverURL,
+            readerId: user.uid,
+            amount: bookPrice,
+            paymentId: paymentId,
+            paymentGateway: "Razorpay"
+          });
+          const currentPurchased = user.purchasedBooks || [];
+          if (!currentPurchased.includes(book.id)) {
+            await updateProfile({
+              purchasedBooks: [...currentPurchased, book.id]
+            });
+          }
+          toast.success(`Payment Successful (${paymentId})! ${book.title} unlocked in your library 📖`, { id: toastId });
+        },
+        onCancel: () => {
+          toast.error("Payment was cancelled.", { id: toastId });
+        }
+      });
+    } catch (err) {
+      if (err.message !== "Payment cancelled by user") {
+        toast.error(err.message || "Razorpay Payment Failed", { id: toastId });
+      } else {
+        toast.dismiss(toastId);
+      }
+    }
+  };
+
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
     toast.success("eBook link copied to clipboard!");
@@ -298,40 +345,62 @@ export const BookDetail = () => {
 
             <div className="h-px bg-brand-border" />
 
-            {/* CTAs & Free Indicator */}
+            {/* CTAs & Payment Gateway */}
             <div className="flex flex-col gap-4">
-              <div className="flex items-center gap-2 text-left">
-                <span className="text-2xl font-mono font-black text-brand-success">Free Forever</span>
-                <span className="text-xs text-brand-text-secondary font-medium">(First Year Launch Offer)</span>
+              <div className="flex items-center gap-3 text-left">
+                <span className="text-3xl font-mono font-black text-brand-text">₹{book.price || 499}</span>
+                {book.originalPrice && (
+                  <span className="text-sm font-mono text-brand-text-secondary line-through">₹{book.originalPrice}</span>
+                )}
+                <span className="text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase">
+                  Razorpay Verified
+                </span>
               </div>
 
               {!isPurchased ? (
-                <div className="flex flex-wrap sm:flex-nowrap gap-3 mt-1">
-                  <Button 
-                    onClick={handleAddToLibrary}
-                    variant="primary" 
-                    className="flex-grow h-13 rounded-full font-bold text-sm shadow-sm"
-                  >
-                    Add to My Library
-                  </Button>
+                <div className="flex flex-col gap-3.5 mt-1">
+                  <div className="flex flex-wrap sm:flex-nowrap gap-3">
+                    <Button 
+                      onClick={handleBuyWithRazorpay}
+                      variant="primary" 
+                      className="flex-grow h-13 rounded-full font-bold text-sm shadow-brand bg-[#3B82F6] hover:bg-[#2563EB] text-white flex items-center justify-center gap-2"
+                    >
+                      <CreditCard className="h-4.5 w-4.5" />
+                      Buy Now with Razorpay
+                    </Button>
 
-                  <Button
-                    onClick={() => toggleWishlist(book.id)}
-                    variant="secondary"
-                    className="h-13 w-13 rounded-full p-0 shrink-0 border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-red-500"
-                    aria-label="Wishlist"
-                  >
-                    <Heart className={`h-4.5 w-4.5 ${wishlisted ? "fill-red-500 text-red-500 border-red-500" : ""}`} />
-                  </Button>
+                    <Button 
+                      onClick={handleAddToLibrary}
+                      variant="outline" 
+                      className="h-13 px-5 rounded-full font-bold text-xs border-brand-border text-brand-text hover:bg-brand-bg-secondary shrink-0"
+                    >
+                      Instant Free Add
+                    </Button>
 
-                  <Button
-                    onClick={handleShare}
-                    variant="secondary"
-                    className="h-13 w-13 rounded-full p-0 shrink-0 border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text"
-                    aria-label="Share link"
-                  >
-                    <Share2 className="h-4.5 w-4.5" />
-                  </Button>
+                    <Button
+                      onClick={() => toggleWishlist(book.id)}
+                      variant="secondary"
+                      className="h-13 w-13 rounded-full p-0 shrink-0 border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-red-500"
+                      aria-label="Wishlist"
+                    >
+                      <Heart className={`h-4.5 w-4.5 ${wishlisted ? "fill-red-500 text-red-500 border-red-500" : ""}`} />
+                    </Button>
+
+                    <Button
+                      onClick={handleShare}
+                      variant="secondary"
+                      className="h-13 w-13 rounded-full p-0 shrink-0 border-brand-border bg-brand-card hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text"
+                      aria-label="Share link"
+                    >
+                      <Share2 className="h-4.5 w-4.5" />
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-brand-text-secondary px-1">
+                    <span className="flex items-center gap-1.5 font-medium text-emerald-500">
+                      <ShieldCheck className="h-4 w-4" /> 100% Secure Razorpay Checkout (UPI / Cards / NetBanking)
+                    </span>
+                  </div>
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">

@@ -245,7 +245,7 @@ export const Marketplace = () => {
       <div>
         <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Categories</h5>
         <div className="flex flex-col gap-2.5">
-          {["Technology", "Business", "Self-Help", "Fiction", "Romance", "Design"].map((cat) => (
+          {["Fiction", "Non-Fiction", "Self-Help", "Biography", "Comic", "Business", "Technology", "Design", "Romance"].map((cat) => (
             <label key={cat} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
               <input
                 type="checkbox"
@@ -307,42 +307,12 @@ export const Marketplace = () => {
           </label>
         </div>
       </div>
-
-      {/* Format */}
-      <div>
-        <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Formats Available</h5>
-        <div className="flex flex-col gap-2.5">
-          {["PDF", "EPUB"].map((fmt) => (
-            <label key={fmt} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
-              <input
-                type="checkbox"
-                checked={selectedFormats.includes(fmt)}
-                onChange={() => handleFormatToggle(fmt)}
-                className="rounded border-brand-border text-brand-accent focus:ring-brand-accent/15 h-4 w-4 cursor-pointer accent-brand-accent"
-              />
-              <span>{fmt} Files</span>
-            </label>
-          ))}
-        </div>
-      </div>
     </div>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10 md:py-14 relative select-none">
+    <div className="max-w-7xl mx-auto px-6 py-6 md:py-8 relative select-none">
       
-      {/* Page Hero Header */}
-      <div className="text-left mb-10 pb-8 border-b border-brand-border">
-        <span className="text-[10px] font-mono text-brand-accent font-bold tracking-widest uppercase mb-3 block">
-          Digital Catalog
-        </span>
-        <h1 className="text-4xl sm:text-5xl font-display font-black text-brand-text tracking-tight">
-          Explore Library
-        </h1>
-        <p className="text-sm text-brand-text-secondary mt-2 max-w-xl font-normal leading-relaxed">
-          Access our open digital library of premium developer editions, SaaS design architectures, and founder-focused self-help books. 100% free forever for the first year.
-        </p>
-      </div>
       {/* Category Pills Bar (Responsive Horizontal Scroll for all breakpoints) */}
       <div className="w-full overflow-x-auto flex items-center gap-2 sm:gap-2.5 pb-4 mb-4 scrollbar-none snap-x snap-mandatory scroll-smooth select-none">
         <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest shrink-0 mr-1 hidden sm:inline">

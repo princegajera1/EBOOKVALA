@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Heart, Eye, Check, Clock, BookOpen, Globe, BrainCircuit } from "lucide-react";
+import { Star, Heart, Eye, Check, Clock, BookOpen, Globe, BrainCircuit, CreditCard } from "lucide-react";
 import { useWishlist } from "../../hooks/useWishlist";
 import { useApp } from "../../store/AppContext";
 import { BookPreview } from "./BookPreview";
 import { Button } from "../ui/Button";
 import { toast } from "react-hot-toast";
 import { dbService } from "../../services/db";
+import { initiateRazorpayCheckout } from "../../services/razorpay";
 
 // Helper to get high-quality seed author avatars
 const getAuthorAvatar = (authorId) => {
@@ -59,6 +60,43 @@ export const BookCard = ({ book, view = "grid" }) => {
       return;
     }
 
+    const price = book.price || 0;
+    if (price > 0) {
+      const toastId = toast.loading("Opening Razorpay Payment Gateway...");
+      try {
+        await initiateRazorpayCheckout({
+          amount: price,
+          title: book.title,
+          description: `Buy ${book.title}`,
+          user: user,
+          onSuccess: async (razorpayResponse) => {
+            toast.loading("Verifying payment...", { id: toastId });
+            await dbService.createOrder({
+              bookId: book.id,
+              bookTitle: book.title,
+              bookCover: book.coverURL,
+              readerId: user.uid,
+              amount: price,
+              paymentId: razorpayResponse.razorpay_payment_id || `rzp_${Date.now()}`,
+              paymentGateway: "Razorpay"
+            });
+            toast.success(`${book.title} unlocked in your library! 📖`, { id: toastId });
+            navigate("/dashboard?tab=home");
+          },
+          onCancel: () => {
+            toast.error("Payment cancelled.", { id: toastId });
+          }
+        });
+      } catch (err) {
+        if (err.message !== "Payment cancelled by user") {
+          toast.error(err.message || "Razorpay Payment Failed", { id: toastId });
+        } else {
+          toast.dismiss(toastId);
+        }
+      }
+      return;
+    }
+
     try {
       await dbService.createOrder({
         bookId: book.id,
@@ -70,7 +108,6 @@ export const BookCard = ({ book, view = "grid" }) => {
         paymentGateway: "Free Library"
       });
       toast.success(`${book.title} added to your library! 📖`);
-      // Force page state update
       navigate("/dashboard?tab=home");
     } catch (err) {
       toast.error("Failed to add book to library.");

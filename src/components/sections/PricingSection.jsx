@@ -1,8 +1,11 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check, Sparkles, Zap, ShieldCheck, Crown } from "lucide-react";
+import { Check, Sparkles, Zap, ShieldCheck, Crown, CreditCard } from "lucide-react";
 import { Button } from "../ui/Button";
+import { toast } from "react-hot-toast";
+import { useApp } from "../../store/AppContext";
+import { initiateRazorpayCheckout } from "../../services/razorpay";
 
 export const PRICING_PLANS = [
   {
@@ -102,6 +105,46 @@ export const PRICING_PLANS = [
 
 export const PricingSection = () => {
   const [billingCycle, setBillingCycle] = useState("monthly"); // "monthly" | "yearly"
+  const { user, isAuthenticated } = useApp();
+  const navigate = useNavigate();
+
+  const handlePlanSubscribe = async (plan) => {
+    if (plan.id === "free" || (plan.monthlyPrice === 0 && plan.yearlyPrice === 0)) {
+      navigate("/register");
+      return;
+    }
+
+    if (!isAuthenticated) {
+      toast.error("Please login or register to subscribe to a plan.");
+      navigate("/login");
+      return;
+    }
+
+    const planPrice = billingCycle === "yearly" ? plan.yearlyPrice * 12 : plan.monthlyPrice;
+    const toastId = toast.loading(`Preparing ${plan.name} Plan checkout via Razorpay...`);
+
+    try {
+      await initiateRazorpayCheckout({
+        amount: planPrice,
+        title: `EbookVala ${plan.name} Plan`,
+        description: `Subscription: ${plan.name} Plan (${billingCycle})`,
+        user: user,
+        onSuccess: (response) => {
+          toast.success(`Successfully subscribed to ${plan.name} Plan! Payment ID: ${response.razorpay_payment_id}`, { id: toastId });
+          navigate("/dashboard");
+        },
+        onCancel: () => {
+          toast.error("Subscription payment cancelled.", { id: toastId });
+        }
+      });
+    } catch (err) {
+      if (err.message !== "Payment cancelled by user") {
+        toast.error(err.message || "Payment failed", { id: toastId });
+      } else {
+        toast.dismiss(toastId);
+      }
+    }
+  };
 
   return (
     <section className="w-full max-w-7xl mx-auto px-6 py-14 select-none text-left">
@@ -220,16 +263,18 @@ export const PricingSection = () => {
               </div>
 
               {/* Action CTA Button */}
-              <Link to="/register" className="w-full mt-auto pt-2">
+              <div className="w-full mt-auto pt-2">
                 <Button
+                  onClick={() => handlePlanSubscribe(plan)}
                   variant={plan.popular ? "primary" : "ghost"}
-                  className={`w-full py-2.5 text-xs font-bold rounded-full justify-center transition-all ${
+                  className={`w-full py-2.5 text-xs font-bold rounded-full justify-center transition-all flex items-center gap-1.5 ${
                     !plan.popular ? "border border-brand-border text-brand-text hover:bg-brand-bg-secondary" : ""
                   }`}
                 >
+                  {price > 0 && <CreditCard className="h-3.5 w-3.5 text-brand-accent" />}
                   {plan.cta}
                 </Button>
-              </Link>
+              </div>
             </motion.div>
           );
         })}

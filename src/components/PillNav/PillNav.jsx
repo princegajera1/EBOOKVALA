@@ -87,11 +87,11 @@ const PillNav = ({
                 className="pill-logo-img shrink-0"
               />
               <div className="flex flex-col text-left leading-tight shrink-0">
-                <span className="font-display font-black tracking-tight select-none text-lg md:text-xl leading-none">
+                <span className="font-display font-black tracking-tight select-none text-xl md:text-2xl leading-none">
                   <span className="text-brand-text">Ebook</span>
                   <span className="text-[#3B82F6]">Vala</span>
                 </span>
-                <span className="text-[9px] md:text-[10px] font-medium tracking-wide text-brand-text-secondary/80 font-sans mt-0.5 whitespace-nowrap">
+                <span className="text-[10px] md:text-[11.5px] font-semibold tracking-wide text-brand-text-secondary/90 font-sans mt-1 whitespace-nowrap">
                   Next-Gen Marketplace
                 </span>
               </div>
@@ -104,11 +104,11 @@ const PillNav = ({
                 className="pill-logo-img shrink-0"
               />
               <div className="flex flex-col text-left leading-tight shrink-0">
-                <span className="font-display font-black tracking-tight select-none text-lg md:text-xl leading-none">
+                <span className="font-display font-black tracking-tight select-none text-xl md:text-2xl leading-none">
                   <span className="text-brand-text">Ebook</span>
                   <span className="text-[#3B82F6]">Vala</span>
                 </span>
-                <span className="text-[9px] md:text-[10px] font-medium tracking-wide text-brand-text-secondary/80 font-sans mt-0.5 whitespace-nowrap">
+                <span className="text-[10px] md:text-[11.5px] font-semibold tracking-wide text-brand-text-secondary/90 font-sans mt-1 whitespace-nowrap">
                   Next-Gen Marketplace
                 </span>
               </div>

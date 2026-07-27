@@ -109,7 +109,7 @@ export const PaymentSuccessModal = ({ isOpen, onClose, subscriptionDetails }) =>
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-[#000000_0_0_0] z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg select-none">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/85 backdrop-blur-lg select-none">
         <motion.div
           initial={{ opacity: 0, scale: 0.8, y: 30 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

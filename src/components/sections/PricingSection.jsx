@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Check, Sparkles, Zap, ShieldCheck, Crown, CreditCard } from "lucide-react";
 import { Button } from "../ui/Button";
 import { toast } from "react-hot-toast";
-import { useApp } from "../../store/AppContext";
+import { useAuth } from "../../hooks/useAuth";
 import { initiateRazorpayCheckout } from "../../services/razorpay";
 
 import { AuthModal } from "../auth/AuthModal";
@@ -110,7 +110,7 @@ export const PRICING_PLANS = [
 
 export const PricingSection = () => {
   const [billingCycle, setBillingCycle] = useState("monthly"); // "monthly" | "yearly"
-  const { user, isAuthenticated } = useApp();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   // Phase 1, 2 & 3: Auth Gate, Checkout Modal & Payment Success States

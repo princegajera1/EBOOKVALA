@@ -16,7 +16,7 @@ export const FullScreenSpinner = () => (
 );
 
 export const ProtectedRoute = ({ role, children }) => {
-  const { user, initialLoading, isAuthenticated } = useAuth();
+  const { user, initialLoading, isAuthenticated, updateProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -31,7 +31,11 @@ export const ProtectedRoute = ({ role, children }) => {
         }
         navigate("/login", { state: { from: location } });
       } else if (role && user?.role !== role) {
-        if (user?.role === "author") {
+        if (role === "author") {
+          updateProfile({ role: "author" }).then(() => {
+            toast.success("Welcome to Author Dashboard! 🚀");
+          });
+        } else if (user?.role === "author") {
           navigate("/author/dashboard", { replace: true });
         } else if (user?.role === "admin") {
           navigate("/admin/dashboard", { replace: true });
@@ -43,7 +47,7 @@ export const ProtectedRoute = ({ role, children }) => {
         }
       }
     }
-  }, [isAuthenticated, user, initialLoading, navigate, role, location]);
+  }, [isAuthenticated, user, initialLoading, navigate, role, location, updateProfile]);
 
   if (initialLoading || !isAuthenticated || (role && user?.role !== role)) {
     return <FullScreenSpinner />;

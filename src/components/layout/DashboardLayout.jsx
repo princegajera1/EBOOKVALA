@@ -10,7 +10,7 @@ import { db } from "../../lib/firebase";
 import { toast } from "react-hot-toast";
 
 export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChange, children }) => {
-  const { user, initialLoading, isAuthenticated } = useAuth();
+  const { user, initialLoading, isAuthenticated, updateProfile } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -270,6 +270,33 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
                 )}
               </AnimatePresence>
             </div>
+
+            {/* Author / Reader Role Switch Button */}
+            {user?.role === "reader" ? (
+              <button
+                onClick={async () => {
+                  const toastId = toast.loading("Switching to Author Workspace...");
+                  await updateProfile({ role: "author" });
+                  toast.success("Switched to Author Workspace! 🚀", { id: toastId });
+                  navigate("/author/dashboard");
+                }}
+                className="px-3 py-1 rounded-full bg-brand-accent/15 border border-brand-accent/30 text-brand-accent text-xs font-bold hover:bg-brand-accent hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Switch to Author Mode</span>
+              </button>
+            ) : user?.role === "author" ? (
+              <button
+                onClick={async () => {
+                  const toastId = toast.loading("Switching to Reader Mode...");
+                  await updateProfile({ role: "reader" });
+                  toast.success("Switched to Reader Mode! 📖", { id: toastId });
+                  navigate("/dashboard");
+                }}
+                className="px-3 py-1 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-400 text-xs font-bold hover:bg-sky-500 hover:text-white transition-all cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Switch to Reader Mode</span>
+              </button>
+            ) : null}
 
             {/* Theme toggler */}
             <button

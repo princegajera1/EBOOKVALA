@@ -62,13 +62,10 @@ const AUTHOR_NAV_LINKS = [
   { id: "overview", label: "Dashboard", icon: Home },
   { id: "my-books", label: "My Books", icon: BookOpen },
   { id: "publish-wizard", label: "Write Book", icon: Edit },
-  { id: "drafts", label: "Drafts", icon: FileText },
   { id: "analytics", label: "Analytics", icon: BarChart2 },
-  { id: "revenue", label: "Revenue", icon: DollarSign },
-  { id: "royalties", label: "Royalties", icon: TrendingUp },
+  { id: "revenue", label: "Revenue & Royalties", icon: DollarSign },
   { id: "orders", label: "Orders", icon: ShoppingBag },
   { id: "subscribers", label: "Subscribers", icon: Mail },
-  { id: "followers", label: "Followers", icon: Heart },
   { id: "reviews", label: "Reviews", icon: Star },
   { id: "messages", label: "Messages", icon: MessageSquare },
   { id: "community", label: "Community", icon: Users },
@@ -148,7 +145,7 @@ export const AuthorDashboard = () => {
     loadAuthorData();
   }, [user]);
 
-  // Derive metrics for 28 KPIs
+  // Derive 100% REAL metrics for 28 KPIs (Zero Dummy Data)
   const totalBooks = books.length;
   const publishedBooks = books.filter(b => b.status === "published").length;
   const draftBooks = books.filter(b => b.status === "draft").length;
@@ -156,39 +153,50 @@ export const AuthorDashboard = () => {
   const totalSales = books.reduce((s, b) => s + (b.salesCount || 0), 0);
   const totalDownloads = books.reduce((s, b) => s + (b.downloadCount || 0), 0);
   const totalViews = books.reduce((s, b) => s + (b.viewCount || 0), 0);
-  const grossRev = books.reduce((s, b) => s + (b.salesCount || 0) * (b.price || 499), 0);
+  const grossRev = books.reduce((s, b) => s + (b.salesCount || 0) * (b.price || 0), 0);
   const netRoyalties = Math.round(grossRev * 0.8);
-  const avgRating = books.length > 0 ? (books.reduce((s, b) => s + (b.rating || 4.8), 0) / books.length).toFixed(1) : 4.8;
+  const pendingPayout = Math.round(netRoyalties * 0.15);
+  const avgRating = allReviews.length > 0 ? (allReviews.reduce((s, r) => s + (r.rating || 0), 0) / allReviews.length).toFixed(1) : "0.0";
+  const readingHoursSum = books.reduce((s, b) => s + (b.readingHours || 0), 0).toFixed(1);
+  const completionsSum = books.reduce((s, b) => s + (b.completions || 0), 0);
+  const completionRateVal = totalSales > 0 ? `${((completionsSum / totalSales) * 100).toFixed(1)}%` : "0.0%";
+  const bookmarksSum = books.reduce((s, b) => s + (b.bookmarkCount || 0), 0);
+  const wishlistsSum = books.reduce((s, b) => s + (b.wishlistCount || 0), 0);
+  const sharesSum = books.reduce((s, b) => s + (b.shareCount || 0), 0);
+  const conversionRateVal = totalViews > 0 ? `${((totalSales / totalViews) * 100).toFixed(1)}%` : "0.0%";
+  const refundsSum = books.reduce((s, b) => s + (b.refundCount || 0), 0);
+  const refundRateVal = totalSales > 0 ? `${((refundsSum / totalSales) * 100).toFixed(1)}%` : "0.0%";
+  const storageUsedGb = (books.reduce((s, b) => s + (b.fileSizeMb || 0), 0) / 1024).toFixed(2);
 
-  // 28 KPI Grid Definitions
+  // 28 KPI Grid Definitions — 100% REAL FIRESTORE METRICS
   const KPI_GRID = [
-    { label: "Total Books", value: totalBooks || 4, icon: BookOpen, color: "text-sky-400" },
-    { label: "Published Books", value: publishedBooks || 3, icon: CheckCircle2, color: "text-emerald-400" },
-    { label: "Draft Books", value: draftBooks || 1, icon: Edit, color: "text-amber-400" },
-    { label: "Under Review", value: inReviewBooks || 0, icon: Clock, color: "text-purple-400" },
-    { label: "Total Readers", value: (totalDownloads + 4820).toLocaleString(), icon: Users, color: "text-indigo-400" },
-    { label: "Followers", value: followers.length || 142, icon: Heart, color: "text-rose-400" },
-    { label: "Profile Visits", value: "14,820", icon: Eye, color: "text-cyan-400" },
-    { label: "Book Views", value: (totalViews || 28400).toLocaleString(), icon: Eye, color: "text-blue-400" },
-    { label: "Downloads", value: (totalDownloads || 3420).toLocaleString(), icon: Download, color: "text-emerald-400" },
-    { label: "Purchases", value: (totalSales || 312).toLocaleString(), icon: Zap, color: "text-amber-400" },
-    { label: "Gross Revenue", value: `₹${(grossRev || 155688).toLocaleString()}`, icon: DollarSign, color: "text-emerald-400" },
-    { label: "Net Royalties (80%)", value: `₹${(netRoyalties || 124550).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
-    { label: "Pending Payout", value: `₹${Math.round((netRoyalties || 124550) * 0.15).toLocaleString()}`, icon: Clock, color: "text-amber-400" },
+    { label: "Total Books", value: totalBooks, icon: BookOpen, color: "text-sky-400" },
+    { label: "Published Books", value: publishedBooks, icon: CheckCircle2, color: "text-emerald-400" },
+    { label: "Draft Books", value: draftBooks, icon: Edit, color: "text-amber-400" },
+    { label: "Under Review", value: inReviewBooks, icon: Clock, color: "text-purple-400" },
+    { label: "Total Readers", value: totalSales.toLocaleString(), icon: Users, color: "text-indigo-400" },
+    { label: "Followers", value: followers.length.toLocaleString(), icon: Heart, color: "text-rose-400" },
+    { label: "Profile Visits", value: (authorProfile?.viewCount || 0).toLocaleString(), icon: Eye, color: "text-cyan-400" },
+    { label: "Book Views", value: totalViews.toLocaleString(), icon: Eye, color: "text-blue-400" },
+    { label: "Downloads", value: totalDownloads.toLocaleString(), icon: Download, color: "text-emerald-400" },
+    { label: "Purchases", value: totalSales.toLocaleString(), icon: Zap, color: "text-amber-400" },
+    { label: "Gross Revenue", value: `₹${grossRev.toLocaleString()}`, icon: DollarSign, color: "text-emerald-400" },
+    { label: "Net Royalties (80%)", value: `₹${netRoyalties.toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
+    { label: "Pending Payout", value: `₹${pendingPayout.toLocaleString()}`, icon: Clock, color: "text-amber-400" },
     { label: "Average Rating", value: `${avgRating} ★`, icon: Star, color: "text-amber-400" },
-    { label: "Total Reviews", value: allReviews.length || 84, icon: MessageSquare, color: "text-purple-400" },
-    { label: "Reading Hours", value: "1,240 hrs", icon: Clock, color: "text-sky-400" },
-    { label: "Completion Rate", value: "84.2%", icon: CheckCircle2, color: "text-emerald-400" },
-    { label: "Bookmarks", value: "892", icon: Bookmark, color: "text-amber-400" },
-    { label: "Wishlists", value: "1,420", icon: Heart, color: "text-rose-400" },
-    { label: "Shares", value: "480", icon: Share2, color: "text-blue-400" },
-    { label: "Conversion Rate", value: "4.8%", icon: Percent, color: "text-emerald-400" },
-    { label: "Refund Rate", value: "0.2%", icon: ShieldCheck, color: "text-indigo-400" },
-    { label: "Subscribers", value: "680", icon: Mail, color: "text-purple-400" },
-    { label: "Newsletter Opens", value: "62.4%", icon: Mail, color: "text-sky-400" },
-    { label: "AI Usage", value: "148 Prompts", icon: Bot, color: "text-brand-accent" },
-    { label: "Storage Used", value: "4.2 GB / 50 GB", icon: HardDrive, color: "text-cyan-400" },
-    { label: "API Calls", value: "12,480", icon: Cpu, color: "text-emerald-400" },
+    { label: "Total Reviews", value: allReviews.length.toLocaleString(), icon: MessageSquare, color: "text-purple-400" },
+    { label: "Reading Hours", value: `${readingHoursSum} hrs`, icon: Clock, color: "text-sky-400" },
+    { label: "Completion Rate", value: completionRateVal, icon: CheckCircle2, color: "text-emerald-400" },
+    { label: "Bookmarks", value: bookmarksSum.toLocaleString(), icon: Bookmark, color: "text-amber-400" },
+    { label: "Wishlists", value: wishlistsSum.toLocaleString(), icon: Heart, color: "text-rose-400" },
+    { label: "Shares", value: sharesSum.toLocaleString(), icon: Share2, color: "text-blue-400" },
+    { label: "Conversion Rate", value: conversionRateVal, icon: Percent, color: "text-emerald-400" },
+    { label: "Refund Rate", value: refundRateVal, icon: ShieldCheck, color: "text-indigo-400" },
+    { label: "Subscribers", value: (authorProfile?.subscribersCount || 0).toLocaleString(), icon: Mail, color: "text-purple-400" },
+    { label: "Newsletter Opens", value: `${authorProfile?.newsletterOpenRate || 0}%`, icon: Mail, color: "text-sky-400" },
+    { label: "AI Usage", value: `${authorProfile?.aiPromptsUsed || 0} Prompts`, icon: Bot, color: "text-brand-accent" },
+    { label: "Storage Used", value: `${storageUsedGb} GB / 50 GB`, icon: HardDrive, color: "text-cyan-400" },
+    { label: "API Calls", value: (authorProfile?.apiCallsCount || 0).toLocaleString(), icon: Cpu, color: "text-emerald-400" },
     { label: "Author XP", value: `${publishedBooks * 100 + totalSales * 20} XP`, icon: Trophy, color: "text-amber-400" }
   ];
 
@@ -233,7 +241,7 @@ export const AuthorDashboard = () => {
                 <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Revenue
                 </p>
-                <p className="text-lg font-display font-black text-emerald-400">₹{(netRoyalties || 124550).toLocaleString()}</p>
+                <p className="text-lg font-display font-black text-emerald-400">₹{netRoyalties.toLocaleString()}</p>
               </div>
             </div>
           </div>

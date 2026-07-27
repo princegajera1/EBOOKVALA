@@ -281,7 +281,7 @@ const SidebarContent = ({
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex flex-col flex-1 gap-4 px-3 py-4 overflow-y-auto no-scrollbar">
+      <div className="flex flex-col flex-1 gap-4 px-3 py-4 overflow-y-auto sidebar-scroll pr-1.5">
         {/* Brand */}
         <div
           className={`flex items-center shrink-0 ${

@@ -3,14 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { 
   ArrowRight, Star, Mail, ChevronLeft, ChevronRight,
-  ShieldCheck, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles
+  ShieldCheck, BookOpen, Download, BrainCircuit, Users, BookMarked, Sparkles,
+  Flame, Globe, Trophy, Smartphone, BarChart3
 } from "lucide-react";
 import { Button } from "../components/ui/Button";
 import { SearchBox } from "../components/ui/SearchBox";
 import { dbService } from "../services/db";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { CategoriesSection } from "../components/sections/CategoriesSection";
+import { BentoCategoriesSection } from "../components/sections/BentoCategoriesSection";
+import { PricingSection } from "../components/sections/PricingSection";
 import { FadeUp } from "../components/common/FadeUp";
 import { BookCard } from "../components/book/BookCard";
 import { HeroImageStack } from "../components/common/HeroImageStack";
@@ -54,6 +56,57 @@ const AnimatedCounter = ({ value, duration = 1.5 }) => {
 
   return <span ref={ref}>{count.toLocaleString()}</span>;
 };
+
+const PLATFORM_BENEFITS = [
+  {
+    title: "Offline Reading",
+    description: "Download your entire library to read anywhere, anytime without requiring an internet connection.",
+    icon: Download,
+    color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
+  },
+  {
+    title: "Reading Streak",
+    description: "Track daily reading goals and maintain your momentum with habit-building streak trackers.",
+    icon: Flame,
+    color: "bg-amber-500/10 text-amber-500 border-amber-500/20"
+  },
+  {
+    title: "Smart Bookmarks",
+    description: "Save important pages with quick visual tabs and category tags for easy reference.",
+    icon: BookMarked,
+    color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
+  },
+  {
+    title: "Multi-Color Highlights",
+    description: "Organize key quotes using customizable highlight colors and instant filter views.",
+    icon: Sparkles,
+    color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
+  },
+  {
+    title: "Instant AI Translator",
+    description: "Translate highlighted paragraphs into 30+ languages in real-time with high accuracy.",
+    icon: Globe,
+    color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
+  },
+  {
+    title: "Reading Achievements",
+    description: "Unlock milestones, earn reading badges, and celebrate completed books.",
+    icon: Trophy,
+    color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+  },
+  {
+    title: "Multi-Device Sync",
+    description: "Seamlessly switch from laptop browser to phone app without losing your exact reading position.",
+    icon: Smartphone,
+    color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
+  },
+  {
+    title: "Reading Analytics",
+    description: "Visualize your reading speed, total minutes read, finished chapters, and monthly trends.",
+    icon: BarChart3,
+    color: "bg-orange-500/10 text-orange-500 border-orange-500/20"
+  }
+];
 
 const testimonialsData = [
   {
@@ -109,42 +162,6 @@ const testimonialsData = [
     rating: 5,
     badge: "Active Reader",
     quote: "Finding high-quality, up-to-date tech guides for my university projects used to be a hassle. EBOOKVALA's curated tech library and flashcards feature helped me ace my database systems finals!"
-  },
-  {
-    name: "Vikram Singh",
-    role: "SaaS Founder",
-    location: "Hyderabad",
-    image: "https://randomuser.me/api/portraits/men/68.jpg",
-    rating: 5,
-    badge: "Verified Reader",
-    quote: "EBOOKVALA's selection of business playbooks is outstanding. The platform has helped my core team align on growth frameworks, and the mobile reading experience is incredibly clean during my daily commutes."
-  },
-  {
-    name: "Neha Gupta",
-    role: "Technical Writer",
-    location: "Noida",
-    image: "https://randomuser.me/api/portraits/women/62.jpg",
-    rating: 5,
-    badge: "Author Creator",
-    quote: "The uploading pipeline for authors is so intuitive. Supreme support, quick review times, and the analytics dashboard gives me deep insights into how readers interact with my tech guides."
-  },
-  {
-    name: "Kabir Malhotra",
-    role: "Backend Architect",
-    location: "Delhi",
-    image: "https://randomuser.me/api/portraits/men/83.jpg",
-    rating: 5,
-    badge: "Verified Reader",
-    quote: "I love the clean, distraction-free reading canvas. The dark mode theme is easy on the eyes during late-night coding sessions, and the search indexing is blazing fast."
-  },
-  {
-    name: "Meera Nair",
-    role: "UX Researcher",
-    location: "Kochi",
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
-    rating: 5,
-    badge: "Active Reader",
-    quote: "The attention to typography and interface layout on EBOOKVALA is impressive. It makes reading dense software architecture papers a joy rather than a chore."
   }
 ];
 
@@ -193,7 +210,7 @@ export const Landing = () => {
 
   const [testimonialPage, setTestimonialPage] = useState(0);
   const [isAutoAdvancing, setIsAutoAdvancing] = useState(true);
-  const totalTestimonialPages = Math.ceil(testimonialsData.length / 2); // 5 pages (10 items, 2 per view)
+  const totalTestimonialPages = Math.ceil(testimonialsData.length / 2);
 
   const navigate = useNavigate();
 
@@ -204,16 +221,12 @@ export const Landing = () => {
       
       setFeaturedBooks(published.filter(b => b.isFeatured));
 
-      // Recently added (sorted by date or ID descending)
       const sortedByDate = [...published].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
       setRecentlyAdded(sortedByDate);
     };
     fetchData();
   }, []);
 
-  // --------------------------------------------------------------------------
-  // Point 4: Recently Added Books Carousel Scroll & State
-  // --------------------------------------------------------------------------
   const updateRecentlyScrollState = () => {
     if (recentlyAddedRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = recentlyAddedRef.current;
@@ -233,14 +246,11 @@ export const Landing = () => {
     }
   };
 
-  // --------------------------------------------------------------------------
-  // Point 6: Testimonials Auto-Advance (Every 2s, pauses on user interaction)
-  // --------------------------------------------------------------------------
   useEffect(() => {
     if (!isAutoAdvancing) return;
     const timer = setInterval(() => {
       setTestimonialPage((prev) => (prev + 1) % totalTestimonialPages);
-    }, 2000);
+    }, 3000);
     return () => clearInterval(timer);
   }, [isAutoAdvancing, totalTestimonialPages]);
 
@@ -254,7 +264,6 @@ export const Landing = () => {
       setTestimonialPage(direction);
     }
 
-    // Resume auto-advance after 4 seconds of inactivity
     setTimeout(() => setIsAutoAdvancing(true), 4000);
   };
 
@@ -307,7 +316,7 @@ export const Landing = () => {
   return (
     <div className="flex flex-col select-none bg-brand-bg transition-colors duration-300">
       
-      {/* 1. PREMIUM HERO SECTION (Fixed scroll overlap with scroll-mt and relative z-0) */}
+      {/* 1. HERO SECTION */}
       <section className="relative max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center pt-8 sm:pt-10 pb-6 lg:pt-8 lg:pb-8 scroll-mt-28 overflow-hidden z-0">
         
         {/* Left Content */}
@@ -329,7 +338,7 @@ export const Landing = () => {
             Discover free ebooks, AI-powered learning, smart summaries, quizzes, flashcards, and everything you need to learn faster.
           </p>
           
-          {/* Point 3: Hero CTA Buttons — Inline side-by-side on mobile and desktop */}
+          {/* Hero CTA Buttons */}
           <div className="flex flex-row items-center gap-2.5 sm:gap-3 mt-1 w-full max-w-md">
             <Link to="/marketplace" className="flex-1">
               <Button variant="primary" size="lg" className="font-bold h-11 sm:h-12 px-3 sm:px-6 text-xs sm:text-sm rounded-full w-full justify-center whitespace-nowrap">
@@ -359,46 +368,46 @@ export const Landing = () => {
             />
           </div>
 
-          {/* Stat Numbers */}
-          <div className="w-full mt-6 py-6 border-t border-brand-border grid grid-cols-2 gap-y-4 gap-x-6 sm:flex sm:flex-wrap sm:items-center sm:gap-6 lg:gap-8 select-none">
-            {/* Item 1: Rating */}
-            <div className="flex flex-col justify-center gap-1.5 text-left">
-              <div className="flex gap-0.5 shrink-0">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <p className="font-bold text-brand-text text-[11px] lg:text-xs leading-none">4.9/5 Rating</p>
+          {/* SECTION 1: REDESIGNED MINIMAL STATS BAR (4 columns, top border line, bold numbers, AI item in gradient) */}
+          <div className="w-full mt-6 pt-6 border-t border-brand-border grid grid-cols-2 md:grid-cols-4 gap-6 select-none">
+            {/* Item 1: eBooks */}
+            <div className="flex flex-col text-left">
+              <span className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight">
+                <AnimatedCounter value="10000" />+
+              </span>
+              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+                Premium eBooks
+              </span>
             </div>
-
-            <div className="hidden sm:block h-6 w-[1px] bg-brand-border shrink-0" />
 
             {/* Item 2: Readers */}
-            <div className="text-[11px] lg:text-xs leading-snug text-left">
-              <p className="font-bold text-brand-text">
-                <AnimatedCounter value="50000" />+ Readers
-              </p>
-              <p className="text-brand-text-secondary">Active Community</p>
+            <div className="flex flex-col text-left">
+              <span className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight">
+                <AnimatedCounter value="50000" />+
+              </span>
+              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+                Happy Readers
+              </span>
             </div>
 
-            <div className="hidden sm:block h-6 w-[1px] bg-brand-border shrink-0" />
-
-            {/* Item 3: eBooks */}
-            <div className="text-[11px] lg:text-xs leading-snug text-left">
-              <p className="font-bold text-brand-text">
-                <AnimatedCounter value="10000" />+ eBooks
-              </p>
-              <p className="text-brand-text-secondary">Free Access</p>
+            {/* Item 3: Rating */}
+            <div className="flex flex-col text-left">
+              <span className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight flex items-center gap-1">
+                4.9/5 <span className="text-amber-400 text-xl">⭐</span>
+              </span>
+              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+                User Rating
+              </span>
             </div>
 
-            <div className="hidden sm:block h-6 w-[1px] bg-brand-border shrink-0" />
-
-            {/* Item 4: Guarantee */}
-            <div className="text-[11px] lg:text-xs leading-snug text-left">
-              <p className="font-bold text-brand-text">
-                <AnimatedCounter value="100" />% Free
-              </p>
-              <p className="text-brand-text-secondary">Forever Guarantee</p>
+            {/* Item 4: AI Powered */}
+            <div className="flex flex-col text-left">
+              <span className="text-2xl sm:text-3xl font-display font-black tracking-tight bg-gradient-to-r from-purple-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent">
+                AI Powered
+              </span>
+              <span className="text-xs text-brand-text-secondary font-medium mt-1">
+                Smart Learning
+              </span>
             </div>
           </div>
         </motion.div>
@@ -440,9 +449,14 @@ export const Landing = () => {
         </div>
       </div>
 
-      {/* 2. Point 4: RECENTLY ADDED BOOKS WITH CAROUSEL ARROWS & SPACING */}
+      {/* SECTION 2: BENTO CATEGORIES SECTION (6 Curated Categories Only) */}
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
+        <BentoCategoriesSection />
+      </div>
+
+      {/* RECENTLY ADDED BOOKS */}
       {recentlyAdded.length > 0 && (
-        <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px] relative">
+        <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px] relative">
           <div className="max-w-7xl mx-auto px-6 w-full text-left relative">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -450,7 +464,6 @@ export const Landing = () => {
                 <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 tracking-tight">Recently Added Books</h2>
               </div>
               
-              {/* Carousel Navigation Arrows */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleRecentlyScroll("prev")}
@@ -475,7 +488,6 @@ export const Landing = () => {
               </div>
             </div>
             
-            {/* Scrollable Row with increased card breathing room */}
             <div 
               ref={recentlyAddedRef}
               onScroll={updateRecentlyScrollState}
@@ -491,115 +503,54 @@ export const Landing = () => {
         </div>
       )}
 
-      {/* 4. Point 5: PLATFORM BENEFITS SECTION — 2-COLUMN GRID + COMPACT CARDS */}
-      <div className="bg-brand-bg border-t border-brand-border pt-10 md:pt-14 pb-12 md:pb-16 transition-colors duration-300 scroll-mt-[76px]">
+      {/* SECTION 3: PLATFORM BENEFITS (8 FEATURE CARDS: 4 columns x 2 rows on desktop) */}
+      <div className="bg-brand-bg-secondary border-t border-brand-border pt-12 md:pt-16 pb-14 md:pb-20 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
-            <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Platform Value</span>
+            <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 border border-brand-accent/20 px-3.5 py-1.5 rounded-full inline-block">
+              PLATFORM VALUE
+            </span>
           </FadeUp>
           <FadeUp delay={0.05}>
-            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 tracking-tight">
+            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-4 tracking-tight">
               Platform Benefits
             </h2>
-            <p className="text-xs sm:text-base text-brand-text-secondary mt-2.5 mb-8 sm:mb-12 max-w-md mx-auto font-normal leading-relaxed">
-              Enjoy 100% free access to all core features for our launching year. No subscriptions required.
+            <p className="text-xs sm:text-base text-brand-text-secondary mt-2.5 mb-10 sm:mb-12 max-w-xl mx-auto font-normal leading-relaxed">
+              Supercharge your reading workflow with cutting-edge tools built for curious minds.
             </p>
           </FadeUp>
 
-          {/* 2-Column Grid on Mobile (<768px), 3-Column on Desktop (>=768px) */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-6 md:gap-8">
-            <FadeUp delay={0.1} className="h-full">
-              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
-                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-2.5 sm:mb-4 shrink-0">
-                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Free Forever</h3>
-                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
-                  Join during our release period and secure open library access completely free of charge. No hidden fees.
-                </p>
-              </div>
-            </FadeUp>
-
-            <FadeUp delay={0.16} className="h-full">
-              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
-                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-2.5 sm:mb-4 shrink-0">
-                  <BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Unlimited Reading</h3>
-                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
-                  Read as many books as you want. Explore tech specifications, startup ARR roadmaps, and self-help classics.
-                </p>
-              </div>
-            </FadeUp>
-
-            <FadeUp delay={0.22} className="h-full">
-              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
-                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-accent/10 border border-brand-accent/20 flex items-center justify-center text-brand-accent mb-2.5 sm:mb-4 shrink-0">
-                  <Download className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Unlimited Downloads</h3>
-                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
-                  Keep your books stored locally. Instantly download PDF and EPUB files to access your reading material offline.
-                </p>
-              </div>
-            </FadeUp>
-
-            <FadeUp delay={0.28} className="h-full">
-              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
-                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 mb-2.5 sm:mb-4 shrink-0">
-                  <BrainCircuit className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">AI Assistant</h3>
-                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
-                  Enhance your learning. Access floating AI assistants to explain complex lines, generate flashcards, and mind maps.
-                </p>
-              </div>
-            </FadeUp>
-
-            <FadeUp delay={0.34} className="h-full">
-              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
-                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-500 mb-2.5 sm:mb-4 shrink-0">
-                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Community Driven</h3>
-                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
-                  Connect directly with authors. Rate titles, publish helpful reviews, follow creators, and share curated collections.
-                </p>
-              </div>
-            </FadeUp>
-
-            <FadeUp delay={0.4} className="h-full">
-              <div className="min-h-[190px] sm:h-[250px] p-3.5 sm:p-6 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-brand-card shadow-brand text-left hover:shadow-brand-hover hover:-translate-y-0.5 transition-all duration-300 flex flex-col justify-start">
-                <div className="h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl bg-brand-success/10 border border-brand-success/20 flex items-center justify-center text-brand-success mb-2.5 sm:mb-4 shrink-0">
-                  <BookMarked className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
-                <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight">Open Library</h3>
-                <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-2.5 leading-normal sm:leading-relaxed line-clamp-3 sm:line-clamp-4">
-                  Enjoy clean layouts without visual clutter, banner ads, or paywall overlays. Designed purely for readers.
-                </p>
-              </div>
-            </FadeUp>
+          {/* 8 Cards Grid: 4 columns on desktop (lg), 2 columns on tablet/mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {PLATFORM_BENEFITS.map((benefit, idx) => {
+              const Icon = benefit.icon;
+              return (
+                <FadeUp key={idx} delay={idx * 0.05} className="h-full">
+                  <div className="h-full p-5 sm:p-6 bg-brand-card border border-brand-border rounded-[22px] shadow-brand text-left hover:shadow-brand-hover hover:border-brand-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-start group">
+                    <div className={`h-11 w-11 rounded-2xl border flex items-center justify-center mb-4 shrink-0 shadow-sm ${benefit.color}`}>
+                      <Icon className="h-5.5 w-5.5" />
+                    </div>
+                    <h3 className="text-base font-bold text-brand-text font-display shrink-0 leading-tight group-hover:text-brand-accent transition-colors">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed">
+                      {benefit.description}
+                    </p>
+                  </div>
+                </FadeUp>
+              );
+            })}
           </div>
         </section>
       </div>
 
-      {/* 5. TRENDING CATEGORIES */}
-      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
-        <section className="max-w-7xl mx-auto px-6 w-full text-center">
-          <FadeUp delay={0}>
-            <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Explore</span>
-          </FadeUp>
-          <FadeUp delay={0.05}>
-            <h2 className="text-3xl sm:text-[42px] font-display font-black text-brand-text mt-3 mb-12 tracking-tight">
-              Trending Categories
-            </h2>
-          </FadeUp>
-          <CategoriesSection />
-        </section>
+      {/* SECTION 4: PRICING SECTION (5 Tiers) */}
+      <div className="bg-brand-bg border-t border-brand-border py-12 md:py-16 scroll-mt-[76px]">
+        <PricingSection />
       </div>
 
-      {/* 7. Point 6: WHAT READERS SAY — 2 CARDS PER VIEW + 2s AUTO-ADVANCE + ARROWS */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 transition-colors duration-300 scroll-mt-[76px]">
+      {/* WHAT READERS SAY */}
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-12 md:py-16 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center select-none">
           <FadeUp delay={0}>
             <span className="text-xs font-mono text-brand-accent font-bold tracking-widest uppercase bg-brand-accent/10 px-3 py-1 rounded-full">Wall of Love</span>
@@ -610,7 +561,6 @@ export const Landing = () => {
                 What Readers Say
               </h2>
 
-              {/* Navigation Arrows */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleTestimonialNav("prev")}
@@ -630,7 +580,6 @@ export const Landing = () => {
             </div>
           </FadeUp>
           
-          {/* 2-Card View Container with Smooth AnimatePresence Slide/Fade */}
           <div className="relative overflow-hidden w-full py-2">
             <AnimatePresence mode="wait">
               <motion.div
@@ -639,7 +588,7 @@ export const Landing = () => {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.35, ease: "easeInOut" }}
-                className="grid grid-cols-2 gap-3 sm:gap-6 w-full"
+                className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 w-full"
               >
                 {testimonialsData
                   .slice(testimonialPage * 2, testimonialPage * 2 + 2)
@@ -650,7 +599,6 @@ export const Landing = () => {
             </AnimatePresence>
           </div>
 
-          {/* Page Indicators (Dots) */}
           <div className="flex justify-center items-center gap-2 mt-6">
             {[...Array(totalTestimonialPages)].map((_, idx) => (
               <button
@@ -666,8 +614,8 @@ export const Landing = () => {
         </section>
       </div>
 
-      {/* CONFIDENT FINAL CTA SECTION */}
-      <div className="bg-brand-bg border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
+      {/* FINAL CTA SECTION */}
+      <div className="bg-brand-bg border-t border-brand-border py-12 md:py-16 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0.1}>
             <h2 className="text-3xl sm:text-5xl font-display font-black text-brand-text leading-tight tracking-tight">
@@ -686,8 +634,8 @@ export const Landing = () => {
         </section>
       </div>
 
-      {/* 8. NEWSLETTER JOIN */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-10 md:py-14 scroll-mt-[76px]">
+      {/* NEWSLETTER JOIN */}
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-12 md:py-16 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full select-none text-center">
           <FadeUp delay={0.1}>
             <div className="bg-brand-card border border-brand-border rounded-[28px] py-10 px-6 md:py-14 md:px-12 text-center flex flex-col items-center gap-4 shadow-brand relative overflow-hidden">

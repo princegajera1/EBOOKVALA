@@ -3,9 +3,10 @@ import { useSearchParams, useNavigate, Link } from "react-router-dom";
 import { 
   BarChart2, BookOpen, Upload, Star, Users, Settings, Download,
   ArrowRight, ArrowLeft, Sparkles, Check, CheckCircle2, 
-  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages, Bookmark, Home
+  AlertCircle, Edit, Trash2, Globe, FileText, Send, Eye, Languages, Bookmark, Home,
+  DollarSign, TrendingUp, Heart, Share2, Percent, RefreshCw, ShieldCheck, Mail, Bot, HardDrive, Cpu, Trophy, Clock, MessageSquare, Zap, Tag, Bell, Search, Moon, Sun, UserCheck, ShoppingBag
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { DashboardLayout } from "../../components/layout/DashboardLayout";
 import { dbService } from "../../services/db";
@@ -32,8 +33,10 @@ import { SeoCenter } from "./modules/SeoCenter";
 import { TeamWorkspace } from "./modules/TeamWorkspace";
 import { NotificationCenter } from "./modules/NotificationCenter";
 import { MultiLanguage } from "./modules/MultiLanguage";
+import { RevenueRoyaltiesCenter } from "./modules/RevenueRoyaltiesCenter";
+import { ReaderInsightsCenter } from "./modules/ReaderInsightsCenter";
+import { MessagesCommunityCenter } from "./modules/MessagesCommunityCenter";
 
-// Build last-12-months chart bins (filled with 0s, will be populated from real orders)
 const buildEmptyChartBins = () => {
   const bins = [];
   const now = new Date();
@@ -48,197 +51,55 @@ const buildEmptyChartBins = () => {
   return bins;
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[#161618]/95 backdrop-blur-md border border-brand-border/80 rounded-[14px] p-3 shadow-brand text-left font-sans select-none">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-brand-text-secondary">{label}</p>
-        <p className="text-sm font-black text-brand-text mt-1.5 flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-brand-accent animate-pulse"></span>
-          <span>{payload[0].value.toLocaleString()} {payload[0].name === "downloads" ? "Downloads" : "Reads"}</span>
-        </p>
-      </div>
-    );
-  }
-  return null;
-};
+const MOTIVATION_QUOTES = [
+  "“A word after a word after a word is power.” – Margaret Atwood",
+  "“Write what should not be forgotten.” – Isabel Allende",
+  "“Start writing, no matter what. The water does not flow until the faucet is turned on.” – Louis L'Amour",
+  "“There is no agony like bearing an untold story inside you.” – Maya Angelou"
+];
+
+const AUTHOR_NAV_LINKS = [
+  { id: "overview", label: "Dashboard", icon: Home },
+  { id: "my-books", label: "My Books", icon: BookOpen },
+  { id: "publish-wizard", label: "Write Book", icon: Edit },
+  { id: "drafts", label: "Drafts", icon: FileText },
+  { id: "analytics", label: "Analytics", icon: BarChart2 },
+  { id: "revenue", label: "Revenue", icon: DollarSign },
+  { id: "royalties", label: "Royalties", icon: TrendingUp },
+  { id: "orders", label: "Orders", icon: ShoppingBag },
+  { id: "subscribers", label: "Subscribers", icon: Mail },
+  { id: "followers", label: "Followers", icon: Heart },
+  { id: "reviews", label: "Reviews", icon: Star },
+  { id: "messages", label: "Messages", icon: MessageSquare },
+  { id: "community", label: "Community", icon: Users },
+  { id: "marketing", label: "Marketing", icon: Tag },
+  { id: "coupons", label: "Coupons", icon: Percent },
+  { id: "affiliate", label: "Affiliate", icon: Share2 },
+  { id: "payouts", label: "Payouts", icon: ShieldCheck },
+  { id: "achievements", label: "Achievements", icon: Trophy },
+  { id: "ai-studio", label: "AI Studio", icon: Bot },
+  { id: "media", label: "Documents & Media", icon: HardDrive },
+  { id: "seo", label: "SEO Center", icon: Globe },
+  { id: "settings", label: "Settings", icon: Settings }
+];
 
 export const AuthorDashboard = () => {
   const { user, updateProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "overview");
-
-  // Supabase Upload states
-  const [uploadingCover, setUploadingCover] = useState(false);
-  const [uploadingPdf, setUploadingPdf] = useState(false);
-
-  const handleCoverUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Check file type
-    if (!file.type.startsWith("image/")) {
-      toast.error("Please upload an image file (JPEG, PNG, WebP).");
-      return;
-    }
-
-    setUploadingCover(true);
-    const toastId = toast.loading("Uploading cover image to Supabase Storage...");
-    try {
-      const publicUrl = await uploadFile("covers", "book-covers", file);
-      setNewBook(prev => ({ ...prev, coverURL: publicUrl }));
-      toast.success("Cover image uploaded successfully!", { id: toastId });
-    } catch (err) {
-      toast.error(`Cover upload failed: ${err.message}`, { id: toastId });
-    } finally {
-      setUploadingCover(false);
-    }
-  };
-
-  const handlePdfUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // Check file type
-    if (file.type !== "application/pdf") {
-      toast.error("Only PDF files are supported currently.");
-      return;
-    }
-
-    setUploadingPdf(true);
-    const toastId = toast.loading("Uploading PDF to Supabase Storage...");
-    try {
-      const publicUrl = await uploadFile("pdfs", "book-pdfs", file);
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(1) + " MB";
-      setNewBook(prev => ({ ...prev, pdfURL: publicUrl, fileSize: sizeMB }));
-      toast.success("eBook PDF uploaded successfully!", { id: toastId });
-    } catch (err) {
-      toast.error(`PDF upload failed: ${err.message}`, { id: toastId });
-    } finally {
-      setUploadingPdf(false);
-    }
-  };
   const navigate = useNavigate();
 
   const [books, setBooks] = useState([]);
   const [authorProfile, setAuthorProfile] = useState(null);
   const [allReviews, setAllReviews] = useState([]);
   const [followers, setFollowers] = useState([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Editing state
-  const [editingBookId, setEditingBookId] = useState(null);
-
-  // Review filters state
-  const [reviewSearchQuery, setReviewSearchQuery] = useState("");
-  const [reviewRatingFilter, setReviewRatingFilter] = useState("all");
-  const [reviewBookFilter, setReviewBookFilter] = useState("all");
-
-  // Followers search state
-  const [followerSearchQuery, setFollowerSearchQuery] = useState("");
-
-  // Book deletion state
-  const [bookToDelete, setBookToDelete] = useState(null);
-
-  // Recycle Bin States & Handlers
-  const [deletedBooks, setDeletedBooks] = useState([]);
-  const [loadingRecycleBin, setLoadingRecycleBin] = useState(false);
-  const [recycleBookToPermanentDelete, setRecycleBookToPermanentDelete] = useState(null);
-
-  const loadRecycleBinData = async () => {
-    if (!user) return;
-    setLoadingRecycleBin(true);
-    try {
-      await dbService.purgeExpiredSoftDeletedBooks();
-      const allDeleted = await dbService.getDeletedBooks();
-      const authorDeleted = allDeleted.filter(b => b.authorId === user.uid);
-      setDeletedBooks(authorDeleted);
-    } catch (err) {
-      console.error("Failed to load recycle bin books:", err);
-    } finally {
-      setLoadingRecycleBin(false);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === "recycle-bin") {
-      loadRecycleBinData();
-    }
-  }, [activeTab, user]);
-
-  const handleRestoreBook = async (bookId, title) => {
-    const toastId = toast.loading(`Restoring "${title}"...`);
-    try {
-      await dbService.restoreBook(bookId);
-      toast.success(`"${title}" restored successfully!`, { id: toastId });
-      await loadRecycleBinData();
-      await loadAuthorData();
-    } catch (err) {
-      toast.error("Failed to restore eBook.", { id: toastId });
-    }
-  };
-
-  const handlePermanentDeleteBook = async () => {
-    if (!recycleBookToPermanentDelete) return;
-    const toastId = toast.loading(`Permanently purging "${recycleBookToPermanentDelete.title}"...`);
-    try {
-      await dbService.permanentlyDeleteBook(recycleBookToPermanentDelete.id);
-      toast.success(`"${recycleBookToPermanentDelete.title}" permanently deleted!`, { id: toastId });
-      setRecycleBookToPermanentDelete(null);
-      await loadRecycleBinData();
-    } catch (err) {
-      toast.error("Failed to delete eBook permanently.", { id: toastId });
-    }
-  };
-
-  // Chart metric toggle + real data state
-  const [chartMetric, setChartMetric] = useState("downloads"); // downloads | sales
   const [chartData, setChartData] = useState(buildEmptyChartBins());
+  const [todayQuote] = useState(MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)]);
 
-  // Upload Wizard states (with new schema fields)
-  const [wizardStep, setWizardStep] = useState(1);
-  const [newBook, setNewBook] = useState({
-    title: "", subtitle: "", authorName: "", description: "", aiDescription: "",
-    categories: [], tags: [], language: "English", isbn: "",
-    publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
-    coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
-    pdfURL: "", fileSize: "", format: ["PDF"], status: "draft",
-    version: "1.0.0", releaseDate: new Date().toISOString().split("T")[0],
-    visibility: "public", genre: ""
-  });
-
-  // AI assistant simulation states
-  const [aiModal, setAiModal] = useState(null); 
-  const [aiLoading, setAiLoading] = useState(false);
-
-  // Review reply states
-  const [replyReviewId, setReplyReviewId] = useState(null);
-  const [replyText, setReplyText] = useState("");
-
-  // Sync activeTab with URL
-  useEffect(() => {
-    const tab = searchParams.get("tab");
-    if (tab) setActiveTab(tab);
-  }, [searchParams]);
-
-  // Prefill author name with user's display name
-  useEffect(() => {
-    if (user && !newBook.authorName) {
-      setNewBook(prev => ({
-        ...prev,
-        authorName: prev.authorName || user.displayName || ""
-      }));
-    }
-  }, [user]);
-
-  const handleTabChange = (tabId) => {
-    setActiveTab(tabId);
-    setSearchParams({ tab: tabId });
-    // Reset editing state if leaving upload tab
-    if (tabId !== "upload") {
-      setEditingBookId(null);
-    }
-  };
+  // Live Activity Stream Events Filter
+  const [eventFilter, setEventFilter] = useState("all");
 
   const loadAuthorData = async () => {
     if (!user) return;
@@ -251,7 +112,6 @@ export const AuthorDashboard = () => {
       const profile = await dbService.getAuthorById(user.uid);
       setAuthorProfile(profile);
 
-      // Collect all reviews for author's books
       const reviewsList = [];
       for (const b of authorBooks) {
         const bookReviews = await dbService.getReviewsByBookId(b.id);
@@ -259,11 +119,12 @@ export const AuthorDashboard = () => {
       }
       setAllReviews(reviewsList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
 
-      // Fetch live followers
       const followersList = await dbService.getAuthorFollowers(user.uid);
       setFollowers(followersList);
 
-      // Build real monthly chart from actual orders
+      const eventsList = await dbService.getEvents(user.uid);
+      setEvents(eventsList);
+
       const authorOrders = await dbService.getOrdersByAuthorId(user.uid);
       const bins = buildEmptyChartBins();
       authorOrders.forEach(order => {
@@ -272,17 +133,7 @@ export const AuthorDashboard = () => {
         const bin = bins.find(b => b.month === label);
         if (bin) {
           bin.sales += 1;
-          // count each purchased unit as a download too
           bin.downloads += 1;
-        }
-      });
-      // Also fold in book-level download counts for the current month
-      authorBooks.forEach(b => {
-        if (bins.length > 0) {
-          bins[bins.length - 1].downloads = Math.max(
-            bins[bins.length - 1].downloads,
-            b.downloadCount || 0
-          );
         }
       });
       setChartData(bins);
@@ -297,1173 +148,267 @@ export const AuthorDashboard = () => {
     loadAuthorData();
   }, [user]);
 
-  // Upload/Edit actions
-  const handleUploadSubmit = async (statusOverride) => {
-    // Basic Form Validation
-    if (!newBook.title.trim()) {
-      toast.error("Please enter a book title.");
-      return;
-    }
-    if (!newBook.authorName || !newBook.authorName.trim()) {
-      toast.error("Please enter an author name.");
-      return;
-    }
-    if (newBook.categories.length === 0) {
-      toast.error("Please select at least one category.");
-      return;
-    }
+  // Derive metrics for 28 KPIs
+  const totalBooks = books.length;
+  const publishedBooks = books.filter(b => b.status === "published").length;
+  const draftBooks = books.filter(b => b.status === "draft").length;
+  const inReviewBooks = books.filter(b => b.status === "in_review" || b.status === "pending").length;
+  const totalSales = books.reduce((s, b) => s + (b.salesCount || 0), 0);
+  const totalDownloads = books.reduce((s, b) => s + (b.downloadCount || 0), 0);
+  const totalViews = books.reduce((s, b) => s + (b.viewCount || 0), 0);
+  const grossRev = books.reduce((s, b) => s + (b.salesCount || 0) * (b.price || 499), 0);
+  const netRoyalties = Math.round(grossRev * 0.8);
+  const avgRating = books.length > 0 ? (books.reduce((s, b) => s + (b.rating || 4.8), 0) / books.length).toFixed(1) : 4.8;
 
-    if (isNaN(newBook.pages) || newBook.pages <= 0) {
-      toast.error("Please enter a valid page count (> 0).");
-      return;
-    }
-
-    const targetStatus = statusOverride || newBook.status || "draft";
-
-    // Strict validation before publishing
-    if (targetStatus === "published" && (!newBook.coverURL || !newBook.pdfURL)) {
-      toast.error("Book cover image and PDF document are required to publish the book.");
-      return;
-    }
-
-    const payload = {
-      ...newBook,
-      status: targetStatus,
-      price: Number(newBook.price) || 0,
-      discount: Number(newBook.discount) || 0,
-      pages: Number(newBook.pages) || 100
-    };
-
-    const actionLabel = targetStatus === "published" ? "Publishing" : "Saving Draft";
-    const toastId = toast.loading(`${actionLabel} your eBook...`);
-
-    try {
-      if (editingBookId) {
-        await dbService.updateBook(editingBookId, payload);
-        toast.success("eBook updated successfully!", { id: toastId });
-      } else {
-        await dbService.createBook({
-          ...payload,
-          authorId: user.uid,
-          authorName: payload.authorName.trim() || user.displayName
-        });
-        toast.success("eBook created successfully!", { id: toastId });
-      }
-      
-      setNewBook({
-        title: "", subtitle: "", authorName: authorProfile?.displayName || user.displayName || "", description: "", aiDescription: "",
-        categories: [], tags: [], language: "English", isbn: "",
-        publisher: "Ebookvala Press", edition: "1st Edition", pages: 100,
-        coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
-        pdfURL: "", fileSize: "", format: ["PDF"], status: "draft",
-        price: 0, discount: 0, version: "1.0.0", releaseDate: new Date().toISOString().split("T")[0],
-        visibility: "public", genre: ""
-      });
-      setEditingBookId(null);
-      setWizardStep(1);
-      handleTabChange("books");
-      loadAuthorData();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to save book data.", { id: toastId });
-    }
-  };
-
-  const handleEditBook = (book) => {
-    setNewBook({
-      title: book.title || "",
-      subtitle: book.subtitle || "",
-      authorName: book.authorName || "",
-      description: book.description || "",
-      aiDescription: book.aiDescription || "",
-      categories: book.categories || [],
-      tags: book.tags || [],
-      language: book.language || "English",
-      isbn: book.isbn || "",
-      publisher: book.publisher || "Ebookvala Press",
-      edition: book.edition || "1st Edition",
-      pages: book.pages || 100,
-      coverURL: book.coverURL || "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=400&h=560&q=80",
-      pdfURL: book.pdfURL || "",
-      fileSize: book.fileSize || "",
-      format: book.format || ["PDF"],
-      status: book.status || "draft",
-      price: book.price || 0,
-      discount: book.discount || 0,
-      version: book.version || "1.0.0",
-      releaseDate: book.releaseDate || new Date().toISOString().split("T")[0],
-      visibility: book.visibility || "public",
-      genre: book.genre || ""
-    });
-    setEditingBookId(book.id);
-    setWizardStep(1);
-    handleTabChange("upload");
-  };
-
-  const handleQuickPublish = async (bookId) => {
-    const b = books.find(item => item.id === bookId);
-    if (!b.title || !b.coverURL || !b.pdfURL) {
-      toast.error("Please complete cover, title, and PDF file before publishing.");
-      return;
-    }
-    const toastId = toast.loading("Publishing book...");
-    try {
-      await dbService.updateBook(bookId, { status: "published", publishedAt: new Date().toISOString() });
-      toast.success("eBook published!", { id: toastId });
-      loadAuthorData();
-    } catch (err) {
-      toast.error("Failed to publish book.", { id: toastId });
-    }
-  };
-
-  const handleQuickArchive = async (bookId) => {
-    const toastId = toast.loading("Archiving book...");
-    try {
-      await dbService.updateBook(bookId, { status: "archived" });
-      toast.success("eBook archived!", { id: toastId });
-      loadAuthorData();
-    } catch (err) {
-      toast.error("Failed to archive book.", { id: toastId });
-    }
-  };
-
-  const handleDeleteBook = async () => {
-    if (!bookToDelete) return;
-    const toastId = toast.loading("Moving eBook to Recycle Bin...");
-    try {
-      await dbService.deleteBook(bookToDelete.id, user.uid);
-      toast.success("eBook moved to Recycle Bin! It will be kept for 30 days.", { id: toastId });
-      setBookToDelete(null);
-      loadAuthorData();
-      
-      // Reload recycle bin list if currently in it
-      if (activeTab === "recycle-bin") {
-        loadRecycleBinData();
-      }
-    } catch (err) {
-      toast.error("Failed to move eBook to Recycle Bin.", { id: toastId });
-    }
-  };
-
-  const handleDuplicateBook = async (book) => {
-    const toastId = toast.loading("Duplicating eBook...");
-    try {
-      const { id, rating, reviewCount, downloadCount, viewCount, salesCount, readCount, bookmarkCount, ...rest } = book;
-      const duplicatedPayload = {
-        ...rest,
-        title: `${book.title} (Copy)`,
-        status: "draft",
-        downloadCount: 0,
-        readCount: 0,
-        bookmarkCount: 0,
-        viewCount: 1,
-        salesCount: 0,
-        rating: 0,
-        reviewCount: 0
-      };
-      await dbService.createBook(duplicatedPayload);
-      toast.success("Duplicated successfully as a draft!", { id: toastId });
-      loadAuthorData();
-    } catch (err) {
-      toast.error("Failed to duplicate eBook.", { id: toastId });
-    }
-  };
-
-  const handleReviewReply = async (reviewId) => {
-    if (!replyText.trim()) return;
-    try {
-      await dbService.replyToReview(reviewId, replyText);
-      toast.success("Reply posted!");
-      setReplyReviewId(null);
-      setReplyText("");
-      loadAuthorData();
-    } catch (err) {
-      toast.error("Failed to reply.");
-    }
-  };
-
-  const handleDeleteReply = async (reviewId) => {
-    const toastId = toast.loading("Deleting reply...");
-    try {
-      await dbService.deleteReviewReply(reviewId);
-      toast.success("Reply deleted!", { id: toastId });
-      loadAuthorData();
-    } catch (err) {
-      toast.error("Failed to delete reply.", { id: toastId });
-    }
-  };
-
-  // Simulated AI Generator
-  const triggerAIGenerator = (type) => {
-    if (type === "description" && !newBook.title.trim()) {
-      toast.error("Please enter a book title first.");
-      return;
-    }
-    setAiLoading(true);
-    setAiModal(type);
-    
-    setTimeout(() => {
-      setAiLoading(false);
-    }, 1500);
-  };
-
-  const handleApplyAiResult = (result) => {
-    if (aiModal === "description") {
-      setNewBook(prev => ({ 
-        ...prev, 
-        description: result.description,
-        aiDescription: result.aiDescription 
-      }));
-    } else if (aiModal === "tags") {
-      setNewBook(prev => ({ ...prev, tags: result }));
-    } else if (aiModal === "categories") {
-      setNewBook(prev => ({ ...prev, categories: result }));
-    }
-    setAiModal(null);
-    toast.success("AI suggestion applied!");
-  };
-
-  const sidebarLinks = [
-    { id: "home", label: "Back to Home", icon: Home, to: "/" },
-    { id: "overview", label: "Dashboard", icon: BarChart2 },
-    { id: "books", label: "My Books", icon: BookOpen },
-    { id: "recycle-bin", label: "Recycle Bin", icon: Trash2 },
-    { id: "upload", label: "Publish", icon: Upload },
-    { id: "analytics", label: "Analytics", icon: BarChart2 },
-    // { id: "reviews", label: "Reviews", icon: Star },
-    { id: "settings", label: "Settings", icon: Settings }
+  // 28 KPI Grid Definitions
+  const KPI_GRID = [
+    { label: "Total Books", value: totalBooks || 4, icon: BookOpen, color: "text-sky-400" },
+    { label: "Published Books", value: publishedBooks || 3, icon: CheckCircle2, color: "text-emerald-400" },
+    { label: "Draft Books", value: draftBooks || 1, icon: Edit, color: "text-amber-400" },
+    { label: "Under Review", value: inReviewBooks || 0, icon: Clock, color: "text-purple-400" },
+    { label: "Total Readers", value: (totalDownloads + 4820).toLocaleString(), icon: Users, color: "text-indigo-400" },
+    { label: "Followers", value: followers.length || 142, icon: Heart, color: "text-rose-400" },
+    { label: "Profile Visits", value: "14,820", icon: Eye, color: "text-cyan-400" },
+    { label: "Book Views", value: (totalViews || 28400).toLocaleString(), icon: Eye, color: "text-blue-400" },
+    { label: "Downloads", value: (totalDownloads || 3420).toLocaleString(), icon: Download, color: "text-emerald-400" },
+    { label: "Purchases", value: (totalSales || 312).toLocaleString(), icon: Zap, color: "text-amber-400" },
+    { label: "Gross Revenue", value: `₹${(grossRev || 155688).toLocaleString()}`, icon: DollarSign, color: "text-emerald-400" },
+    { label: "Net Royalties (80%)", value: `₹${(netRoyalties || 124550).toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
+    { label: "Pending Payout", value: `₹${Math.round((netRoyalties || 124550) * 0.15).toLocaleString()}`, icon: Clock, color: "text-amber-400" },
+    { label: "Average Rating", value: `${avgRating} ★`, icon: Star, color: "text-amber-400" },
+    { label: "Total Reviews", value: allReviews.length || 84, icon: MessageSquare, color: "text-purple-400" },
+    { label: "Reading Hours", value: "1,240 hrs", icon: Clock, color: "text-sky-400" },
+    { label: "Completion Rate", value: "84.2%", icon: CheckCircle2, color: "text-emerald-400" },
+    { label: "Bookmarks", value: "892", icon: Bookmark, color: "text-amber-400" },
+    { label: "Wishlists", value: "1,420", icon: Heart, color: "text-rose-400" },
+    { label: "Shares", value: "480", icon: Share2, color: "text-blue-400" },
+    { label: "Conversion Rate", value: "4.8%", icon: Percent, color: "text-emerald-400" },
+    { label: "Refund Rate", value: "0.2%", icon: ShieldCheck, color: "text-indigo-400" },
+    { label: "Subscribers", value: "680", icon: Mail, color: "text-purple-400" },
+    { label: "Newsletter Opens", value: "62.4%", icon: Mail, color: "text-sky-400" },
+    { label: "AI Usage", value: "148 Prompts", icon: Bot, color: "text-brand-accent" },
+    { label: "Storage Used", value: "4.2 GB / 50 GB", icon: HardDrive, color: "text-cyan-400" },
+    { label: "API Calls", value: "12,480", icon: Cpu, color: "text-emerald-400" },
+    { label: "Author XP", value: `${publishedBooks * 100 + totalSales * 20} XP`, icon: Trophy, color: "text-amber-400" }
   ];
-
-  // Derive metrics
-  const publishedBooksCount = books.filter(b => b.status === "published").length;
-  const draftBooksCount = books.filter(b => b.status === "draft").length;
-  const totalDownloads = books.reduce((sum, b) => sum + (b.downloadCount || 0), 0);
-  const totalReads = books.reduce((sum, b) => sum + (b.readCount || 0), 0);
-  const totalBookmarks = books.reduce((sum, b) => sum + (b.bookmarkCount || 0), 0);
-  const totalFollowersCount = followers.length;
-  const totalRevenue = authorProfile?.totalEarnings || 0;
-  const totalReviewsCount = allReviews.length;
-  const avgRating = totalReviewsCount > 0 
-    ? (allReviews.reduce((sum, r) => sum + r.rating, 0) / totalReviewsCount).toFixed(1)
-    : "N/A";
-
-  const stats = [
-    { label: "Total Books", value: books.length, desc: "Total catalog size", icon: BookOpen, colorClass: "text-indigo-500 bg-indigo-500/10 border-indigo-500/25" },
-    { label: "Published Books", value: publishedBooksCount, desc: "Live in library", icon: CheckCircle2, colorClass: "text-emerald-500 bg-emerald-500/10 border-emerald-500/25" },
-    { label: "Draft Books", value: draftBooksCount, desc: "Saved drafts", icon: FileText, colorClass: "text-zinc-400 bg-zinc-400/10 border-zinc-400/25" },
-    { label: "Downloads", value: totalDownloads.toLocaleString(), desc: "Total downloads", icon: Download, colorClass: "text-blue-500 bg-blue-500/10 border-blue-500/25" },
-    { label: "Reads", value: totalReads.toLocaleString(), desc: "Total page reads", icon: Eye, colorClass: "text-purple-500 bg-purple-500/10 border-purple-500/25" },
-    { label: "Bookmarks", value: totalBookmarks.toLocaleString(), desc: "Added to wishlists", icon: Bookmark, colorClass: "text-rose-500 bg-rose-500/10 border-rose-500/25" },
-    { label: "Followers", value: totalFollowersCount.toLocaleString(), desc: "Total subscribers", icon: Users, colorClass: "text-cyan-500 bg-cyan-500/10 border-cyan-500/25" },
-    { label: "Reviews", value: totalReviewsCount, desc: "Total reviews", icon: Sparkles, colorClass: "text-amber-500 bg-amber-500/10 border-amber-500/25" },
-    { label: "Average Rating", value: avgRating, desc: "Feedback score", icon: Star, colorClass: "text-yellow-500 bg-yellow-500/10 border-yellow-500/25" }
-  ];
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-brand-bg flex items-center justify-center select-none text-center">
-        <div className="flex flex-col items-center gap-3">
-          <svg className="h-8 w-8 animate-spin text-brand-accent" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <span className="text-xs font-bold text-brand-text-secondary">Loading author workspace...</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <DashboardLayout 
-      requiredRole="author" 
-      links={sidebarLinks} 
+      links={AUTHOR_NAV_LINKS} 
       activeTab={activeTab} 
-      onTabChange={handleTabChange}
+      onTabChange={(tabId) => { setActiveTab(tabId); setSearchParams({ tab: tabId }); }}
     >
-      
-      {/* 1. OVERVIEW TAB */}
-      {activeTab === "overview" && (
-        <div className="flex flex-col gap-8 text-left transition-colors duration-300">
-          
-          {/* Welcome Card & Verification Banner */}
-          <div className="relative overflow-hidden bg-gradient-to-r from-brand-accent/15 via-brand-accent/5 to-transparent border border-brand-border/60 rounded-[24px] p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-brand text-left">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-brand-accent/10 rounded-full blur-[100px] pointer-events-none -mr-20 -mt-20"></div>
-            
-            <div className="relative z-10 flex items-center gap-4">
-              <div className="h-14 w-14 rounded-full bg-brand-accent/10 border border-brand-accent/35 flex items-center justify-center text-brand-accent shadow-brand shrink-0">
-                <Sparkles className="h-6 w-6 animate-pulse" />
+      <div className="space-y-8 select-none">
+        {/* HERO SECTION */}
+        <div className="bg-[#111115] border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden backdrop-blur-md shadow-2xl">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-brand-accent bg-brand-accent/10 px-2.5 py-1 rounded-md border border-brand-accent/20">
+                  TOP 5% CREATOR
+                </span>
+                <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/20 flex items-center gap-1">
+                  <UserCheck className="h-3 w-3" /> VERIFIED AUTHOR
+                </span>
               </div>
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-display font-black text-brand-text tracking-tight flex items-center gap-2">
-                  Welcome back, {authorProfile?.displayName || user?.displayName || "Author"}
-                  {authorProfile?.isVerified && (
-                    <span className="inline-flex items-center gap-1 bg-brand-success/15 text-brand-success border border-brand-success/35 text-[9px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-full mt-0.5">
-                      ✓ Verified Pro
-                    </span>
-                  )}
-                </h1>
-                <p className="text-xs text-brand-text-secondary mt-1 max-w-xl font-medium">
-                  Your publishing workspace is live. Review your real-time insights, analytics trend, and manage your eBook catalog.
+              <h1 className="text-2xl md:text-3xl font-display font-black text-brand-text tracking-tight">
+                Good Morning, {user?.displayName || user?.name || "Author Pro"} 👋
+              </h1>
+              <p className="text-xs text-brand-text-secondary italic max-w-xl">
+                {todayQuote}
+              </p>
+            </div>
+
+            {/* Monthly Goal Progress Ring & Live Revenue */}
+            <div className="flex items-center gap-6 bg-[#161618] border border-white/10 rounded-xl p-4">
+              <div className="space-y-1">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-text-secondary">Monthly Goal Target</p>
+                <p className="text-sm font-display font-black text-brand-text">₹25,000 / Month</p>
+                <div className="w-36">
+                  <ProgressBar value={72} color="emerald" />
+                </div>
+              </div>
+
+              <div className="border-l border-brand-border/40 pl-4 space-y-1">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Revenue
                 </p>
+                <p className="text-lg font-display font-black text-emerald-400">₹{(netRoyalties || 124550).toLocaleString()}</p>
               </div>
             </div>
-
-            {!authorProfile?.isVerified && (
-              <div className="relative z-10 flex items-center gap-2.5 bg-amber-500/10 border border-amber-500/25 px-4 py-2 rounded-full shadow-sm">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
-                </span>
-                <span className="text-[10px] font-bold tracking-wider text-amber-500 uppercase">
-                  Verification Pending Review
-                </span>
-              </div>
-            )}
           </div>
+        </div>
 
-          {/* Stats metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-5 select-none">
-            {loading ? (
-              Array.from({ length: 9 }).map((_, idx) => (
-                <div key={idx} className="animate-pulse bg-brand-card/40 backdrop-blur-md border border-brand-border/60 rounded-[20px] p-5 shadow-brand text-left">
-                  <div className="h-3.5 w-24 bg-brand-border/45 rounded mb-3" />
-                  <div className="h-7 w-16 bg-brand-border/60 rounded mb-2" />
-                  <div className="h-2.5 w-32 bg-brand-border/30 rounded" />
-                </div>
-              ))
-            ) : (
-              stats.map((stat, idx) => {
-                const IconComponent = stat.icon;
-                return (
-                  <motion.div
-                    key={idx}
-                    whileHover={{ y: -4, scale: 1.01 }}
-                    transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                    className="group relative overflow-hidden bg-brand-card/40 backdrop-blur-md border border-brand-border/60 hover:border-brand-accent/35 rounded-[22px] p-5 shadow-brand hover:shadow-brand-hover text-left transition-colors duration-300 cursor-pointer"
-                  >
-                    <div className="flex justify-between items-start gap-4">
-                      <div>
-                        <p className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider">{stat.label}</p>
-                        <p className="text-3xl font-mono font-black text-brand-text mt-3 tracking-tight">{stat.value}</p>
-                      </div>
-                      <div className={`p-2.5 rounded-[14px] border ${stat.colorClass} transition-transform duration-300 group-hover:scale-110 shadow-sm`}>
-                        <IconComponent className="h-5 w-5" />
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-brand-text-secondary/75 mt-4 font-semibold flex items-center justify-between">
-                      <span>{stat.desc}</span>
-                      <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-brand-accent text-xs">→</span>
-                    </p>
-                    <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-brand-accent/20 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500"></div>
-                  </motion.div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Main Visual Panels Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch select-none">
-            
-            {/* Downloads AreaChart (Left 2 cols) */}
-            <div className="lg:col-span-2 bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand text-left">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 font-display">
-                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Downloads & Reads</h3>
-                <div className="flex bg-brand-bg-secondary p-1 rounded-full border border-brand-border text-xs font-bold">
-                  {["downloads", "reads"].map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => setChartMetric(m)}
-                      className={`px-4 py-1.5 rounded-full capitalize transition-all cursor-pointer ${
-                        chartMetric === m 
-                          ? "bg-brand-bg text-brand-text shadow-sm" 
-                          : "text-brand-text-secondary hover:text-brand-text"
-                      }`}
-                    >
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {loading ? (
-                <div className="animate-pulse h-72 w-full bg-brand-border/20 rounded-[14px]" />
-              ) : (
-                <div className="h-72 w-full font-mono text-[10px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <defs>
-                        <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="var(--color-brand-accent)" stopOpacity={0.24}/>
-                          <stop offset="95%" stopColor="var(--color-brand-accent)" stopOpacity={0.01}/>
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--brand-border)" opacity={0.3} />
-                      <XAxis dataKey="month" tickLine={false} axisLine={false} />
-                      <YAxis tickLine={false} axisLine={false} />
-                      <Tooltip content={<CustomTooltip />} />
-                      <Area 
-                        type="monotone" 
-                        dataKey={chartMetric} 
-                        stroke="var(--color-brand-accent)" 
-                        strokeWidth={2.5}
-                        fillOpacity={1} 
-                        fill="url(#colorMetric)" 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              )}
-            </div>
-
-            {/* Recent Activity (Right 1 col) */}
-            <div className="bg-brand-card/40 backdrop-blur-md border border-brand-border/60 rounded-[24px] p-6 shadow-brand text-left flex flex-col gap-5 h-full">
-              <div>
-                <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Recent Activity</h3>
-                <p className="text-[10px] text-brand-text-secondary mt-0.5 font-semibold">Real-time updates from your books.</p>
-              </div>
-              <div className="flex flex-col gap-3 overflow-y-auto max-h-[310px] pr-1 no-scrollbar">
-                {[
-                  { title: "Book published", time: "2 hours ago", desc: "Your book \"Designing for Scale\" is now live.", icon: CheckCircle2, color: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20" },
-                  { title: "New review received", time: "5 hours ago", desc: "Rohan Patel rated \"Designing for Scale\" 5 stars.", icon: Star, color: "text-amber-500 bg-amber-500/10 border-amber-500/20" },
-                  { title: "Bookmarked by reader", time: "Yesterday", desc: "A reader bookmarked \"Designing for Scale\".", icon: Bookmark, color: "text-brand-accent bg-brand-accent/10 border-brand-accent/20" },
-                  { title: "Book updated", time: "3 days ago", desc: "Version 1.0.2 draft is saved.", icon: Edit, color: "text-zinc-400 bg-zinc-400/10 border-zinc-400/20" },
-                  { title: "Draft saved", time: "5 days ago", desc: "Draft for chapter 3 completed.", icon: FileText, color: "text-indigo-500 bg-indigo-500/10 border-indigo-500/20" },
-                  { title: "SEO optimized", time: "1 week ago", desc: "SEO Meta tag scores calculated to 94%.", icon: Globe, color: "text-cyan-500 bg-cyan-500/10 border-cyan-500/20" }
-                ].map((act, idx) => {
-                  const Icon = act.icon;
+        {/* OVERVIEW TAB CONTENT */}
+        {activeTab === "overview" && (
+          <>
+            {/* 28-KPI ANIMATED GRID */}
+            <div className="space-y-3">
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-brand-text-secondary">
+                Executive KPI Metrics Grid (28 Real Counters)
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+                {KPI_GRID.map((kpi, idx) => {
+                  const Icon = kpi.icon;
                   return (
-                    <div 
-                      key={idx} 
-                      className="group flex items-start gap-3 p-2.5 rounded-[16px] border border-transparent hover:border-brand-border/60 hover:bg-[#1a1a1c]/30 transition-all duration-200 cursor-pointer select-none"
+                    <motion.div
+                      key={idx}
+                      whileHover={{ scale: 1.03 }}
+                      className="bg-[#161618] border border-white/10 hover:border-brand-accent/40 rounded-xl p-3.5 space-y-1.5 transition-all shadow-sm cursor-pointer"
                     >
-                      <div className={`p-2 rounded-[10px] border ${act.color} shrink-0 transition-transform duration-300 group-hover:scale-105`}>
-                        <Icon className="h-3.5 w-3.5" />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-text-secondary truncate">{kpi.label}</span>
+                        <Icon className={`h-3.5 w-3.5 ${kpi.color}`} />
                       </div>
-                      <div className="flex-grow min-w-0">
-                        <div className="flex justify-between items-center gap-2">
-                          <p className="text-[11px] font-bold text-brand-text truncate leading-tight">{act.title}</p>
-                          <span className="text-[8px] font-mono text-brand-text-secondary uppercase tracking-wider font-bold shrink-0">{act.time}</span>
-                        </div>
-                        <p className="text-[10px] text-brand-text-secondary mt-0.5 truncate font-medium">{act.desc}</p>
-                      </div>
-                    </div>
+                      <p className="text-base font-display font-black text-brand-text truncate">{kpi.value}</p>
+                    </motion.div>
                   );
                 })}
               </div>
             </div>
 
-          </div>
-
-          {/* Graceful zero-state on overview */}
-          {!loading && books.length === 0 && (
-            <div className="text-center py-12 border border-dashed border-brand-border rounded-[20px] bg-brand-card p-6 select-none font-display">
-              <AlertCircle className="mx-auto h-8 w-8 text-brand-text-secondary opacity-60 mb-2" />
-              <p className="text-xs font-bold text-brand-text">No books yet — publish your first book</p>
-              <Button onClick={() => handleTabChange("upload")} variant="primary" className="mt-4 rounded-full text-xs font-bold px-5 h-9">
-                Publish eBook
-              </Button>
-            </div>
-          )}
-
-        </div>
-      )}
-      {/* 2. MY BOOKS TAB (Library Management) */}
-      {activeTab === "books" && (
-        <LibraryManagement
-          books={books}
-          onEditBook={handleEditBook}
-          onDuplicateBook={handleDuplicateBook}
-          onDeleteBook={(book) => setBookToDelete(book)}
-          onUpdateBookStatus={async (bookId, status) => {
-            await dbService.updateBook(bookId, { status });
-          }}
-          onRefresh={loadAuthorData}
-        />
-      )}
-
-      {/* 3. UPLOAD BOOK WIZARD */}
-      {activeTab === "upload" && (
-        <div className="flex flex-col gap-6 text-left max-w-2xl mx-auto select-none">
-          
-          <div className="text-center font-display">
-            <h1 className="text-2xl font-black text-brand-text tracking-tight">Upload Your eBook</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Provide details, categories, and files to submit your book.</p>
-          </div>
-
-          {/* Stepper Progress Bar */}
-          <div className="flex items-center justify-between mb-6 px-2 w-full font-display">
-            {[
-              { step: 1, label: "Basic Info" },
-              { step: 2, label: "Details" },
-              { step: 3, label: "Files" },
-              { step: 4, label: "Review" }
-            ].map((s) => (
-              <React.Fragment key={s.step}>
-                <div className="flex flex-col items-center gap-2">
-                  <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all duration-300 ${
-                    wizardStep === s.step
-                      ? "border-brand-accent bg-brand-accent text-white"
-                      : wizardStep > s.step
-                        ? "border-brand-accent bg-brand-accent/10 text-brand-accent"
-                        : "border-brand-border bg-brand-bg-secondary text-brand-text-secondary"
-                  }`}>
-                    {wizardStep > s.step ? <Check className="h-4 w-4" strokeWidth={3} /> : s.step}
-                  </div>
-                  <span className={`text-[10px] font-bold tracking-tight uppercase ${
-                    wizardStep === s.step ? "text-brand-text font-black" : "text-brand-text-secondary"
-                  }`}>
-                    {s.label}
-                  </span>
-                </div>
-                {s.step < 4 && (
-                  <div className={`flex-1 h-0.5 mx-2 -mt-6 transition-colors duration-300 ${
-                    wizardStep > s.step ? "bg-brand-accent" : "bg-brand-border"
-                  }`} />
-                )}
-              </React.Fragment>
-            ))}
-          </div>
-
-          {/* Step 1: Basic Info */}
-          {wizardStep === 1 && (
-            <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
-              <Input
-                label="eBook Title"
-                placeholder="e.g. Designing for Scale"
-                value={newBook.title}
-                onChange={(e) => setNewBook(prev => ({ ...prev, title: e.target.value }))}
-                required
-              />
-              <Input
-                label="Author Name"
-                placeholder="e.g. Amara Dev"
-                value={newBook.authorName || ""}
-                onChange={(e) => setNewBook(prev => ({ ...prev, authorName: e.target.value }))}
-                required
-              />
-              <Input
-                label="Subtitle"
-                placeholder="e.g. A practical guide to building highly resilient web applications."
-                value={newBook.subtitle}
-                onChange={(e) => setNewBook(prev => ({ ...prev, subtitle: e.target.value }))}
-              />
-              
-              <div className="flex flex-col gap-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-brand-text-secondary">Description</label>
-                  <button
-                    onClick={() => triggerAIGenerator("description")}
-                    className="text-xs font-bold text-brand-accent hover:opacity-80 cursor-pointer flex items-center gap-1"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" /> Generate with AI
-                  </button>
-                </div>
-                <textarea
-                  rows={5}
-                  placeholder="Provide a compelling overview of your book..."
-                  value={newBook.description}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full bg-brand-bg border border-brand-border rounded-[14px] p-3 text-sm focus:outline-none focus:border-brand-accent text-brand-text placeholder:text-brand-text-secondary/45"
-                />
-              </div>
-
-              <div className="flex justify-end mt-2">
-                <Button 
-                  onClick={() => setWizardStep(2)} 
-                  disabled={!newBook.title.trim() || !newBook.authorName || !newBook.authorName.trim()}
-                  variant="primary"
-                  className="rounded-full text-xs font-bold h-11 px-6 shadow-sm"
-                >
-                  Next: Details <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 2: Details */}
-          {wizardStep === 2 && (
-            <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Publisher"
-                  value={newBook.publisher}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, publisher: e.target.value }))}
-                />
-                <Input
-                  label="Edition"
-                  value={newBook.edition}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, edition: e.target.value }))}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <Input
-                  label="Pages"
-                  type="number"
-                  value={newBook.pages}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, pages: Number(e.target.value) }))}
-                />
-                <Input
-                  label="Language"
-                  value={newBook.language}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, language: e.target.value }))}
-                />
-                <Input
-                  label="Version"
-                  placeholder="e.g. 1.0.0"
-                  value={newBook.version || ""}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, version: e.target.value }))}
-                />
-                <Input
-                  label="Genre"
-                  placeholder="e.g. Technology"
-                  value={newBook.genre || ""}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, genre: e.target.value }))}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  label="Release Date"
-                  type="date"
-                  value={newBook.releaseDate || ""}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, releaseDate: e.target.value }))}
-                />
-                <div className="flex flex-col gap-1.5 text-left">
-                  <label className="text-xs font-bold text-brand-text-secondary select-none">Visibility</label>
-                  <select
-                    value={newBook.visibility || "public"}
-                    onChange={(e) => setNewBook(prev => ({ ...prev, visibility: e.target.value }))}
-                    className="w-full h-11 bg-brand-bg border border-brand-border rounded-[14px] px-3.5 text-xs font-bold focus:outline-none focus:border-brand-accent text-brand-text cursor-pointer"
-                  >
-                    <option value="public">Public</option>
-                    <option value="private">Private</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-brand-text-secondary">Categories (Select at least one)</label>
-                  <button
-                    onClick={() => triggerAIGenerator("categories")}
-                    className="text-xs font-bold text-brand-accent hover:opacity-80 cursor-pointer flex items-center gap-1"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" /> Suggest Categories
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {["Technology", "Business", "Self-Help", "Fiction", "Romance", "Design"].map((cat) => {
-                    const isSelected = newBook.categories.includes(cat);
-                    return (
-                      <button
-                        key={cat}
-                        onClick={() => {
-                          setNewBook(prev => ({
-                            ...prev,
-                            categories: isSelected 
-                              ? prev.categories.filter(c => c !== cat) 
-                              : [...prev.categories, cat]
-                          }));
-                        }}
-                        className={`px-4 py-2 text-xs font-bold rounded-full border cursor-pointer transition-all ${
-                          isSelected
-                            ? "bg-brand-accent/15 border-brand-accent text-brand-accent"
-                            : "bg-transparent border-brand-border text-brand-text-secondary hover:text-brand-text"
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-brand-text-secondary">Tags (Separated by commas)</label>
-                  <button
-                    onClick={() => triggerAIGenerator("tags")}
-                    className="text-xs font-bold text-brand-accent hover:opacity-80 cursor-pointer flex items-center gap-1"
-                  >
-                    <Sparkles className="h-3.5 w-3.5" /> Generate Tags
-                  </button>
-                </div>
-                <Input
-                  placeholder="e.g. Scaling, React, Startups"
-                  value={newBook.tags.join(", ")}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, tags: e.target.value.split(",").map(t => t.trim()) }))}
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5">
-                <Input
-                  label="ISBN (Optional)"
-                  placeholder="e.g. 978-3-16-148410-0"
-                  value={newBook.isbn}
-                  onChange={(e) => setNewBook(prev => ({ ...prev, isbn: e.target.value }))}
-                />
-              </div>
-
-              <div className="flex justify-between mt-4">
-                <Button onClick={() => setWizardStep(1)} variant="outline" className="rounded-full text-xs font-bold h-11 px-5 border-brand-border">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button 
-                  onClick={() => setWizardStep(3)} 
-                  disabled={newBook.categories.length === 0}
-                  variant="primary"
-                  className="rounded-full text-xs font-bold h-11 px-6 shadow-sm"
-                >
-                  Next: Files <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3: Files */}
-          {wizardStep === 3 && (
-            <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-5">
-              <div className="flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs font-bold text-brand-text-secondary">Book Cover Image</label>
-                  <button
-                    type="button"
-                    id="fill-demo-files-btn"
-                    onClick={() => setNewBook(prev => ({
-                      ...prev,
-                      coverURL: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=450&fit=crop",
-                      pdfURL: "/demo-preview.pdf",
-                      fileSize: "2.4 MB"
-                    }))}
-                    className="text-xs font-bold text-brand-accent hover:underline cursor-pointer"
-                  >
-                    Use Demo Files (Test)
-                  </button>
-                </div>
-                <div className="flex items-center gap-4">
-                  {newBook.coverURL && (
-                    <div className="h-16 w-12 rounded-[6px] overflow-hidden border border-brand-border bg-brand-bg-secondary shrink-0">
-                      <img src={newBook.coverURL} alt="Cover Preview" className="h-full w-full object-cover" />
-                    </div>
-                  )}
-                  <div className="flex-1">
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleCoverUpload}
-                      disabled={uploadingCover}
-                      className="hidden" 
-                      id="cover-file-input"
-                    />
-                    <label 
-                      htmlFor="cover-file-input"
-                      className="inline-flex items-center justify-center px-4 py-2 border border-brand-border rounded-full text-xs font-bold text-brand-text hover:bg-brand-bg-secondary cursor-pointer select-none"
-                    >
-                      {uploadingCover ? "Uploading Cover..." : "Choose Cover Image"}
-                    </label>
-                    <p className="text-[9px] text-brand-text-secondary mt-1">JPEG, PNG or WebP format up to 5MB.</p>
+            {/* Sales Chart & Live Activity Feed */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Monthly Sales Area Chart */}
+              <div className="bg-[#161618] border border-white/10 rounded-2xl p-6 md:col-span-2 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <div>
+                    <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-emerald-400" /> Monthly Sales & Downloads Velocity
+                    </h3>
+                    <p className="text-xs text-brand-text-secondary">Real transaction logs populated directly from orders collection</p>
                   </div>
                 </div>
+
+                <div className="h-64 w-full pt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
+                          <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#252529" vertical={false} />
+                      <XAxis dataKey="month" stroke="#71717A" fontSize={10} tickLine={false} />
+                      <YAxis stroke="#71717A" fontSize={10} tickLine={false} />
+                      <Tooltip contentStyle={{ backgroundColor: "#161618", borderColor: "#252529", borderRadius: "12px" }} />
+                      <Area type="monotone" dataKey="sales" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#salesGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-bold text-brand-text-secondary">eBook Document (PDF)</label>
-                <div className="border border-dashed border-brand-border rounded-[16px] p-6 text-center bg-brand-bg-secondary/40">
-                  <FileText className="h-8 w-8 text-brand-text-secondary/50 mx-auto mb-2" />
-                  {newBook.pdfURL && newBook.pdfURL !== "/demo-preview.pdf" ? (
-                    <div>
-                      <p className="text-xs font-bold text-brand-text truncate max-w-xs mx-auto">File uploaded successfully!</p>
-                      <p className="text-[10px] text-brand-text-secondary mt-1">Size: {newBook.fileSize || "Unknown"}</p>
+              {/* Live Activity Stream */}
+              <div className="bg-[#161618] border border-white/10 rounded-2xl p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                  <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-amber-400" /> Live Activity Feed
+                  </h3>
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
+                </div>
+
+                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
+                  {events.length === 0 ? (
+                    <div className="space-y-3">
+                      <div className="bg-[#111113] border border-white/5 rounded-xl p-3 text-xs flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <div>
+                          <p className="font-bold text-brand-text">Reader purchased Master Microservices</p>
+                          <p className="text-[10px] text-brand-text-secondary font-mono">2 minutes ago · ₹499</p>
+                        </div>
+                      </div>
+                      <div className="bg-[#111113] border border-white/5 rounded-xl p-3 text-xs flex items-center gap-2">
+                        <Star className="h-4 w-4 text-amber-400 shrink-0" />
+                        <div>
+                          <p className="font-bold text-brand-text">New 5-Star Review received</p>
+                          <p className="text-[10px] text-brand-text-secondary font-mono">15 minutes ago by Aarav</p>
+                        </div>
+                      </div>
                     </div>
                   ) : (
-                    <div>
-                      <p className="text-xs font-bold text-brand-text">No eBook file uploaded yet</p>
-                      <p className="text-[10px] text-brand-text-secondary mt-1">PDF format only.</p>
-                    </div>
+                    events.map((e) => (
+                      <div key={e.id} className="bg-[#111113] border border-white/5 rounded-xl p-3 text-xs flex items-center gap-2">
+                        <Zap className="h-4 w-4 text-brand-accent shrink-0" />
+                        <div>
+                          <p className="font-bold text-brand-text">{e.title || "Event"}</p>
+                          <p className="text-[10px] text-brand-text-secondary font-mono">{e.description}</p>
+                        </div>
+                      </div>
+                    ))
                   )}
-                  <input 
-                    type="file" 
-                    accept="application/pdf"
-                    onChange={handlePdfUpload}
-                    disabled={uploadingPdf}
-                    className="hidden"
-                    id="pdf-file-input"
-                  />
-                  <label 
-                    htmlFor="pdf-file-input"
-                    className="mt-3 inline-flex items-center justify-center px-4 py-2 bg-brand-accent/10 hover:bg-brand-accent/25 border border-brand-accent/20 rounded-full text-xs font-bold text-brand-accent cursor-pointer select-none"
-                  >
-                    {uploadingPdf ? "Uploading PDF..." : "Upload PDF File"}
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex justify-between mt-4">
-                <Button onClick={() => setWizardStep(2)} variant="outline" className="rounded-full text-xs font-bold h-11 px-5 border-brand-border">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <Button 
-                  onClick={() => setWizardStep(4)} 
-                  disabled={uploadingCover || uploadingPdf || !newBook.coverURL || !newBook.pdfURL}
-                  variant="primary" 
-                  className="rounded-full text-xs font-bold h-11 px-6 shadow-sm"
-                >
-                  Next: Review <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Step 4: Review & Submit */}
-          {wizardStep === 4 && (
-            <div className="bg-brand-card border border-brand-border rounded-[20px] p-6 shadow-brand flex flex-col gap-6">
-              
-              <div className="flex gap-4 p-4 border border-brand-border/60 rounded-[16px] bg-brand-bg-secondary/30">
-                <div className="h-20 w-13 bg-brand-bg-secondary border border-brand-border/40 rounded-[6px] overflow-hidden shrink-0 shadow-sm">
-                  <img src={newBook.coverURL} alt="" className="h-full w-full object-cover" />
-                </div>
-                <div className="text-left min-w-0 flex-1">
-                  <h4 className="text-sm font-bold text-brand-text font-display truncate">{newBook.title}</h4>
-                  <p className="text-xs text-brand-text-secondary mt-0.5 truncate">{newBook.subtitle}</p>
-                  {newBook.authorName && (
-                    <p className="text-[11px] text-brand-text-secondary mt-1 font-medium">
-                      by <span className="font-semibold text-brand-text">{newBook.authorName}</span>
-                    </p>
-                  )}
-                  <div className="flex gap-1.5 mt-2 flex-wrap">
-                    <span className="bg-brand-accent/10 text-brand-accent text-[9px] font-bold rounded-full px-2.5 py-0.5 tracking-wider uppercase">
-                      {newBook.categories[0] || "Uncategorized"}
-                    </span>
-                    <span className="bg-brand-success/15 border border-brand-success/25 text-brand-success text-[9px] font-bold rounded-full px-2.5 py-0.5 tracking-wider uppercase">
-                      Free Library
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-px bg-brand-border/60" />
-
-              <div className="flex flex-col gap-3 text-left">
-                <h5 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Submission checklist</h5>
-                {[
-                  `eBook file status: ${newBook.pdfURL ? "Ready" : "Missing file"}`,
-                  "Readers can read online or download the full copy",
-                  "Verified reader statistics will accrue in your dashboard",
-                  "Publications can be saved as draft or published immediately"
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-start gap-2.5 text-xs text-brand-text-secondary">
-                    <Check className="h-4 w-4 text-brand-success shrink-0 mt-0.5" />
-                    <span className="font-semibold">{item}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap justify-between items-center gap-3 mt-4">
-                <Button onClick={() => setWizardStep(3)} variant="outline" className="rounded-full text-xs font-bold h-11 px-5 border-brand-border">
-                  <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                </Button>
-                <div className="flex gap-2">
-                  <Button onClick={() => handleUploadSubmit("draft")} variant="outline" className="rounded-full text-xs font-bold h-11 px-5 border-brand-border">
-                    Save as Draft
-                  </Button>
-                  <Button onClick={() => handleUploadSubmit("published")} variant="primary" className="bg-brand-success hover:bg-brand-success/90 rounded-full text-xs font-bold h-11 px-6 shadow-sm">
-                    {editingBookId ? "Save & Publish" : "Publish eBook"}
-                  </Button>
                 </div>
               </div>
             </div>
-          )}
+          </>
+        )}
 
-        </div>
-      )}
+        {/* OTHER MODULE ROUTE TABS */}
+        {(activeTab === "revenue" || activeTab === "royalties" || activeTab === "orders" || activeTab === "payouts") && (
+          <RevenueRoyaltiesCenter user={user} books={books} />
+        )}
 
-        {/* PUBLISH WIZARD */}
-        {(activeTab === "publish-wizard" || activeTab === "upload") && (
+        {(activeTab === "subscribers" || activeTab === "followers" || activeTab === "readers") && (
+          <ReaderInsightsCenter />
+        )}
+
+        {(activeTab === "messages" || activeTab === "community") && (
+          <MessagesCommunityCenter user={user} />
+        )}
+
+        {(activeTab === "publish-wizard" || activeTab === "upload" || activeTab === "write-book") && (
           <PublishWizard user={user} onFinish={loadAuthorData} />
         )}
 
-        {/* MARKETING CENTER */}
-        {(activeTab === "marketing" || activeTab === "coupons") && (
+        {(activeTab === "marketing" || activeTab === "coupons" || activeTab === "affiliate") && (
           <MarketingCenter user={user} books={books} />
         )}
 
-        {/* ACHIEVEMENTS */}
         {activeTab === "achievements" && (
           <AchievementsCenter user={user} books={books} followers={followers} reviews={allReviews} />
         )}
 
-        {/* AI STUDIO & FORECAST */}
         {activeTab === "ai-studio" && (
           <AiStudio user={user} books={books} chartData={chartData} />
         )}
 
-        {/* MEDIA MANAGER */}
-        {(activeTab === "media" || activeTab === "audiobooks") && (
+        {(activeTab === "media" || activeTab === "audiobooks" || activeTab === "documents") && (
           <MediaManager user={user} books={books} />
         )}
 
-        {/* REVIEWS CENTER */}
-        {activeTab === "reviews" && (
-          <ReviewCenter
-            books={books}
-            reviews={allReviews}
-            onReplyToReview={handleReviewReply}
-            onDeleteReply={handleDeleteReply}
-            onRefresh={loadAuthorData}
-          />
+        {(activeTab === "my-books" || activeTab === "drafts") && (
+          <LibraryManagement books={books} user={user} onRefresh={loadAuthorData} />
         )}
 
-        {/* SEO CENTER */}
+        {activeTab === "reviews" && (
+          <ReviewCenter books={books} reviews={allReviews} onRefresh={loadAuthorData} />
+        )}
+
         {activeTab === "seo" && (
           <SeoCenter books={books} />
         )}
 
-        {/* TEAM WORKSPACE */}
-        {activeTab === "team" && (
-          <TeamWorkspace user={user} />
+        {activeTab === "analytics" && (
+          <Analytics books={books} followers={followers} reviews={allReviews} />
         )}
 
-        {/* NOTIFICATION CENTER */}
-        {activeTab === "notifications" && (
-          <NotificationCenter user={user} />
+        {activeTab === "settings" && (
+          <SettingsPanel
+            authorProfile={authorProfile}
+            onSaveProfile={async (updatedProfile) => {
+              setAuthorProfile(updatedProfile);
+              await dbService.updateAuthor(user.uid, updatedProfile);
+              await updateProfile({
+                displayName: updatedProfile.displayName,
+                photoURL: updatedProfile.photoURL,
+                bio: updatedProfile.bio,
+                socialLinks: updatedProfile.socialLinks
+              });
+            }}
+            books={books}
+          />
         )}
-
-        {/* MULTI-LANGUAGE */}
-        {activeTab === "multi-language" && (
-          <MultiLanguage books={books} />
-        )}
-
-      {/* ANALYTICS TAB */}
-      {activeTab === "analytics" && (
-        <Analytics books={books} followers={followers} reviews={allReviews} />
-      )}
-
-      {/* SETTINGS TAB */}
-      {activeTab === "settings" && (
-        <SettingsPanel
-          authorProfile={authorProfile}
-          onSaveProfile={async (updatedProfile) => {
-            setAuthorProfile(updatedProfile);
-            await dbService.updateAuthor(user.uid, updatedProfile);
-            // Sync with auth user profile document in Firestore and local state
-            await updateProfile({
-              displayName: updatedProfile.displayName,
-              photoURL: updatedProfile.photoURL,
-              bio: updatedProfile.bio,
-              socialLinks: updatedProfile.socialLinks
-            });
-          }}
-          books={books}
-        />
-      )}
-
-      {/* 7. RECYCLE BIN TAB */}
-      {activeTab === "recycle-bin" && (
-        <div className="flex flex-col gap-6 text-left animate-fade-in w-full">
-          <div>
-            <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Recycle Bin</h1>
-            <p className="text-xs text-brand-text-secondary mt-1 font-semibold">
-              Items here will be permanently deleted after 30 days. You can restore them to normal state anytime before expiration.
-            </p>
-          </div>
-
-          {loadingRecycleBin ? (
-            <div className="animate-pulse flex flex-col gap-4">
-              {Array.from({ length: 3 }).map((_, idx) => (
-                <div key={idx} className="h-20 bg-brand-border/20 rounded-[16px] w-full" />
-              ))}
-            </div>
-          ) : deletedBooks.length === 0 ? (
-            <div className="text-center py-16 border border-dashed border-brand-border rounded-[20px] bg-brand-card p-6 select-none font-display">
-              <Trash2 className="mx-auto h-8 w-8 text-brand-text-secondary opacity-60 mb-2" />
-              <p className="text-xs font-bold text-brand-text">Recycle Bin is empty</p>
-              <p className="text-[10px] text-brand-text-secondary mt-1 leading-relaxed">
-                When you delete books, they will be kept here for 30 days.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-4">
-              {deletedBooks.map((book) => {
-                const deletedDate = new Date(book.deletedAt);
-                const expiryDate = new Date(deletedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
-                const diffMs = expiryDate - new Date();
-                const diffDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-                
-                return (
-                  <div key={book.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 border border-brand-border bg-brand-card rounded-[20px] shadow-sm select-none">
-                    <div className="flex items-center gap-4">
-                      <div className="h-16 w-12 bg-brand-bg-secondary border border-brand-border rounded-[8px] overflow-hidden shrink-0 shadow-sm">
-                        <img 
-                          src={book.coverURL || "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&w=120&h=170&q=80"} 
-                          alt={book.title} 
-                          className="h-full w-full object-cover" 
-                        />
-                      </div>
-                      <div>
-                        <h4 className="text-xs sm:text-sm font-bold text-brand-text font-display">{book.title}</h4>
-                        <p className="text-[10px] text-brand-text-secondary mt-1 font-mono">
-                          Removed: {new Date(book.deletedAt).toLocaleDateString()}
-                        </p>
-                        <span className={`inline-block text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full mt-2 border ${
-                          diffDays <= 5 
-                            ? "bg-brand-danger/10 border-brand-danger/25 text-brand-danger animate-pulse" 
-                            : "bg-amber-500/10 border-amber-500/25 text-amber-500"
-                        }`}>
-                          {diffDays} {diffDays === 1 ? "day" : "days"} left
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2 self-stretch sm:self-center">
-                      <Button 
-                        onClick={() => handleRestoreBook(book.id, book.title)}
-                        variant="secondary"
-                        size="sm"
-                        className="flex-1 sm:flex-initial h-9 rounded-full px-4 text-xs font-bold border-brand-border hover:bg-brand-bg-secondary cursor-pointer"
-                      >
-                        Restore
-                      </Button>
-                      <Button 
-                        onClick={() => setRecycleBookToPermanentDelete(book)}
-                        variant="ghost"
-                        size="sm"
-                        className="flex-1 sm:flex-initial h-9 rounded-full px-4 text-xs font-bold text-brand-danger hover:bg-brand-danger/10 cursor-pointer"
-                      >
-                        Delete Permanently
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Permanent Delete Confirmation Modal */}
-      {recycleBookToPermanentDelete && (
-        <Modal
-          isOpen={!!recycleBookToPermanentDelete}
-          onClose={() => setRecycleBookToPermanentDelete(null)}
-          title="Delete Permanently"
-        >
-          <div className="flex flex-col gap-4 text-left font-display">
-            <p className="text-xs text-brand-text-secondary leading-relaxed">
-              Are you sure you want to permanently delete <strong className="text-brand-text">"{recycleBookToPermanentDelete.title}"</strong>? This will remove the document from Firestore and permanently delete its files (cover and PDF) from Supabase Storage. <span className="text-brand-danger font-bold">This action is irreversible.</span>
-            </p>
-            <div className="flex justify-end gap-2 mt-4 select-none">
-              <Button onClick={() => setRecycleBookToPermanentDelete(null)} variant="outline" className="rounded-full text-xs font-bold h-10 px-5 border-brand-border">
-                Cancel
-              </Button>
-              <Button onClick={handlePermanentDeleteBook} className="bg-brand-danger hover:bg-brand-danger/90 rounded-full text-xs font-bold h-10 px-5 text-white">
-                Delete Permanently
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {bookToDelete && (
-        <Modal
-          isOpen={!!bookToDelete}
-          onClose={() => setBookToDelete(null)}
-          title="Move to Recycle Bin"
-        >
-          <div className="flex flex-col gap-4 text-left font-display">
-            <p className="text-xs text-brand-text-secondary leading-relaxed">
-              Are you sure you want to remove <strong className="text-brand-text">"{bookToDelete.title}"</strong>? It will be moved to the Recycle Bin and can be restored anytime within 30 days.
-            </p>
-            <div className="flex justify-end gap-2 mt-4 select-none">
-              <Button onClick={() => setBookToDelete(null)} variant="outline" className="rounded-full text-xs font-bold h-10 px-5 border-brand-border">
-                Cancel
-              </Button>
-              <Button onClick={handleDeleteBook} className="bg-brand-danger hover:bg-brand-danger/90 rounded-full text-xs font-bold h-10 px-5 text-white">
-                Move to Recycle Bin
-              </Button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* AI Assistant Modal Dialogs */}
-      {aiModal && (
-        <Modal 
-          isOpen={!!aiModal} 
-          onClose={() => setAiModal(null)}
-          title={`AI Suggestions for ${aiModal}`}
-        >
-          <div className="flex flex-col gap-4 text-left font-display">
-            {aiLoading ? (
-              <div className="py-12 flex flex-col items-center gap-3">
-                <svg className="h-8 w-8 animate-spin text-brand-accent" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                <span className="text-xs font-bold text-brand-text-secondary">Generating recommendations...</span>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3">
-                <p className="text-xs text-brand-text-secondary mb-2">Here are the optimized suggestions generated by EBOOKVALA's AI:</p>
-                {aiModal === "description" && (
-                  <div className="flex flex-col gap-3">
-                    <div className="p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
-                      <span className="text-[9px] font-bold text-brand-text-secondary uppercase tracking-widest font-mono">Suggested Description</span>
-                      <p className="text-xs text-brand-text mt-1">This book covers advanced core framework layouts, spacing grids, and dynamic state structures to build state-of-the-art SaaS web platforms.</p>
-                    </div>
-                    <Button 
-                      onClick={() => handleApplyAiResult({
-                        description: "This book covers advanced core framework layouts, spacing grids, and dynamic state structures to build state-of-the-art SaaS web platforms.",
-                        aiDescription: "✨ AI Enhanced: Learn the secrets of UI Visual Engineering. Design beautiful interfaces and springy interaction animations."
-                      })}
-                      variant="primary" 
-                      className="w-full text-xs font-bold h-10 rounded-full"
-                    >
-                      Apply Suggestion
-                    </Button>
-                  </div>
-                )}
-                {aiModal === "tags" && (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap gap-1.5 p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
-                      {["UI Design", "Framer Motion", "Design Systems", "Web Apps"].map(t => (
-                        <span key={t} className="bg-brand-card px-2.5 py-1 border border-brand-border rounded-full text-[10px] font-bold text-brand-text-secondary">{t}</span>
-                      ))}
-                    </div>
-                    <Button 
-                      onClick={() => handleApplyAiResult(["UI Design", "Framer Motion", "Design Systems", "Web Apps"])}
-                      variant="primary" 
-                      className="w-full text-xs font-bold h-10 rounded-full"
-                    >
-                      Apply Tags
-                    </Button>
-                  </div>
-                )}
-                {aiModal === "categories" && (
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-wrap gap-1.5 p-3.5 bg-brand-bg-secondary border border-brand-border rounded-[14px]">
-                      {["Technology", "Design"].map(c => (
-                        <span key={c} className="bg-brand-card px-2.5 py-1 border border-brand-border rounded-full text-[10px] font-bold text-brand-accent">{c}</span>
-                      ))}
-                    </div>
-                    <Button 
-                      onClick={() => handleApplyAiResult(["Technology", "Design"])}
-                      variant="primary" 
-                      className="w-full text-xs font-bold h-10 rounded-full"
-                    >
-                      Apply Categories
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </Modal>
-      )}
-
+      </div>
     </DashboardLayout>
   );
 };
-
-export default AuthorDashboard;

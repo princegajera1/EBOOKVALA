@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Trophy, BookOpen, Clock, Layers, Flame, Play, Calendar } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
+import { SubscriptionManagementCard } from "../../../components/subscription/SubscriptionManagementCard";
 
 export const Overview = ({ user, books = [] }) => {
   const navigate = useNavigate();
@@ -259,7 +260,11 @@ export const Overview = ({ user, books = [] }) => {
             </div>
           </div>
         </div>
+      </div>
 
+      {/* ACTIVE SUBSCRIPTION MANAGEMENT CARD */}
+      <div className="mb-6">
+        <SubscriptionManagementCard user={user} onUpgradeClick={() => navigate("/#pricing")} />
       </div>
 
       {/* 3. READING HEATMAP / CALENDAR SECTION */}

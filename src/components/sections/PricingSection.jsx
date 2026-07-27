@@ -8,6 +8,7 @@ import { useApp } from "../../store/AppContext";
 import { initiateRazorpayCheckout } from "../../services/razorpay";
 
 import { AuthModal } from "../auth/AuthModal";
+import { PlanCheckoutModal } from "../checkout/PlanCheckoutModal";
 
 export const PRICING_PLANS = [
   {
@@ -110,8 +111,9 @@ export const PricingSection = () => {
   const { user, isAuthenticated } = useApp();
   const navigate = useNavigate();
 
-  // Phase 1: Auth Gate & Plan Persistence States
+  // Phase 1 & 2: Auth Gate & Checkout Modal States
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [pendingPlan, setPendingPlan] = useState(null);
 
   // Core Logic Step 1: User clicks plan CTA button
@@ -130,9 +132,15 @@ export const PricingSection = () => {
       // Open login/signup modal immediately
       setIsAuthModalOpen(true);
     } else {
-      // User already logged in -> Skip auth modal & resume flow directly
-      executePlanAction(selectedPlanPayload, user);
+      // User already logged in -> Skip auth modal & open Phase 2 Plan Checkout Modal directly
+      openCheckoutModal(selectedPlanPayload);
     }
+  };
+
+  // Open Phase 2 Checkout Modal
+  const openCheckoutModal = (planPayload) => {
+    setPendingPlan(planPayload);
+    setIsCheckoutModalOpen(true);
   };
 
   // Core Logic Step 2: On successful login/signup, resume flow automatically
@@ -147,44 +155,44 @@ export const PricingSection = () => {
       const payload = { ...planObj, billingCycle: savedPlan.billingCycle || billingCycle };
       
       toast.success(`Resuming ${payload.name} Plan subscription for ${loggedInUser.displayName || loggedInUser.email}! ✨`);
-      executePlanAction(payload, loggedInUser);
+      openCheckoutModal(payload);
       
       // Clean up stored pending plan
-      setPendingPlan(null);
       localStorage.removeItem("eb_pending_plan");
     }
   };
 
-  // Execute actual plan subscription or activation
-  const executePlanAction = async (plan, currentUser) => {
-    // If Plan is Free -> skip payment entirely, activate instantly
-    if (plan.id === "free" || (plan.monthlyPrice === 0 && plan.yearlyPrice === 0)) {
-      toast.success("Free Plan activated on your account! Welcome to EbookVala.");
-      navigate("/dashboard");
-      return;
-    }
+  // Handle Free Plan Instant Activation
+  const handleFreeActivation = (plan) => {
+    setIsCheckoutModalOpen(false);
+    toast.success("Free Plan activated on your account! Welcome to EbookVala.");
+    navigate("/dashboard");
+  };
 
-    // Paid Plan -> Razorpay Checkout
-    const planPrice = plan.billingCycle === "yearly" ? plan.yearlyPrice * 12 : plan.monthlyPrice;
-    const toastId = toast.loading(`Preparing ${plan.name} Plan checkout via Razorpay...`);
+  // Handle Paid Plan Razorpay Checkout (Proceed to Payment)
+  const handleProceedToPayment = async (plan, billingData) => {
+    setIsCheckoutModalOpen(false);
+    const toastId = toast.loading(`Initiating Razorpay payment for ₹${billingData.finalTotal}...`);
 
     try {
       await initiateRazorpayCheckout({
-        amount: planPrice,
+        amount: billingData.finalTotal,
         title: `EbookVala ${plan.name} Plan`,
-        description: `Subscription: ${plan.name} Plan (${plan.billingCycle})`,
-        user: currentUser,
+        description: `Subscription: ${plan.name} Plan (${billingData.billingCycle})`,
+        user: { ...user, email: billingData.email, displayName: billingData.fullName, phone: billingData.phone },
         onSuccess: (response) => {
           toast.success(`Successfully subscribed to ${plan.name} Plan! Payment ID: ${response.razorpay_payment_id}`, { id: toastId });
           navigate("/dashboard");
         },
         onCancel: () => {
           toast.error("Subscription payment cancelled.", { id: toastId });
+          setIsCheckoutModalOpen(true); // Re-open checkout modal on cancel so details aren't lost!
         }
       });
     } catch (err) {
       if (err.message !== "Payment cancelled by user") {
         toast.error(err.message || "Payment failed", { id: toastId });
+        setIsCheckoutModalOpen(true); // Retain entered billing details on failure!
       } else {
         toast.dismiss(toastId);
       }
@@ -331,6 +339,16 @@ export const PricingSection = () => {
         onClose={() => setIsAuthModalOpen(false)}
         pendingPlan={pendingPlan}
         onSuccess={handleAuthSuccess}
+      />
+
+      {/* Phase 2 Plan Checkout & Billing Details Modal */}
+      <PlanCheckoutModal
+        isOpen={isCheckoutModalOpen}
+        onClose={() => setIsCheckoutModalOpen(false)}
+        plan={pendingPlan}
+        user={user}
+        onProceedToPayment={handleProceedToPayment}
+        onFreeActivation={handleFreeActivation}
       />
     </section>
   );

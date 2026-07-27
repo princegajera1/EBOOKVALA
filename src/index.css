@@ -247,12 +247,28 @@ body {
   font-variation-settings: "wdth" 100;
 }
 
-.font-sans-custom,
-.font-montserrat {
-  font-family: "Montserrat", sans-serif;
-  font-optical-sizing: auto;
-  font-style: normal;
+/* ============================================================
+   CUSTOM MARQUEE TICKER ANIMATION
+   ============================================================ */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
 }
+
+.animate-marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 28s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
 
 
 

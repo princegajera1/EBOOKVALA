@@ -140,7 +140,7 @@ const testimonialsData = [
     name: "Priya Sharma",
     role: "Product Designer",
     location: "Pune",
-    image: "https://randomuser.me/api/portraits/women/49.jpg",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&h=150&q=80",
     rating: 5,
     badge: "Active Reader",
     quote: "The visual mind maps and outline generation on this platform are game-changers for visual learners. I can dissect complex design system guides in half the time compared to standard PDFs."
@@ -149,7 +149,7 @@ const testimonialsData = [
     name: "Aarav Patel",
     role: "Full Stack Dev",
     location: "Vadodara",
-    image: "https://randomuser.me/api/portraits/men/35.jpg",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150&q=80",
     rating: 5,
     badge: "Verified Reader",
     quote: "I was skeptical about another free eBook site, but EBOOKVALA delivers a truly premium experience. Zero ads, instant downloads, and the inline AI study assistant is shockingly good at explaining code snippets."
@@ -158,11 +158,132 @@ const testimonialsData = [
     name: "Ananya Iyer",
     role: "CS Student",
     location: "Chennai",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
+    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=150&h=150&q=80",
     rating: 5,
     badge: "Active Reader",
     quote: "Finding high-quality, up-to-date tech guides for my university projects used to be a hassle. EBOOKVALA's curated tech library and flashcards feature helped me ace my database systems finals!"
+  },
+  {
+    name: "Siddharth Rao",
+    role: "DevOps Lead",
+    location: "Hyderabad",
+    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "The infrastructure and cloud architecture eBooks on EBOOKVALA are phenomenal. Instant PDF downloads with zero clutter or ads make offline reading on iPad smooth and effortless."
+  },
+  {
+    name: "Sneha Nair",
+    role: "UX Researcher",
+    location: "Kochi",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Premium Member",
+    quote: "The design & human-computer interaction book collection is gold! I love how clean the reader is—no annoying popups, easy bookmarking, and instant summary notes."
+  },
+  {
+    name: "Devansh Shah",
+    role: "Product Manager",
+    location: "Surat",
+    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Tech Founder",
+    quote: "Finding zero-to-one startup playbooks written by real founders is rare. EBOOKVALA's curated Business section gave our product team instant actionable growth frameworks."
+  },
+  {
+    name: "Riya Joshi",
+    role: "Frontend Engineer",
+    location: "Ahmedabad",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "I love reading technical books on my tablet. The instant PDF preview and responsive layout make EBOOKVALA my go-to library every single evening."
+  },
+  {
+    name: "Vikram Singhania",
+    role: "Tech Lead",
+    location: "Bengaluru",
+    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Pro Member",
+    quote: "Razorpay payment checkout worked instantly when I unlocked Pro access. The AI companion helps me query 300-page architecture books in seconds."
+  },
+  {
+    name: "Pooja Sundaram",
+    role: "Data Scientist",
+    location: "Chennai",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Active Reader",
+    quote: "The AI summary and Q&A assistant saved me hours while reviewing machine learning textbooks. Truly a next-gen learning ecosystem."
+  },
+  {
+    name: "Kartik Verma",
+    role: "Engineering Student",
+    location: "Delhi",
+    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Student Reader",
+    quote: "As a student preparing for backend tech interviews, the AI Flashcards feature generated from system design chapters is literally a cheat code for exam prep."
+  },
+  {
+    name: "Tanvi Gupta",
+    role: "Content Strategist",
+    location: "Kolkata",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "The self-help and biography categories are curated with so much care. Seamless checkout and instant access directly on my account."
+  },
+  {
+    name: "Aditya Kulkarni",
+    role: "Mobile App Developer",
+    location: "Pune",
+    image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Active Reader",
+    quote: "The dark mode reader interface and font customization options are super crisp. Best digital library experience for reading on desktop and phone."
+  },
+  {
+    name: "Meera Deshmukh",
+    role: "AI Researcher",
+    location: "Mumbai",
+    image: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "Clean, high-performance web app. Having full access to technical books with offline PDF downloads is an invaluable resource."
+  },
+  {
+    name: "Harsh Vardhan",
+    role: "Startup Founder",
+    location: "Jaipur",
+    image: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Active Reader",
+    quote: "Curated books without spammy ads or popups. EBOOKVALA is setting the benchmark for next-gen knowledge platforms in India."
+  },
+  {
+    name: "Kavya Menon",
+    role: "Tech Journalist",
+    location: "Bengaluru",
+    image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=150&h=150&q=80",
+    rating: 5,
+    badge: "Verified Reader",
+    quote: "EBOOKVALA proves that digital reading can be elegant, fast, and reader-first. The AI chat feature inside eBooks is revolutionary."
   }
+];
+
+const marqueeSnippets = [
+  { text: "Amazing platform for tech & business books!", author: "Prince G. • Ahmedabad" },
+  { text: "Best free eBook site with zero ad distraction", author: "Priya S. • Pune" },
+  { text: "AI chapter summaries save hours of study time!", author: "Pooja S. • Chennai" },
+  { text: "Instant PDF downloads & offline iPad reader", author: "Siddharth R. • Hyderabad" },
+  { text: "Curated guides for SaaS founders & engineers", author: "Rohan M. • Mumbai" },
+  { text: "Interactive flashcards helped me ace finals!", author: "Kartik V. • Delhi" },
+  { text: "Smooth Razorpay payment & instant unlocks", author: "Devansh S. • Surat" },
+  { text: "Beautiful visual mind maps and dark UI reader", author: "Sneha N. • Kochi" },
+  { text: "10/10 knowledge ecosystem for developers!", author: "Vikram S. • Bengaluru" },
+  { text: "High quality curated digital library in India", author: "Meera D. • Mumbai" }
 ];
 
 const TestimonialCard = ({ testimonial }) => {
@@ -622,6 +743,20 @@ export const Landing = () => {
                 aria-label={`Go to testimonial page ${idx + 1}`}
               />
             ))}
+          </div>
+
+          {/* CONTINUOUS SCROLLING REVIEWS MARQUEE TICKER STRIP */}
+          <div className="w-full mt-8 overflow-hidden py-3 bg-brand-card/70 border-y border-brand-border/70 select-none relative rounded-2xl shadow-sm">
+            <div className="animate-marquee flex items-center gap-8 whitespace-nowrap">
+              {[...marqueeSnippets, ...marqueeSnippets].map((snippet, i) => (
+                <div key={i} className="flex items-center gap-2.5 text-xs font-sans">
+                  <span className="text-amber-400 font-bold tracking-widest text-xs">★★★★★</span>
+                  <span className="text-brand-text font-semibold">"{snippet.text}"</span>
+                  <span className="text-brand-text-secondary font-medium">— {snippet.author}</span>
+                  <span className="text-brand-accent/50 mx-2 font-bold">•</span>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
       </div>

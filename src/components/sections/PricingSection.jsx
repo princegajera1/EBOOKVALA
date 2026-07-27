@@ -7,6 +7,8 @@ import { toast } from "react-hot-toast";
 import { useApp } from "../../store/AppContext";
 import { initiateRazorpayCheckout } from "../../services/razorpay";
 
+import { AuthModal } from "../auth/AuthModal";
+
 export const PRICING_PLANS = [
   {
     id: "free",
@@ -108,27 +110,70 @@ export const PricingSection = () => {
   const { user, isAuthenticated } = useApp();
   const navigate = useNavigate();
 
-  const handlePlanSubscribe = async (plan) => {
-    if (plan.id === "free" || (plan.monthlyPrice === 0 && plan.yearlyPrice === 0)) {
-      navigate("/register");
-      return;
-    }
+  // Phase 1: Auth Gate & Plan Persistence States
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState(null);
+
+  // Core Logic Step 1: User clicks plan CTA button
+  const handlePlanClick = (plan) => {
+    const selectedPlanPayload = { ...plan, billingCycle };
 
     if (!isAuthenticated) {
-      toast.error("Please login or register to subscribe to a plan.");
-      navigate("/login");
+      // Store in state & localStorage so selection is NOT lost
+      setPendingPlan(selectedPlanPayload);
+      localStorage.setItem("eb_pending_plan", JSON.stringify({
+        planId: plan.id,
+        planName: plan.name,
+        billingCycle
+      }));
+      
+      // Open login/signup modal immediately
+      setIsAuthModalOpen(true);
+    } else {
+      // User already logged in -> Skip auth modal & resume flow directly
+      executePlanAction(selectedPlanPayload, user);
+    }
+  };
+
+  // Core Logic Step 2: On successful login/signup, resume flow automatically
+  const handleAuthSuccess = (loggedInUser) => {
+    setIsAuthModalOpen(false);
+    
+    // Retrieve stored plan from state or localStorage
+    const savedPlan = pendingPlan || JSON.parse(localStorage.getItem("eb_pending_plan") || "null");
+    
+    if (savedPlan) {
+      const planObj = PRICING_PLANS.find(p => p.id === (savedPlan.id || savedPlan.planId)) || PRICING_PLANS[3];
+      const payload = { ...planObj, billingCycle: savedPlan.billingCycle || billingCycle };
+      
+      toast.success(`Resuming ${payload.name} Plan subscription for ${loggedInUser.displayName || loggedInUser.email}! ✨`);
+      executePlanAction(payload, loggedInUser);
+      
+      // Clean up stored pending plan
+      setPendingPlan(null);
+      localStorage.removeItem("eb_pending_plan");
+    }
+  };
+
+  // Execute actual plan subscription or activation
+  const executePlanAction = async (plan, currentUser) => {
+    // If Plan is Free -> skip payment entirely, activate instantly
+    if (plan.id === "free" || (plan.monthlyPrice === 0 && plan.yearlyPrice === 0)) {
+      toast.success("Free Plan activated on your account! Welcome to EbookVala.");
+      navigate("/dashboard");
       return;
     }
 
-    const planPrice = billingCycle === "yearly" ? plan.yearlyPrice * 12 : plan.monthlyPrice;
+    // Paid Plan -> Razorpay Checkout
+    const planPrice = plan.billingCycle === "yearly" ? plan.yearlyPrice * 12 : plan.monthlyPrice;
     const toastId = toast.loading(`Preparing ${plan.name} Plan checkout via Razorpay...`);
 
     try {
       await initiateRazorpayCheckout({
         amount: planPrice,
         title: `EbookVala ${plan.name} Plan`,
-        description: `Subscription: ${plan.name} Plan (${billingCycle})`,
-        user: user,
+        description: `Subscription: ${plan.name} Plan (${plan.billingCycle})`,
+        user: currentUser,
         onSuccess: (response) => {
           toast.success(`Successfully subscribed to ${plan.name} Plan! Payment ID: ${response.razorpay_payment_id}`, { id: toastId });
           navigate("/dashboard");
@@ -265,7 +310,7 @@ export const PricingSection = () => {
               {/* Action CTA Button */}
               <div className="w-full mt-auto pt-2">
                 <Button
-                  onClick={() => handlePlanSubscribe(plan)}
+                  onClick={() => handlePlanClick(plan)}
                   variant={plan.popular ? "primary" : "ghost"}
                   className={`w-full py-2.5 text-xs font-bold rounded-full justify-center transition-all flex items-center gap-1.5 ${
                     !plan.popular ? "border border-brand-border text-brand-text hover:bg-brand-bg-secondary" : ""
@@ -279,6 +324,14 @@ export const PricingSection = () => {
           );
         })}
       </div>
+
+      {/* Phase 1 Auth Gate Modal */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        pendingPlan={pendingPlan}
+        onSuccess={handleAuthSuccess}
+      />
     </section>
   );
 };

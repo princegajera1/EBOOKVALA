@@ -516,7 +516,7 @@ export const AuthorDashboard = () => {
   };
 
   const sidebarLinks = [
-    { id: "home", label: "Home", icon: Home, to: "/" },
+    { id: "home", label: "Back to Home", icon: Home, to: "/" },
     { id: "overview", label: "Dashboard", icon: BarChart2 },
     { id: "books", label: "My Books", icon: BookOpen },
     { id: "recycle-bin", label: "Recycle Bin", icon: Trash2 },

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const READER_SIDEBAR_LINKS = [
-  { id: "home", label: "Home", icon: Home, to: "/" },
+  { id: "home", label: "Back to Home", icon: Home, to: "/" },
   { id: "overview", label: "Overview", icon: LayoutDashboard },
   { id: "library", label: "My Library", icon: Library },
   { id: "wishlist", label: "Wishlist", icon: Heart },

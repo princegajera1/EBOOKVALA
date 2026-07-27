@@ -45,12 +45,8 @@ export const ProtectedRoute = ({ role, children }) => {
     }
   }, [isAuthenticated, user, initialLoading, navigate, role, location]);
 
-  if (initialLoading) {
+  if (initialLoading || !isAuthenticated || (role && user?.role !== role)) {
     return <FullScreenSpinner />;
-  }
-
-  if (!isAuthenticated || (role && user?.role !== role)) {
-    return null; // Will redirect in useEffect
   }
 
   return children;

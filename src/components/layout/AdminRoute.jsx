@@ -15,12 +15,8 @@ export const AdminRoute = ({ children }) => {
     }
   }, [isAuthenticated, isAdmin, initialLoading, navigate]);
 
-  if (initialLoading) {
+  if (initialLoading || !isAuthenticated || !isAdmin) {
     return <FullScreenSpinner />;
-  }
-
-  if (!isAuthenticated || !isAdmin) {
-    return null;
   }
 
   return children;

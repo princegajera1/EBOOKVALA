@@ -19,12 +19,8 @@ export const GuestRoute = ({ children }) => {
     }
   }, [isAuthenticated, isReader, isAuthor, isAdmin, initialLoading, navigate]);
 
-  if (initialLoading) {
+  if (initialLoading || isAuthenticated) {
     return <FullScreenSpinner />;
-  }
-
-  if (isAuthenticated) {
-    return null; // Will redirect in useEffect
   }
 
   return children;

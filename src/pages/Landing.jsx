@@ -447,7 +447,7 @@ export const Landing = () => {
       </div>
 
       {/* FINAL CTA SECTION */}
-      <div className="bg-brand-bg border-t border-brand-border py-12 md:py-16 scroll-mt-[76px]">
+      <div className="bg-brand-bg-secondary border-t border-brand-border py-12 md:py-16 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0.1}>
             <h2 className="text-3xl sm:text-5xl font-display font-black text-brand-text leading-tight tracking-tight">
@@ -467,7 +467,7 @@ export const Landing = () => {
       </div>
 
       {/* NEWSLETTER JOIN */}
-      <div className="bg-brand-bg-secondary border-t border-brand-border py-12 md:py-16 scroll-mt-[76px]">
+      <div className="bg-brand-bg border-t border-brand-border py-12 md:py-16 scroll-mt-[76px]">
         <section className="max-w-4xl mx-auto px-6 w-full select-none text-center">
           <FadeUp delay={0.1}>
             <div className="bg-brand-card border border-brand-border rounded-[28px] py-10 px-6 md:py-14 md:px-12 text-center flex flex-col items-center gap-4 shadow-brand relative overflow-hidden">

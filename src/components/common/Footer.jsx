@@ -61,7 +61,7 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="relative bg-brand-bg select-none text-left transition-colors duration-300">
+    <footer className="relative bg-brand-bg-secondary select-none text-left transition-colors duration-300">
       {/* Subtle Gradient Top Border Line (blue -> purple -> orange) */}
       <div className="h-[3px] w-full bg-gradient-to-r from-[#3B82F6] via-[#8B5CF6] to-[#F59E0B]" />
 

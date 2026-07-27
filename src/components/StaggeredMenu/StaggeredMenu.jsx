@@ -311,11 +311,17 @@ export const StaggeredMenu = ({
         })()}
       </div>
       <header className="staggered-menu-header" aria-label="Main navigation header">
-        <div className="sm-logo" aria-label="Logo">
-          <span className="font-display font-black tracking-tight select-none text-[19px]">
-            <span className="text-brand-text">EBOOK</span>
-            <span className="text-[#3B82F6]">VALA</span>
-          </span>
+        <div className="sm-logo flex items-center gap-2 select-none" aria-label="EbookVala Logo">
+          <img src={logoUrl || "/logo.png"} alt="EbookVala" className="h-7 w-7 object-contain drop-shadow-[0_2px_6px_rgba(59,130,246,0.3)] shrink-0" />
+          <div className="flex flex-col text-left leading-none shrink-0">
+            <span className="font-display font-black tracking-tight select-none text-[17px] leading-none">
+              <span className="text-brand-text">Ebook</span>
+              <span className="text-[#3B82F6]">Vala</span>
+            </span>
+            <span className="text-[9px] font-medium tracking-wide text-brand-text-secondary/80 mt-0.5 whitespace-nowrap font-sans">
+              Next-Gen Marketplace
+            </span>
+          </div>
         </div>
         <button
           ref={toggleBtnRef}

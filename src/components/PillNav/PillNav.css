@@ -17,18 +17,32 @@
   transition: all 0.38s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Two-tone text logo */
-.pill-logo-text {
+/* Two-tone text logo & icon container */
+.pill-logo-text,
+.pill-logo-container {
   text-decoration: none;
   outline: none;
   cursor: pointer;
   display: flex;
   align-items: center;
+  gap: 0.6rem;
   transition: transform 0.2s ease;
 }
 
-.pill-logo-text:hover {
+.pill-logo-container:hover {
   transform: scale(1.02);
+}
+
+.pill-logo-img {
+  height: 2.25rem;
+  width: 2.25rem;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(59, 130, 246, 0.3));
+  transition: transform 0.3s ease;
+}
+
+.pill-logo-container:hover .pill-logo-img {
+  transform: scale(1.08) rotate(-3deg);
 }
 
 /* Center Pill shaped core menu */

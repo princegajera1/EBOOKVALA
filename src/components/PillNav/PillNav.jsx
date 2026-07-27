@@ -77,21 +77,41 @@ const PillNav = ({
     <div className={`pill-nav-container ${className}`}>
       <nav className={`pill-nav ${scrolled ? 'is-scrolled' : ''}`} aria-label="Primary">
         
-        {/* Left: Two-tone premium text logo */}
+        {/* Left: Brand Logo with icon + title + subtitle */}
         <div ref={logoRef}>
           {isRouterLink(homeItem.href) ? (
-            <Link className="pill-logo-text" to={homeItem.href} aria-label="Home">
-              <span className="font-display font-black tracking-tight select-none text-xl">
-                <span className="text-brand-text">EBOOK</span>
-                <span className="text-[#3B82F6]">VALA</span>
-              </span>
+            <Link className="pill-logo-container group" to={homeItem.href} aria-label="EbookVala Home">
+              <img 
+                src={logo || "/logo.png"} 
+                alt={logoAlt || "EbookVala"} 
+                className="pill-logo-img shrink-0"
+              />
+              <div className="flex flex-col text-left leading-tight shrink-0">
+                <span className="font-display font-black tracking-tight select-none text-lg md:text-xl leading-none">
+                  <span className="text-brand-text">Ebook</span>
+                  <span className="text-[#3B82F6]">Vala</span>
+                </span>
+                <span className="text-[9px] md:text-[10px] font-medium tracking-wide text-brand-text-secondary/80 font-sans mt-0.5 whitespace-nowrap">
+                  Next-Gen Marketplace
+                </span>
+              </div>
             </Link>
           ) : (
-            <a className="pill-logo-text" href={homeItem.href || '#'} aria-label="Home">
-              <span className="font-display font-black tracking-tight select-none text-xl">
-                <span className="text-brand-text">EBOOK</span>
-                <span className="text-[#3B82F6]">VALA</span>
-              </span>
+            <a className="pill-logo-container group" href={homeItem.href || '#'} aria-label="EbookVala Home">
+              <img 
+                src={logo || "/logo.png"} 
+                alt={logoAlt || "EbookVala"} 
+                className="pill-logo-img shrink-0"
+              />
+              <div className="flex flex-col text-left leading-tight shrink-0">
+                <span className="font-display font-black tracking-tight select-none text-lg md:text-xl leading-none">
+                  <span className="text-brand-text">Ebook</span>
+                  <span className="text-[#3B82F6]">Vala</span>
+                </span>
+                <span className="text-[9px] md:text-[10px] font-medium tracking-wide text-brand-text-secondary/80 font-sans mt-0.5 whitespace-nowrap">
+                  Next-Gen Marketplace
+                </span>
+              </div>
             </a>
           )}
         </div>

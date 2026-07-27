@@ -204,9 +204,28 @@ export const Navbar = () => {
           {/* Left Column: Logo */}
           <Link 
             to="/" 
-            className="text-[22px] font-extrabold tracking-tighter text-brand-text select-none leading-none hover:opacity-90 hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md shrink-0 font-display"
+            className="flex items-center gap-2.5 group select-none hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-lg shrink-0"
           >
-            <span className="text-brand-text">EBOOK</span><span className="text-brand-accent">VALA</span>
+            <img 
+              src="/logo.png" 
+              alt="EbookVala Logo" 
+              className={`object-contain transition-all duration-300 ${
+                isScrolled ? "h-8 w-8" : "h-10 w-10 md:h-11 md:w-11"
+              } drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] group-hover:scale-105`} 
+            />
+            <div className="flex flex-col text-left leading-tight">
+              <div className={`font-extrabold tracking-tight font-display transition-all duration-300 ${
+                isScrolled ? "text-lg" : "text-xl md:text-2xl"
+              }`}>
+                <span className="text-brand-text group-hover:text-brand-text/90 transition-colors">Ebook</span>
+                <span className="text-[#3B82F6] group-hover:text-[#2563EB] transition-colors">Vala</span>
+              </div>
+              <span className={`text-[10px] md:text-[11px] font-medium tracking-wide text-brand-text-secondary/80 font-sans transition-all duration-300 ${
+                isScrolled ? "hidden sm:inline-block text-[9px]" : "inline-block"
+              }`}>
+                Next-Gen Marketplace
+              </span>
+            </div>
           </Link>
 
           {/* Center Column: Navigation Links (Desktop) */}

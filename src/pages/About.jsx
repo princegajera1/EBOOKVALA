@@ -2,8 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Sparkles, Shield, HeartHandshake, Eye } from "lucide-react";
 import { Button } from "../components/ui/Button";
-import princeAvatar from "../assets/testimonials/prince.png";
-import amaraAvatar from "../assets/testimonials/amara.png";
+import princeGajeraAvatar from "../assets/testimonials/prince_gajera.png";
+import princeBhanderiAvatar from "../assets/testimonials/prince_bhanderi.jpg";
 
 export const About = () => {
   const values = [
@@ -34,13 +34,13 @@ export const About = () => {
       name: "Prince Gajera",
       role: "Founder & Lead Architect",
       quote: "I built EBOOKVALA out of frustration. I wanted a modern reader that wasn't bloated with popups and allowed clean ePUB formatting.",
-      image: princeAvatar
+      image: princeGajeraAvatar
     },
     {
       name: "Prince Bhanderi",
       role: "Social Media Executive",
       quote: "Amplifying our message and growing the EBOOKVALA community. I focus on keeping our social presence clean, helpful, and engaging across all platforms, connecting curious minds with high-fidelity knowledge.",
-      image: amaraAvatar
+      image: princeBhanderiAvatar
     }
   ];
 

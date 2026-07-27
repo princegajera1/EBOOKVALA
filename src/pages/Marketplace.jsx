@@ -245,7 +245,7 @@ export const Marketplace = () => {
       <div>
         <h5 className="text-xs font-bold text-brand-text uppercase tracking-wider mb-3 font-mono">Categories</h5>
         <div className="flex flex-col gap-2.5">
-          {["Fiction", "Non-Fiction", "Self-Help", "Biography", "Comic", "Business", "Technology", "Design", "Romance"].map((cat) => (
+          {["Fiction", "Non-Fiction", "Self-Help", "Biography", "Comic", "Business"].map((cat) => (
             <label key={cat} className="flex items-center gap-3 text-xs text-brand-text-secondary hover:text-brand-text cursor-pointer font-medium transition-colors">
               <input
                 type="checkbox"
@@ -318,7 +318,7 @@ export const Marketplace = () => {
         <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-widest shrink-0 mr-1 hidden sm:inline">
           Categories:
         </span>
-        {["Technology", "Business", "Self-Help", "Fiction", "Romance", "Design"].map((cat) => {
+        {["Fiction", "Non-Fiction", "Self-Help", "Biography", "Comic", "Business"].map((cat) => {
           const isSelected = selectedCategories.includes(cat);
           return (
             <button

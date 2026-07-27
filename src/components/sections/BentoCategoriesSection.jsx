@@ -14,8 +14,7 @@ export const BENTO_CATEGORIES = [
     description: "Immersive stories, novels, sci-fi, fantasy, and narrative prose.",
     icon: Feather,
     gradient: "from-blue-500/10 via-blue-500/5 to-transparent",
-    badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    defaultCount: 7
+    badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20"
   },
   {
     id: "non-fiction",
@@ -24,8 +23,7 @@ export const BENTO_CATEGORIES = [
     description: "Science, technology, philosophy, history, and real-world knowledge.",
     icon: Globe,
     gradient: "from-purple-500/10 via-purple-500/5 to-transparent",
-    badgeColor: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    defaultCount: 240
+    badgeColor: "bg-purple-500/10 text-purple-500 border-purple-500/20"
   },
   {
     id: "self-help",
@@ -34,8 +32,7 @@ export const BENTO_CATEGORIES = [
     description: "Building habits, high performance, focus, productivity, and mindset.",
     icon: Brain,
     gradient: "from-amber-500/10 via-amber-500/5 to-transparent",
-    badgeColor: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    defaultCount: 2
+    badgeColor: "bg-amber-500/10 text-amber-500 border-amber-500/20"
   },
   {
     id: "biography",
@@ -44,8 +41,7 @@ export const BENTO_CATEGORIES = [
     description: "Inspiring life stories of visionary leaders, founders, and icons.",
     icon: UserCheck,
     gradient: "from-emerald-500/10 via-emerald-500/5 to-transparent",
-    badgeColor: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    defaultCount: 85
+    badgeColor: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
   },
   {
     id: "comic",
@@ -54,8 +50,7 @@ export const BENTO_CATEGORIES = [
     description: "Graphic novels, manga, illustrated stories, and visual art.",
     icon: Palette,
     gradient: "from-pink-500/10 via-pink-500/5 to-transparent",
-    badgeColor: "bg-pink-500/10 text-pink-500 border-pink-500/20",
-    defaultCount: 64
+    badgeColor: "bg-pink-500/10 text-pink-500 border-pink-500/20"
   },
   {
     id: "business-finance",
@@ -64,8 +59,7 @@ export const BENTO_CATEGORIES = [
     description: "Wealth creation, entrepreneurship, investing, strategy, and leadership.",
     icon: TrendingUp,
     gradient: "from-cyan-500/10 via-cyan-500/5 to-transparent",
-    badgeColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
-    defaultCount: 1
+    badgeColor: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
   }
 ];
 
@@ -79,26 +73,38 @@ export const BentoCategoriesSection = () => {
         const books = await dbService.getBooks();
         const published = books.filter(b => b.status === "published");
         
-        const categoryMap = {};
-        BENTO_CATEGORIES.forEach(cat => {
-          categoryMap[cat.id] = 0;
-        });
+        const categoryMap = {
+          "fiction": 0,
+          "non-fiction": 0,
+          "self-help": 0,
+          "biography": 0,
+          "comic": 0,
+          "business-finance": 0
+        };
 
-        // Count actual live published books currently in database for each category
+        // Calculate 100% REAL live count of published books in database
         published.forEach(book => {
-          const bookCats = (book.categories || []).map(c => (c || "").toLowerCase());
+          const rawCats = Array.isArray(book.categories) 
+            ? book.categories 
+            : (book.category ? [book.category] : []);
+          const bookCats = rawCats.map(c => (c || "").toString().toLowerCase());
+
           BENTO_CATEGORIES.forEach(cat => {
             const catTitle = cat.title.toLowerCase();
             const catSlug = cat.slug.toLowerCase();
-            if (
-              bookCats.some(c => 
-                c === catTitle || 
-                c === catSlug ||
-                (cat.id === "business-finance" && (c.includes("business") || c.includes("finance"))) ||
-                (cat.id === "self-help" && (c.includes("self-help") || c.includes("self help"))) ||
-                (cat.id === "non-fiction" && (c.includes("non-fiction") || c.includes("technology") || c.includes("design")))
-              )
-            ) {
+            
+            const isMatch = bookCats.some(c => {
+              if (c === catTitle || c === catSlug) return true;
+              if (cat.id === "fiction" && (c.includes("fiction") && !c.includes("non"))) return true;
+              if (cat.id === "non-fiction" && (c.includes("non-fiction") || c.includes("tech") || c.includes("design") || c.includes("science"))) return true;
+              if (cat.id === "self-help" && (c.includes("self") || c.includes("productivity") || c.includes("mind"))) return true;
+              if (cat.id === "biography" && (c.includes("bio") || c.includes("autobio") || c.includes("history"))) return true;
+              if (cat.id === "comic" && (c.includes("comic") || c.includes("manga") || c.includes("graphic"))) return true;
+              if (cat.id === "business-finance" && (c.includes("business") || c.includes("finance") || c.includes("startups"))) return true;
+              return false;
+            });
+
+            if (isMatch) {
               categoryMap[cat.id] = (categoryMap[cat.id] || 0) + 1;
             }
           });
@@ -121,7 +127,7 @@ export const BentoCategoriesSection = () => {
           CURATED LIBRARY
         </span>
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-display font-black text-brand-text mt-4 tracking-tight">
-          Explore EbookVala Bento Categories
+          Explore EbookVala Categories
         </h2>
         <p className="text-xs sm:text-base text-brand-text-secondary mt-3 font-normal leading-relaxed">
           Handpicked collections structured for deep learning, professional growth, and personal mastery.
@@ -132,7 +138,7 @@ export const BentoCategoriesSection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {BENTO_CATEGORIES.map((cat, idx) => {
           const Icon = cat.icon;
-          const count = counts[cat.id] || cat.defaultCount;
+          const count = counts[cat.id] !== undefined ? counts[cat.id] : 0;
 
           return (
             <motion.div

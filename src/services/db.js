@@ -1077,5 +1077,111 @@ export const dbService = {
       console.error("Error deleting review reply:", err);
       return false;
     }
+  },
+
+  // SUBSCRIPTION & PAYMENTS DAL (Phase 3 & 4)
+  createSubscriptionRecord: async ({ userId, plan, billingData, paymentId, orderId }) => {
+    try {
+      const startDate = new Date();
+      const renewDate = new Date();
+      if (billingData.billingCycle === "yearly") {
+        renewDate.setFullYear(startDate.getFullYear() + 1);
+      } else {
+        renewDate.setMonth(startDate.getMonth() + 1);
+      }
+
+      const subscriptionPayload = {
+        userId,
+        planId: plan.id,
+        planName: plan.name,
+        billingCycle: billingData.billingCycle,
+        status: "active",
+        paymentId: paymentId || `pay_${Math.random().toString(36).substring(2, 12)}`,
+        orderId: orderId || `ord_${Math.random().toString(36).substring(2, 12)}`,
+        amount: billingData.finalTotal,
+        rawPrice: billingData.rawPrice,
+        discountAmount: billingData.discountAmount,
+        appliedCoupon: billingData.appliedCoupon || null,
+        autoRenew: true,
+        startDate: startDate.toISOString(),
+        renewDate: renewDate.toISOString(),
+        createdAt: serverTimestamp()
+      };
+
+      // Save into 'subscriptions' collection
+      const subRef = await addDoc(collection(db, "subscriptions"), subscriptionPayload);
+
+      // Save into 'payments' collection
+      await addDoc(collection(db, "payments"), {
+        subscriptionId: subRef.id,
+        userId,
+        paymentId: subscriptionPayload.paymentId,
+        amount: billingData.finalTotal,
+        planName: plan.name,
+        billingCycle: billingData.billingCycle,
+        status: "success",
+        createdAt: serverTimestamp()
+      });
+
+      // Update user document activePlan
+      const userRef = doc(db, "users", userId);
+      await updateDoc(userRef, {
+        activePlan: plan.id,
+        planName: plan.name,
+        subscriptionStatus: "active",
+        subscriptionId: subRef.id,
+        subscriptionRenewDate: renewDate.toISOString(),
+        updatedAt: serverTimestamp()
+      });
+
+      return { id: subRef.id, ...subscriptionPayload };
+    } catch (err) {
+      console.error("Error creating subscription record:", err);
+      throw err;
+    }
+  },
+
+  getUserSubscription: async (userId) => {
+    try {
+      const q = query(collection(db, "subscriptions"), where("userId", "==", userId), where("status", "==", "active"), limit(1));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const docSnap = snap.docs[0];
+        return { id: docSnap.id, ...docSnap.data() };
+      }
+      return null;
+    } catch (err) {
+      console.error("Error fetching user subscription:", err);
+      return null;
+    }
+  },
+
+  cancelUserSubscription: async (subscriptionId) => {
+    try {
+      const docRef = doc(db, "subscriptions", subscriptionId);
+      await updateDoc(docRef, {
+        status: "cancelled",
+        autoRenew: false,
+        cancelledAt: serverTimestamp()
+      });
+      return true;
+    } catch (err) {
+      console.error("Error cancelling subscription:", err);
+      return false;
+    }
+  },
+
+  toggleSubscriptionAutoRenew: async (subscriptionId, currentAutoRenew) => {
+    try {
+      const docRef = doc(db, "subscriptions", subscriptionId);
+      await updateDoc(docRef, {
+        autoRenew: !currentAutoRenew,
+        updatedAt: serverTimestamp()
+      });
+      return !currentAutoRenew;
+    } catch (err) {
+      console.error("Error toggling auto renew:", err);
+      return currentAutoRenew;
+    }
   }
 };

@@ -75,11 +75,21 @@ export const BookCard = ({ book, view = "grid" }) => {
               bookId: book.id,
               bookTitle: book.title,
               bookCover: book.coverURL,
+              authorId: book.authorId,
+              authorName: book.authorName,
               readerId: user.uid,
+              readerName: user.displayName || user.name || "Reader",
+              readerEmail: user.email || "",
               amount: price,
               paymentId: razorpayResponse.razorpay_payment_id || `rzp_${Date.now()}`,
               paymentGateway: "Razorpay"
             });
+            const currentPurchased = user.purchasedBooks || [];
+            if (!currentPurchased.includes(book.id)) {
+              await updateProfile({
+                purchasedBooks: [...currentPurchased, book.id]
+              });
+            }
             toast.success(`${book.title} unlocked in your library! 📖`, { id: toastId });
             navigate("/dashboard?tab=home");
           },

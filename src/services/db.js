@@ -687,12 +687,49 @@ export const dbService = {
   },
   
   createOrder: async (orderData) => {
+    let bookData = null;
+    if (orderData.bookId) {
+      try {
+        const bookDocRef = doc(db, "books", orderData.bookId);
+        const bookSnap = await getDoc(bookDocRef);
+        if (bookSnap.exists()) {
+          bookData = bookSnap.data();
+        }
+      } catch (e) {
+        console.warn("Could not fetch book in createOrder:", e);
+      }
+    }
+
+    let readerName = orderData.readerName || "";
+    let readerEmail = orderData.readerEmail || "";
+
+    if (orderData.readerId && (!readerName || !readerEmail)) {
+      try {
+        const userDocRef = doc(db, "users", orderData.readerId);
+        const userSnap = await getDoc(userDocRef);
+        if (userSnap.exists()) {
+          const uData = userSnap.data();
+          if (!readerName) readerName = uData.displayName || uData.name || uData.email?.split("@")[0] || "Reader";
+          if (!readerEmail) readerEmail = uData.email || "";
+        }
+      } catch (e) {
+        console.warn("Could not fetch reader in createOrder:", e);
+      }
+    }
+
+    const authorId = orderData.authorId || bookData?.authorId || "author-1";
+    const authorName = orderData.authorName || bookData?.authorName || "Author";
+
     const newOrderRef = doc(collection(db, "orders"));
     const newOrder = {
       id: newOrderRef.id,
       createdAt: new Date().toISOString(),
       status: "completed",
       invoiceURL: `/invoice-${Date.now().toString().slice(-4)}.pdf`,
+      authorId: authorId,
+      authorName: authorName,
+      readerName: readerName || "Reader",
+      readerEmail: readerEmail,
       ...orderData
     };
     await setDoc(newOrderRef, newOrder);
@@ -1183,5 +1220,93 @@ export const dbService = {
       console.error("Error toggling auto renew:", err);
       return currentAutoRenew;
     }
+  },
+
+  // COUPONS & CAMPAIGNS
+  getCouponsByAuthorId: async (authorId) => {
+    try {
+      const q = query(collection(db, "coupons"), where("authorId", "==", authorId));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      console.error("Error fetching coupons:", err);
+      return [];
+    }
+  },
+
+  createCoupon: async (couponData) => {
+    const docRef = doc(collection(db, "coupons"));
+    const payload = {
+      id: docRef.id,
+      createdAt: new Date().toISOString(),
+      usedCount: 0,
+      status: "active",
+      ...couponData
+    };
+    await setDoc(docRef, payload);
+    return payload;
+  },
+
+  deleteCoupon: async (couponId) => {
+    await deleteDoc(doc(db, "coupons", couponId));
+    return true;
+  },
+
+  // LIVE EVENTS & ACTIVITY FEED
+  getEvents: async (authorId) => {
+    try {
+      const q = query(collection(db, "events"), where("authorId", "==", authorId));
+      const snap = await getDocs(q);
+      return snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } catch (err) {
+      console.error("Error fetching events:", err);
+      return [];
+    }
+  },
+
+  createEvent: async (eventData) => {
+    try {
+      const docRef = doc(collection(db, "events"));
+      const payload = {
+        id: docRef.id,
+        createdAt: new Date().toISOString(),
+        ...eventData
+      };
+      await setDoc(docRef, payload);
+      return payload;
+    } catch (err) {
+      console.warn("Could not record event:", err);
+      return null;
+    }
+  },
+
+  // MEDIA ASSETS (Covers, Trailers, Audiobooks, Narrations)
+  getMediaAssets: async (authorId) => {
+    try {
+      const q = query(collection(db, "mediaAssets"), where("authorId", "==", authorId));
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch (err) {
+      console.error("Error fetching media assets:", err);
+      return [];
+    }
+  },
+
+  createMediaAsset: async (assetData) => {
+    const docRef = doc(collection(db, "mediaAssets"));
+    const payload = {
+      id: docRef.id,
+      createdAt: new Date().toISOString(),
+      ...assetData
+    };
+    await setDoc(docRef, payload);
+    return payload;
+  },
+
+  deleteMediaAsset: async (assetId) => {
+    await deleteDoc(doc(db, "mediaAssets", assetId));
+    return true;
   }
 };

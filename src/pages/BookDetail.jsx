@@ -214,7 +214,11 @@ export const BookDetail = () => {
             bookId: book.id,
             bookTitle: book.title,
             bookCover: book.coverURL,
+            authorId: book.authorId,
+            authorName: book.authorName,
             readerId: user.uid,
+            readerName: user.displayName || user.name || "Reader",
+            readerEmail: user.email || "",
             amount: bookPrice,
             paymentId: paymentId,
             paymentGateway: "Razorpay"

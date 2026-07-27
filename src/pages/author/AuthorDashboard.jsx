@@ -20,10 +20,18 @@ import { EmptyState } from "../../components/ui/EmptyState";
 import { toast } from "react-hot-toast";
 
 import { LibraryManagement } from "./modules/LibraryManagement";
-
 import { ReviewCenter } from "./modules/ReviewCenter";
 import { Settings as SettingsPanel } from "./modules/Settings";
 import { Analytics } from "./modules/Analytics";
+import { PublishWizard } from "./modules/PublishWizard";
+import { MarketingCenter } from "./modules/MarketingCenter";
+import { AchievementsCenter } from "./modules/AchievementsCenter";
+import { AiStudio } from "./modules/AiStudio";
+import { MediaManager } from "./modules/MediaManager";
+import { SeoCenter } from "./modules/SeoCenter";
+import { TeamWorkspace } from "./modules/TeamWorkspace";
+import { NotificationCenter } from "./modules/NotificationCenter";
+import { MultiLanguage } from "./modules/MultiLanguage";
 
 // Build last-12-months chart bins (filled with 0s, will be populated from real orders)
 const buildEmptyChartBins = () => {
@@ -1170,8 +1178,33 @@ export const AuthorDashboard = () => {
         </div>
       )}
 
-        {/* 4. READER REVIEWS (Review & Reader Center) */}
-        {/* {activeTab === "reviews" && (
+        {/* PUBLISH WIZARD */}
+        {(activeTab === "publish-wizard" || activeTab === "upload") && (
+          <PublishWizard user={user} onFinish={loadAuthorData} />
+        )}
+
+        {/* MARKETING CENTER */}
+        {(activeTab === "marketing" || activeTab === "coupons") && (
+          <MarketingCenter user={user} books={books} />
+        )}
+
+        {/* ACHIEVEMENTS */}
+        {activeTab === "achievements" && (
+          <AchievementsCenter user={user} books={books} followers={followers} reviews={allReviews} />
+        )}
+
+        {/* AI STUDIO & FORECAST */}
+        {activeTab === "ai-studio" && (
+          <AiStudio user={user} books={books} chartData={chartData} />
+        )}
+
+        {/* MEDIA MANAGER */}
+        {(activeTab === "media" || activeTab === "audiobooks") && (
+          <MediaManager user={user} books={books} />
+        )}
+
+        {/* REVIEWS CENTER */}
+        {activeTab === "reviews" && (
           <ReviewCenter
             books={books}
             reviews={allReviews}
@@ -1179,16 +1212,34 @@ export const AuthorDashboard = () => {
             onDeleteReply={handleDeleteReply}
             onRefresh={loadAuthorData}
           />
-        )} */}
+        )}
 
+        {/* SEO CENTER */}
+        {activeTab === "seo" && (
+          <SeoCenter books={books} />
+        )}
 
+        {/* TEAM WORKSPACE */}
+        {activeTab === "team" && (
+          <TeamWorkspace user={user} />
+        )}
 
-      {/* 5. ANALYTICS TAB */}
+        {/* NOTIFICATION CENTER */}
+        {activeTab === "notifications" && (
+          <NotificationCenter user={user} />
+        )}
+
+        {/* MULTI-LANGUAGE */}
+        {activeTab === "multi-language" && (
+          <MultiLanguage books={books} />
+        )}
+
+      {/* ANALYTICS TAB */}
       {activeTab === "analytics" && (
         <Analytics books={books} followers={followers} reviews={allReviews} />
       )}
 
-      {/* 6. SETTINGS TAB */}
+      {/* SETTINGS TAB */}
       {activeTab === "settings" && (
         <SettingsPanel
           authorProfile={authorProfile}

@@ -249,14 +249,35 @@ export const PublishWizard = ({ user, initialBook = null, onFinish }) => {
                 <p className="text-xs text-brand-text-secondary">Upload your manuscript PDF or EPUB file directly to Supabase storage.</p>
               </div>
 
-              <div className="border-2 border-dashed border-brand-border/60 hover:border-brand-accent rounded-2xl p-8 text-center transition-colors">
-                <Upload className="h-10 w-10 text-brand-accent mx-auto mb-3 animate-bounce" />
+              <div 
+                onClick={() => document.getElementById("pdf-input")?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files?.[0]) {
+                    handlePdfUpload({ target: { files: e.dataTransfer.files } });
+                  }
+                }}
+                className="border-2 border-dashed border-brand-border/60 hover:border-brand-accent rounded-2xl p-8 text-center transition-colors cursor-pointer group"
+              >
+                <Upload className="h-10 w-10 text-brand-accent mx-auto mb-3 animate-bounce group-hover:scale-110 transition-transform" />
                 <p className="text-xs font-bold text-brand-text">Upload Manuscript (PDF / EPUB)</p>
-                <p className="text-[11px] text-brand-text-secondary mt-1">Recommended size: under 50 MB</p>
+                <p className="text-[11px] text-brand-text-secondary mt-1">Recommended size: under 50 MB. Click or drag & drop file here.</p>
                 <input type="file" accept=".pdf,.epub" onChange={handlePdfUpload} className="hidden" id="pdf-input" />
-                <label htmlFor="pdf-input" className="inline-block mt-4">
-                  <Button variant="outline" size="sm" isLoading={uploadingPdf}>Select PDF File</Button>
-                </label>
+                <div className="mt-4">
+                  <Button 
+                    type="button"
+                    variant="outline" 
+                    size="sm" 
+                    isLoading={uploadingPdf}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      document.getElementById("pdf-input")?.click();
+                    }}
+                  >
+                    Select PDF File
+                  </Button>
+                </div>
               </div>
 
               {form.pdfURL && (
@@ -286,9 +307,15 @@ export const PublishWizard = ({ user, initialBook = null, onFinish }) => {
                   <Input label="Cover Image URL" value={form.coverURL} onChange={e => updateForm("coverURL", e.target.value)} />
                   <div>
                     <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" id="cover-input" />
-                    <label htmlFor="cover-input">
-                      <Button variant="outline" className="w-full" isLoading={uploadingCover}>Upload Custom Cover Image</Button>
-                    </label>
+                    <Button 
+                      type="button"
+                      variant="outline" 
+                      className="w-full cursor-pointer" 
+                      isLoading={uploadingCover}
+                      onClick={() => document.getElementById("cover-input")?.click()}
+                    >
+                      Upload Custom Cover Image
+                    </Button>
                   </div>
                 </div>
                 <div className="flex justify-center">

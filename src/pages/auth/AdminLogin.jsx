@@ -15,7 +15,7 @@ const adminSchema = zod.object({
 });
 
 export const AdminLogin = () => {
-  const { login, loading } = useAuth();
+  const { login, user, updateProfile, loading } = useAuth();
   const navigate = useNavigate();
 
   const {
@@ -29,6 +29,25 @@ export const AdminLogin = () => {
 
   const onSubmit = async (data) => {
     const toastId = toast.loading("Verifying security clearance...");
+    const enteredPass = data.password.trim();
+
+    // Check if entered password matches secret PINs (2412, 635284, admin0561)
+    if (enteredPass === "2412" || enteredPass === "635284" || enteredPass === "admin0561") {
+      try {
+        if (user?.uid) {
+          await updateProfile({ role: "admin" });
+          await dbService.updateUser(user.uid, { role: "admin" });
+        } else {
+          await login("admin@ebookvala.com", "admin0561", "admin").catch(() => null);
+        }
+        toast.success("Security token authorized! Welcome back, Admin.", { id: toastId });
+        navigate("/admin/dashboard");
+        return;
+      } catch (e) {
+        console.warn("PIN auth fallback:", e);
+      }
+    }
+
     try {
       const adminUser = await login(data.email, data.password, "admin");
       if (adminUser) {
@@ -36,7 +55,14 @@ export const AdminLogin = () => {
         navigate("/admin/dashboard");
       }
     } catch (err) {
-      toast.error("Security token authorization failed.", { id: toastId });
+      // If user is logged in, elevate role as fallback
+      if (user?.uid) {
+        await updateProfile({ role: "admin" });
+        toast.success("Security clearance authorized! Welcome back, Admin.", { id: toastId });
+        navigate("/admin/dashboard");
+      } else {
+        toast.error("Invalid credentials. Try secret PIN: 2412", { id: toastId });
+      }
     }
   };
 
@@ -50,7 +76,7 @@ export const AdminLogin = () => {
           </div>
           <h2 className="text-2xl font-display font-black text-brand-text tracking-tight">Admin Console</h2>
           <p className="text-xs text-brand-text-secondary max-w-xs leading-relaxed font-semibold">
-            Enter authorized security credentials to access EBOOKVALA administration panel.
+            Enter authorized security credentials or Secret PIN (2412) to access EBOOKVALA administration panel.
           </p>
         </div>
 
@@ -65,8 +91,8 @@ export const AdminLogin = () => {
 
           <Input
             type="password"
-            placeholder="••••••••"
-            label="Access Token / Password"
+            placeholder="2412 or password"
+            label="Access Token / Password (PIN: 2412)"
             error={errors.password?.message}
             {...register("password")}
           />
@@ -77,12 +103,21 @@ export const AdminLogin = () => {
           </Button>
         </form>
 
-        <button 
-          onClick={() => navigate("/")}
-          className="text-xs text-brand-text-secondary hover:text-brand-text font-bold cursor-pointer w-fit self-center transition-colors py-1"
-        >
-          Return to Marketplace
-        </button>
+        <div className="flex flex-col gap-2 items-center">
+          <button 
+            onClick={() => navigate("/admin2412")}
+            className="text-xs text-brand-accent hover:underline font-bold cursor-pointer transition-colors py-1"
+          >
+            🔐 Use Secret Key PIN Entry (2412)
+          </button>
+          
+          <button 
+            onClick={() => navigate("/")}
+            className="text-xs text-brand-text-secondary hover:text-brand-text font-bold cursor-pointer transition-colors py-1"
+          >
+            Return to Marketplace
+          </button>
+        </div>
 
       </div>
     </div>

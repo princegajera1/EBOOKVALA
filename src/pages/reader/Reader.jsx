@@ -12,14 +12,18 @@ import { useAuth } from "../../hooks/useAuth";
 import { Button } from "../../components/ui/Button";
 import { toast } from "react-hot-toast";
 
-// Palette of 6 vibrant highlight colors
+// Palette of 10 vibrant highlight colors
 export const HIGHLIGHT_COLORS = [
   { id: "yellow", name: "Yellow", bg: "bg-yellow-300/80 dark:bg-yellow-400/40 text-slate-900 dark:text-slate-100", dot: "bg-yellow-400", hex: "#FDE047" },
   { id: "green", name: "Green", bg: "bg-emerald-300/80 dark:bg-emerald-400/40 text-slate-900 dark:text-slate-100", dot: "bg-emerald-400", hex: "#86EFAC" },
   { id: "blue", name: "Blue", bg: "bg-sky-300/80 dark:bg-sky-400/40 text-slate-900 dark:text-slate-100", dot: "bg-sky-400", hex: "#7DD3FC" },
   { id: "pink", name: "Pink", bg: "bg-pink-300/80 dark:bg-pink-400/40 text-slate-900 dark:text-slate-100", dot: "bg-pink-400", hex: "#F472B6" },
   { id: "purple", name: "Purple", bg: "bg-purple-300/80 dark:bg-purple-400/40 text-slate-900 dark:text-slate-100", dot: "bg-purple-400", hex: "#C084FC" },
-  { id: "orange", name: "Orange", bg: "bg-orange-300/80 dark:bg-orange-400/40 text-slate-900 dark:text-slate-100", dot: "bg-orange-400", hex: "#FDBA74" }
+  { id: "orange", name: "Orange", bg: "bg-orange-300/80 dark:bg-orange-400/40 text-slate-900 dark:text-slate-100", dot: "bg-orange-400", hex: "#FDBA74" },
+  { id: "cyan", name: "Cyan", bg: "bg-cyan-300/80 dark:bg-cyan-400/40 text-slate-900 dark:text-slate-100", dot: "bg-cyan-400", hex: "#22D3EE" },
+  { id: "lime", name: "Lime", bg: "bg-lime-300/80 dark:bg-lime-400/40 text-slate-900 dark:text-slate-100", dot: "bg-lime-400", hex: "#A3E635" },
+  { id: "rose", name: "Rose", bg: "bg-rose-300/80 dark:bg-rose-400/40 text-slate-900 dark:text-slate-100", dot: "bg-rose-400", hex: "#FB7185" },
+  { id: "indigo", name: "Indigo", bg: "bg-indigo-300/80 dark:bg-indigo-400/40 text-slate-900 dark:text-slate-100", dot: "bg-indigo-400", hex: "#818CF8" }
 ];
 
 // Generates rich mock chapters for interactive eBook mode
@@ -135,8 +139,13 @@ export const Reader = () => {
         }
 
         // Load saved highlights from user profile
-        if (user?.readingHighlights?.[found.id]) {
-          setHighlights(user.readingHighlights[found.id]);
+        if (user?.uid && found?.id) {
+          const loadedHL = await dbService.getUserHighlights(user.uid, found.id);
+          if (loadedHL && loadedHL.length > 0) {
+            setHighlights(loadedHL);
+          } else if (user?.readingHighlights?.[found.id]) {
+            setHighlights(user.readingHighlights[found.id]);
+          }
         }
 
         // Increment read count
@@ -214,8 +223,9 @@ export const Reader = () => {
     toast.success(`Text highlighted in ${colorId.toUpperCase()}! 🖍️`);
 
     // Sync to user profile in Firestore
-    if (user && book) {
+    if (user?.uid && book?.id) {
       try {
+        await dbService.saveUserHighlights(user.uid, book.id, updated);
         const userHighlights = user.readingHighlights || {};
         userHighlights[book.id] = updated;
         await updateProfile({ readingHighlights: userHighlights });
@@ -231,8 +241,9 @@ export const Reader = () => {
     setHighlights(updated);
     toast.success("Highlight removed.");
 
-    if (user && book) {
+    if (user?.uid && book?.id) {
       try {
+        await dbService.saveUserHighlights(user.uid, book.id, updated);
         const userHighlights = user.readingHighlights || {};
         userHighlights[book.id] = updated;
         await updateProfile({ readingHighlights: userHighlights });
@@ -401,41 +412,6 @@ export const Reader = () => {
 
         <div className="flex items-center gap-2">
           
-          {/* Mode Switcher Pill (eBook Mode vs PDF View) */}
-          <div className="flex items-center border border-inherit rounded-full p-1 bg-black/5 dark:bg-white/5 select-none shadow-inner">
-            <button
-              onClick={() => setViewMode("text")}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "text"
-                  ? "bg-brand-accent text-white shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">eBook Mode</span>
-            </button>
-            <button
-              onClick={() => setViewMode("pdf")}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "pdf"
-                  ? "bg-brand-accent text-white shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">PDF View</span>
-            </button>
-          </div>
-
-          {/* Table of Contents Drawer Trigger */}
-          <button
-            onClick={() => setShowTocDrawer(!showTocDrawer)}
-            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
-            title="Table of Contents"
-          >
-            <List className="h-4.5 w-4.5" />
-          </button>
-
           {/* Highlights & Notes Drawer Trigger */}
           <button
             onClick={() => setShowHighlightsDrawer(!showHighlightsDrawer)}
@@ -448,17 +424,6 @@ export const Reader = () => {
                 {highlights.length}
               </span>
             )}
-          </button>
-
-          {/* Audio Narration TTS */}
-          <button
-            onClick={toggleSpeech}
-            className={`p-2 rounded-full transition-colors cursor-pointer ${
-              isSpeaking ? "bg-amber-500/20 text-amber-500 animate-pulse" : "hover:bg-black/5 dark:hover:bg-white/5"
-            }`}
-            title={isSpeaking ? "Stop Narration" : "Read Aloud"}
-          >
-            {isSpeaking ? <VolumeX className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
           </button>
 
           {/* AI Tutor Toggle */}

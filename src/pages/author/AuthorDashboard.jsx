@@ -212,27 +212,6 @@ export const AuthorDashboard = () => {
                 {todayQuote}
               </p>
             </div>
-
-            {/* Monthly Goal Progress Ring & Live Revenue (Preserved intact) */}
-            <div className="flex items-center gap-6 bg-[#161618] border border-white/10 rounded-xl p-4">
-              <div className="space-y-1">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-text-secondary">Monthly Goal Target</p>
-                <p className="text-sm font-display font-black text-brand-text">₹{(authorProfile?.monthlyGoalTarget || 25000).toLocaleString()} / Month</p>
-                <div className="w-36">
-                  <ProgressBar 
-                    value={Math.min(100, Math.round((netRoyalties / (authorProfile?.monthlyGoalTarget || 25000)) * 100))} 
-                    color="emerald" 
-                  />
-                </div>
-              </div>
-
-              <div className="border-l border-brand-border/40 pl-4 space-y-1">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-ping"></span> Live Revenue
-                </p>
-                <p className="text-lg font-display font-black text-emerald-400">₹{netRoyalties.toLocaleString()}</p>
-              </div>
-            </div>
           </div>
         </div>
 

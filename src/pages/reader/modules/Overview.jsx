@@ -37,14 +37,16 @@ export const Overview = ({ user, books = [] }) => {
     activeProgress = { currentPage: 1, totalPages: 100, lastRead: new Date().toISOString() };
   }
 
-  // Derive stats
+  // Derive real stats
   const completedBooksCount = myBooks.filter(b => {
     const p = progressMap[b.id];
-    return p && p.currentPage >= p.totalPages;
+    return p && (p.progressPercent >= 99 || (p.currentPage && p.totalPages && p.currentPage >= p.totalPages));
   }).length;
 
   const totalPagesRead = Object.values(progressMap).reduce((sum, p) => sum + (p.currentPage || 0), 0);
-  const totalHoursRead = (totalPagesRead * 2.5 / 60).toFixed(1); // Mins per page = 2.5
+  const totalHoursRead = user?.totalReadingSeconds 
+    ? (user.totalReadingSeconds / 3600).toFixed(1)
+    : (totalPagesRead * 2.5 / 60).toFixed(1);
 
   // Calculate real active streak from reading progress timestamps
   const calculateStreak = () => {

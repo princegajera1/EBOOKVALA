@@ -494,6 +494,116 @@ export const dbService = {
     }
   },
 
+  saveReadingProgress: async (userId, bookId, progressData) => {
+    if (!userId || !bookId) return null;
+    try {
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        const currentProgress = uData.readingProgress || {};
+        const existingBookProg = currentProgress[bookId] || {};
+
+        const updatedProg = {
+          ...existingBookProg,
+          ...progressData,
+          lastRead: new Date().toISOString()
+        };
+
+        await updateDoc(userRef, {
+          [`readingProgress.${bookId}`]: updatedProg,
+          totalReadingSeconds: (uData.totalReadingSeconds || 0) + (progressData.addedSeconds || 0)
+        });
+        return updatedProg;
+      }
+    } catch (err) {
+      console.error("Error saving reading progress:", err);
+    }
+    return null;
+  },
+
+  saveUserHighlights: async (userId, bookId, highlightsList) => {
+    if (!userId || !bookId) return false;
+    try {
+      const userRef = doc(db, "users", userId);
+      await updateDoc(userRef, {
+        [`highlights.${bookId}`]: highlightsList
+      });
+      return true;
+    } catch (err) {
+      console.error("Error saving user highlights:", err);
+      return false;
+    }
+  },
+
+  getUserHighlights: async (userId, bookId) => {
+    if (!userId || !bookId) return [];
+    try {
+      const userRef = doc(db, "users", userId);
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        return uData.highlights?.[bookId] || [];
+      }
+    } catch (err) {
+      console.error("Error getting user highlights:", err);
+    }
+    return [];
+  },
+
+  createBookReview: async (reviewData) => {
+    try {
+      const docRef = doc(collection(db, "reviews"));
+      const newReview = {
+        id: docRef.id,
+        createdAt: new Date().toISOString(),
+        status: "published",
+        ...reviewData
+      };
+      await setDoc(docRef, newReview);
+
+      if (reviewData.bookId) {
+        const reviewsSnap = await getDocs(query(collection(db, "reviews"), where("bookId", "==", reviewData.bookId)));
+        const allRevs = reviewsSnap.docs.map(d => d.data());
+        const avgRating = parseFloat((allRevs.reduce((acc, r) => acc + (r.rating || 5), 0) / allRevs.length).toFixed(1));
+        await updateDoc(doc(db, "books", reviewData.bookId), {
+          rating: avgRating,
+          reviewCount: allRevs.length
+        });
+      }
+
+      if (reviewData.authorId) {
+        await dbService.createNotification({
+          userId: reviewData.authorId,
+          role: "author",
+          category: "Reviews",
+          type: "New Review",
+          title: "New eBook Review ⭐",
+          message: `${reviewData.userName || "A reader"} rated your book "${reviewData.bookTitle}" ${reviewData.rating} stars!`,
+          link: `/author/dashboard?tab=reviews`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }).catch(err => console.warn("Failed to notify author of review:", err));
+      }
+
+      return newReview;
+    } catch (err) {
+      console.error("Error creating book review:", err);
+      throw err;
+    }
+  },
+
+  getReviewsByAuthorId: async (authorId) => {
+    try {
+      const snap = await getDocs(query(collection(db, "reviews"), where("authorId", "==", authorId)));
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      return list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } catch (err) {
+      console.error("Error getting reviews by author ID:", err);
+      return [];
+    }
+  },
+
   getDeletedBooks: async () => {
     try {
       const colRef = collection(db, "books");

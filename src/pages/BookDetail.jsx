@@ -42,6 +42,62 @@ export const BookDetail = () => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [flippedCardId, setFlippedCardId] = useState(null);
 
+  // Review Submission State
+  const [newRating, setNewRating] = useState(5);
+  const [newReviewText, setNewReviewText] = useState("");
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      toast.error("Please log in to post a review ⭐");
+      navigate("/login");
+      return;
+    }
+    if (!newReviewText.trim()) {
+      toast.error("Please enter a review message.");
+      return;
+    }
+
+    const PROFANITY_LIST = ["badword", "spam", "scam", "fuck", "shit", "bitch", "asshole"];
+    const hasProfanity = PROFANITY_LIST.some(w => newReviewText.toLowerCase().includes(w));
+    if (hasProfanity) {
+      toast.error("Review contains restricted terms. Please keep reviews respectful.");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+    try {
+      const created = await dbService.createBookReview({
+        bookId: book.id,
+        bookTitle: book.title,
+        authorId: book.authorId || "author-1",
+        userId: user.uid,
+        userName: user.displayName || user.name || user.email?.split("@")[0] || "Reader",
+        userPhotoURL: user.photoURL || "",
+        rating: newRating,
+        text: newReviewText.trim(),
+        createdAt: new Date().toISOString()
+      });
+
+      setReviews(prev => [created, ...prev]);
+      setBook(prev => prev ? ({
+        ...prev,
+        rating: parseFloat((((prev.rating || 5) * reviews.length + newRating) / (reviews.length + 1)).toFixed(1)),
+        reviewCount: (reviews.length + 1)
+      }) : prev);
+
+      setNewReviewText("");
+      setNewRating(5);
+      toast.success("Thank you for your review! ⭐");
+    } catch (err) {
+      console.error("Error submitting review:", err);
+      toast.error("Failed to submit review.");
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
   useEffect(() => {
     const loadBookData = async () => {
       setLoading(true);
@@ -549,8 +605,63 @@ export const BookDetail = () => {
                   </div>
 
                   {/* Reviews block */}
-                  <div>
-                    <h3 className="text-lg font-bold text-brand-text mb-4">Customer Reviews</h3>
+                  <div className="flex flex-col gap-6">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-bold text-brand-text">Customer Reviews ({reviews.length})</h3>
+                    </div>
+
+                    {/* Interactive Review Submission Card */}
+                    <div className="bg-brand-card border border-brand-border rounded-[20px] p-5 shadow-brand text-left">
+                      <h4 className="text-xs font-bold text-brand-text uppercase tracking-wider font-mono mb-3">Write a Review</h4>
+                      <form onSubmit={handleReviewSubmit} className="flex flex-col gap-4">
+                        <div>
+                          <label className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider block mb-1.5 font-mono">Rating</label>
+                          <div className="flex items-center gap-1 select-none">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setNewRating(star)}
+                                className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                              >
+                                <Star 
+                                  className={`h-5 w-5 ${
+                                    star <= newRating 
+                                      ? "fill-amber-400 text-amber-400" 
+                                      : "text-brand-border hover:text-amber-300"
+                                  }`} 
+                                />
+                              </button>
+                            ))}
+                            <span className="text-xs font-mono font-bold text-brand-text ml-2">{newRating} Stars</span>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="text-[10px] font-bold text-brand-text-secondary uppercase tracking-wider block mb-1.5 font-mono">Your Review</label>
+                          <textarea
+                            rows={3}
+                            placeholder="Share your thoughts about this eBook..."
+                            value={newReviewText}
+                            onChange={(e) => setNewReviewText(e.target.value)}
+                            className="w-full bg-brand-bg border border-brand-border rounded-xl p-3 text-xs text-brand-text placeholder:text-brand-text-secondary/50 focus:outline-none focus:border-brand-accent transition-colors"
+                          />
+                        </div>
+
+                        <div className="flex justify-end">
+                          <Button 
+                            type="submit" 
+                            disabled={isSubmittingReview}
+                            variant="primary" 
+                            className="rounded-full text-xs font-bold px-5 h-9 bg-brand-accent hover:scale-[1.02] shadow-sm cursor-pointer"
+                          >
+                            {isSubmittingReview ? "Submitting..." : "Submit Review ⭐"}
+                          </Button>
+                        </div>
+                      </form>
+                    </div>
+
+                    {/* Customer Reviews List */}
                     {reviews.length > 0 ? (
                       <div className="flex flex-col gap-4">
                         {reviews.map((rev) => (
@@ -558,13 +669,13 @@ export const BookDetail = () => {
                             <div className="flex justify-between items-start">
                               <div className="flex items-center gap-3">
                                 <div className="h-9 w-9 rounded-full bg-brand-bg-secondary border border-brand-border flex items-center justify-center font-bold text-xs text-brand-text uppercase">
-                                  {rev.readerName.substring(0, 2).toUpperCase()}
+                                  {(rev.readerName || rev.userName || "Reader").substring(0, 2).toUpperCase()}
                                 </div>
                                 <div>
-                                  <h5 className="text-xs font-bold text-brand-text leading-none">{rev.readerName}</h5>
+                                  <h5 className="text-xs font-bold text-brand-text leading-none">{rev.readerName || rev.userName || "Reader"}</h5>
                                   <div className="flex gap-0.5 mt-1.5">
                                     {[...Array(5)].map((_, i) => (
-                                      <Star key={i} className={`h-3 w-3 ${i < rev.rating ? "fill-amber-400 text-amber-400" : "text-brand-border"}`} />
+                                      <Star key={i} className={`h-3 w-3 ${i < (rev.rating || 5) ? "fill-amber-400 text-amber-400" : "text-brand-border"}`} />
                                     ))}
                                   </div>
                                 </div>
@@ -573,12 +684,12 @@ export const BookDetail = () => {
                                 {new Date(rev.createdAt).toLocaleDateString()}
                               </span>
                             </div>
-                            <p className="text-xs text-brand-text-secondary leading-relaxed font-normal">{rev.text}</p>
+                            <p className="text-xs text-brand-text-secondary leading-relaxed font-normal">{rev.text || rev.comment}</p>
                           </div>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-brand-text-secondary italic">No reviews yet.</p>
+                      <p className="text-xs text-brand-text-secondary italic">No reviews yet. Be the first to leave a review!</p>
                     )}
                   </div>
                 </div>

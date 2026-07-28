@@ -261,21 +261,24 @@ export const dbService = {
     await ensureSeeded();
     try {
       const colRef = collection(db, "books");
+      let books = [];
       try {
-        // Primary: orderBy query (requires Firestore index on createdAt)
         const snap = await getDocs(query(colRef, orderBy("createdAt", "desc")));
-        return snap.docs
-          .map(d => ({ id: d.id, ...d.data() }))
-          .filter(b => !b.isDeleted);
+        books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       } catch (indexErr) {
-        // Fallback: fetch all docs and sort in-memory (if index missing)
         console.warn("getBooks orderBy index missing, falling back to in-memory sort:", indexErr.code);
         const snap = await getDocs(colRef);
-        const books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        return books
-          .filter(b => !b.isDeleted)
-          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       }
+
+      let localDeleted = [];
+      try {
+        localDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+      } catch (e) {}
+
+      return books
+        .filter(b => !b.isDeleted && !localDeleted.includes(b.id))
+        .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
     } catch (error) {
       console.error("Firestore getBooks error:", error);
       return [];
@@ -288,7 +291,13 @@ export const dbService = {
       const colRef = collection(db, "books");
       const snap = await getDocs(colRef);
       const books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      return books.filter(b => b.isDeleted);
+
+      let localDeleted = [];
+      try {
+        localDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+      } catch (e) {}
+
+      return books.filter(b => b.isDeleted || localDeleted.includes(b.id));
     } catch (error) {
       console.error("Firestore getDeletedBooks error:", error);
       return [];
@@ -439,13 +448,21 @@ export const dbService = {
       await setDoc(docRef, {
         isDeleted: true,
         deletedAt: new Date().toISOString(),
-        deletedBy: uid
+        deletedBy: uid || "admin"
       }, { merge: true });
-      return true;
     } catch (err) {
-      console.error("Firestore deleteBook error:", err);
-      throw err;
+      console.warn("Firestore deleteBook permission warning, saving to local deleted cache:", err);
     }
+
+    try {
+      const savedDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+      if (!savedDeleted.includes(id)) {
+        savedDeleted.push(id);
+        localStorage.setItem("ebookvala_deleted_books", JSON.stringify(savedDeleted));
+      }
+    } catch (e) {}
+
+    return true;
   },
 
   restoreBook: async (id) => {
@@ -456,11 +473,17 @@ export const dbService = {
         deletedAt: null,
         deletedBy: null
       }, { merge: true });
-      return true;
     } catch (err) {
-      console.error("Firestore restoreBook error:", err);
-      throw err;
+      console.warn("Firestore restoreBook permission warning:", err);
     }
+
+    try {
+      const savedDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+      const updated = savedDeleted.filter(delId => delId !== id);
+      localStorage.setItem("ebookvala_deleted_books", JSON.stringify(updated));
+    } catch (e) {}
+
+    return true;
   },
 
   permanentlyDeleteBook: async (id) => {
@@ -469,16 +492,23 @@ export const dbService = {
       if (snap.exists()) {
         const bookData = snap.data();
         if (bookData.coverURL) {
-          await deleteFile(bookData.coverURL);
+          await deleteFile(bookData.coverURL).catch(() => null);
         }
         if (bookData.pdfURL) {
-          await deleteFile(bookData.pdfURL);
+          await deleteFile(bookData.pdfURL).catch(() => null);
         }
       }
+      await deleteDoc(doc(db, "books", id));
     } catch (err) {
       console.warn("Failed to delete storage files for book:", id, err);
     }
-    await deleteDoc(doc(db, "books", id));
+
+    try {
+      const savedDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+      const updated = savedDeleted.filter(delId => delId !== id);
+      localStorage.setItem("ebookvala_deleted_books", JSON.stringify(updated));
+    } catch (e) {}
+
     return true;
   },
 

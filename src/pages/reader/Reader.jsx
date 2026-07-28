@@ -22,40 +22,69 @@ export const HIGHLIGHT_COLORS = [
   { id: "orange", name: "Orange", bg: "bg-orange-300/80 dark:bg-orange-400/40 text-slate-900 dark:text-slate-100", dot: "bg-orange-400", hex: "#FDBA74" }
 ];
 
-// Generates rich mock chapters for interactive eBook mode
+// Generates page-by-page content matching PDF View and interactive eBook mode
 const generateBookChapters = (bookData) => {
-  const title = bookData?.title || "EbookVala Title";
-  const desc = bookData?.description || "";
+  if (bookData?.chapters && Array.isArray(bookData.chapters) && bookData.chapters.length > 0) {
+    return bookData.chapters.map((ch, idx) => ({
+      id: ch.id || `ch-${idx + 1}`,
+      chapter: ch.chapter || ch.title || `Page ${idx + 1}`,
+      content: ch.content || (Array.isArray(ch.paragraphs) ? ch.paragraphs.join("\n\n") : ch.text || ""),
+      paragraphs: Array.isArray(ch.paragraphs) ? ch.paragraphs : (ch.content ? ch.content.split("\n\n") : []),
+      pageNumber: ch.pageNumber || idx + 1
+    }));
+  }
 
-  return [
-    {
-      id: 1,
-      chapter: "Chapter 1: Foundations & Architecture",
-      paragraphs: [
-        `Welcome to ${title}. Deep reading requires uninterrupted space. A web-based reader shouldn't feel like a social feed designed to steal your attention. It should behave like a piece of quiet hardware—loading quickly, rendering sharp typography, and keeping distractions at zero.`,
-        desc || `In the architectural design of modern applications, baseline foundations dictate longevity. Whether configuring structural margins or managing load balancing grids, every minor detail influences user engagement. When we think of ${title}, the goal remains simple: construct interfaces that look premium, feel cohesive, and prioritize clarity.`,
-        `We start by aligning visual tokens. A design system is not a collection of arbitrary color palettes; it is a strict layout blueprint. We define primary colors and accent tones to command attention without inducing visual fatigue. By establishing consistent corner radiuses and soft elevation shadows, we create spatial depth.`
-      ]
-    },
-    {
-      id: 2,
-      chapter: "Chapter 2: Optimization, Speed & Scaling",
-      paragraphs: [
-        `Scaling is a mathematical art. Developers often fail not because their code is incorrect, but because they scaled the system prematurely. In this chapter, we outline the parameters of customer acquisition systems, grandfathering tiers, and value metric tracking.`,
-        `For any SaaS engine, alignment between pricing and value metrics ensures smooth expansion revenue. However, for open-library platforms, the challenge shifts from transaction processing to loading performance. Optimization rules keep the Largest Contentful Paint (LCP) under 2 seconds.`,
-        `We must also design error-recovery states. When a network request fails, presenting a raw system error ruins user trust. EBOOKVALA handles this with custom visual illustrations, friendly instructions, and a single-click recovery CTA.`
-      ]
-    },
-    {
-      id: 3,
-      chapter: "Chapter 3: Interactive Design & Typography Mastery",
-      paragraphs: [
-        `Static applications feel dead. Adding micro-interactions—like subtle button ripples, springy card zooms, and smooth page slides—brings a product to life. We utilize Framer Motion spring physics to simulate realistic physical weight.`,
-        `Let us examine how hover states transform user delight. When a user hovers over a Book Card, the card lifts slightly while the cover zooms in by 3-5%. Concurrently, quick actions (like adding to bookmarks or previewing chapters) fade in. This is not visual clutter; it is a visual conversation.`,
-        `We will also analyze text customization. Giving readers control over their environment (adjusting font size, background sepia mode, line spacing) is a hallmark of top-tier product design. It shows consideration for accessibility (WCAG AA compliance) and reading longevity.`
-      ]
+  if (bookData?.extractedPages && Array.isArray(bookData.extractedPages) && bookData.extractedPages.length > 0) {
+    return bookData.extractedPages.map((pgText, idx) => ({
+      id: `page-${idx + 1}`,
+      chapter: `Page ${idx + 1}`,
+      content: pgText,
+      paragraphs: typeof pgText === "string" ? pgText.split("\n\n") : [String(pgText)],
+      pageNumber: idx + 1
+    }));
+  }
+
+  const title = bookData?.title || "eBook";
+  const subtitle = bookData?.subtitle || bookData?.aiDescription || "";
+  const description = bookData?.description || "Explore core concepts, strategies, and principles.";
+  const totalBookPages = bookData?.pages || 24;
+
+  const chaptersList = [];
+  const numPages = Math.max(totalBookPages, 4);
+
+  for (let i = 1; i <= numPages; i++) {
+    let pTitle = `Page ${i}`;
+    let pContent = "";
+
+    if (i === 1) {
+      pTitle = `Page 1 — ${title}`;
+      pContent = `Welcome to "${title}". ${subtitle ? subtitle + "\n\n" : ""}${description}\n\nThis section establishes the overarching framework and primary objectives of the publication. Select any text on this page to highlight with 6 colors or add notes.`;
+    } else if (i === 2) {
+      pTitle = `Page 2 — Chapter 1: Foundations`;
+      pContent = `In this section of "${title}", we explore baseline principles, system rules, and design methodologies.\n\nMaintaining decoupled structures ensures maximum resilience and scalability under high load.`;
+    } else if (i === 3) {
+      pTitle = `Page 3 — 1.1 Core Architecture`;
+      pContent = `Architectural optimization in "${title}" relies on clear patterns, strict data typing, and micro-metric analysis.\n\nBy establishing predictable execution pipelines, systems remain performant and maintainable.`;
+    } else if (i === 4) {
+      pTitle = `Page 4 — 1.2 Execution & Strategy`;
+      pContent = `Practical execution requires strategic alignment and continuous user feedback. Apply the concepts introduced in "${title}" to build high-performance products.`;
+    } else {
+      const chapNum = Math.floor((i - 1) / 3) + 1;
+      const secNum = ((i - 1) % 3) + 1;
+      pTitle = `Page ${i} — Chapter ${chapNum}.${secNum}`;
+      pContent = `Continued discussion and analysis for "${title}" (Page ${i} of ${numPages}).\n\nReviewing key domain concepts, advanced patterns, and actionable takeaways for Chapter ${chapNum}.${secNum}.`;
     }
-  ];
+
+    chaptersList.push({
+      id: `ch-${i}`,
+      chapter: pTitle,
+      content: pContent,
+      paragraphs: pContent.split("\n\n"),
+      pageNumber: i
+    });
+  }
+
+  return chaptersList;
 };
 
 export const Reader = () => {
@@ -237,6 +266,7 @@ export const Reader = () => {
 
   // Turn Page / Chapter Change
   const handlePageTurn = async (newIdx) => {
+    if (newIdx < 0 || newIdx >= chapters.length) return;
     setCurrentChapterIdx(newIdx);
     if (isSpeaking) {
       window.speechSynthesis.cancel();
@@ -250,7 +280,14 @@ export const Reader = () => {
         totalPages: chapters.length,
         lastRead: new Date().toISOString()
       };
-      await updateProfile({ readingProgress: updatedProgress });
+      try {
+        await dbService.saveReadingProgress(user.uid, book.id, progData);
+        const userProgress = user.readingProgress || {};
+        userProgress[book.id] = progData;
+        await updateProfile({ readingProgress: userProgress });
+      } catch (err) {
+        console.warn("Failed to sync reading progress:", err);
+      }
     }
   };
 
@@ -655,9 +692,13 @@ export const Reader = () => {
               fullPdfUrl = window.location.origin + rawPdfUrl;
             }
             
-            const iframeSrc = (fullPdfUrl.startsWith("http://") || fullPdfUrl.startsWith("https://")) && !fullPdfUrl.includes("localhost")
-              ? `https://docs.google.com/viewer?url=${encodeURIComponent(fullPdfUrl)}&embedded=true`
-              : fullPdfUrl;
+            const pdfPageHash = `#page=${currentChapterIdx + 1}`;
+            let iframeSrc = fullPdfUrl;
+            if ((fullPdfUrl.startsWith("http://") || fullPdfUrl.startsWith("https://")) && !fullPdfUrl.includes(window.location.hostname)) {
+              iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(fullPdfUrl)}&embedded=true${pdfPageHash}`;
+            } else {
+              iframeSrc = `${fullPdfUrl}${pdfPageHash}`;
+            }
 
             return (
               <div className="flex-grow relative bg-brand-bg-secondary flex flex-col items-stretch justify-center overflow-hidden w-full">
@@ -668,6 +709,7 @@ export const Reader = () => {
                   </div>
                 )}
                 <iframe 
+                  key={`pdf-frame-page-${currentChapterIdx + 1}`}
                   src={iframeSrc} 
                   className="w-full h-full flex-grow border-none" 
                   title={book.title}
@@ -699,15 +741,20 @@ export const Reader = () => {
                 </h2>
               </div>
               
-              {/* Paragraphs with Color Highlights support */}
+              {/* Paragraph Content */}
               <div className={`flex flex-col gap-6 ${fontFamilies[fontFamily]} ${lineHeights[lineHeight]}`} style={{ fontSize: `${fontSize}px` }}>
-                {chapters[currentChapterIdx]?.paragraphs.map((para, pIdx) => {
-                  return (
-                    <p key={pIdx} className="indent-4 text-justify font-medium leading-relaxed opacity-95 relative">
-                      {para}
+                {(() => {
+                  const currentCh = chapters[currentChapterIdx];
+                  const paras = currentCh?.paragraphs && currentCh.paragraphs.length > 0
+                    ? currentCh.paragraphs
+                    : (currentCh?.content ? currentCh.content.split("\n\n") : []);
+
+                  return paras.map((pText, pIdx) => (
+                    <p key={pIdx} className="indent-4 text-justify font-medium opacity-95 relative leading-relaxed">
+                      {pText}
                     </p>
-                  );
-                })}
+                  ));
+                })()}
               </div>
 
               {/* Render Saved Highlights in this chapter */}
@@ -887,32 +934,30 @@ export const Reader = () => {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Progress Navigation bar */}
-      {viewMode === "text" && (
-        <footer className="h-16 border-t border-inherit px-6 flex items-center justify-between select-none">
-          <button
-            onClick={() => handlePageTurn(currentChapterIdx - 1)}
-            disabled={currentChapterIdx === 0}
-            className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <ChevronLeft className="h-4.5 w-4.5" />
-            <span>Previous Chapter</span>
-          </button>
+      {/* Bottom Progress Navigation bar (rendered in both PDF and eBook text modes for page position parity) */}
+      <footer className="h-16 border-t border-inherit px-6 flex items-center justify-between select-none backdrop-blur-md sticky bottom-0 z-30">
+        <button
+          onClick={() => handlePageTurn(currentChapterIdx - 1)}
+          disabled={currentChapterIdx === 0}
+          className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <ChevronLeft className="h-4.5 w-4.5" />
+          <span>Previous Page</span>
+        </button>
 
-          <span className="text-xs font-mono font-bold opacity-80">
-            Chapter {currentChapterIdx + 1} of {chapters.length}
-          </span>
+        <span className="text-xs font-mono font-bold opacity-80">
+          Page {currentChapterIdx + 1} of {chapters.length}
+        </span>
 
-          <button
-            onClick={() => handlePageTurn(currentChapterIdx + 1)}
-            disabled={currentChapterIdx === chapters.length - 1}
-            className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <span>Next Chapter</span>
-            <ChevronRight className="h-4.5 w-4.5" />
-          </button>
-        </footer>
-      )}
+        <button
+          onClick={() => handlePageTurn(currentChapterIdx + 1)}
+          disabled={currentChapterIdx >= chapters.length - 1}
+          className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <span>Next Page</span>
+          <ChevronRight className="h-4.5 w-4.5" />
+        </button>
+      </footer>
 
     </div>
   );

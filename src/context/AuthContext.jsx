@@ -351,6 +351,58 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // --------------------------------------------------------------------------
+  // 9. Dedicated Role Upgrade to Author
+  // Safely updates role to 'author' in Firestore and initializes author profile
+  // --------------------------------------------------------------------------
+  const upgradeToAuthor = async () => {
+    if (!auth.currentUser) throw new Error("No authenticated user session.");
+
+    try {
+      setLoading(true);
+      const uid = auth.currentUser.uid;
+      const displayName = user?.displayName || user?.name || auth.currentUser.displayName || "EbookVala Author";
+
+      // 1. Update user document role in Firestore
+      const userDocRef = doc(db, "users", uid);
+      await updateDoc(userDocRef, {
+        role: "author",
+        updatedAt: new Date().toISOString()
+      }).catch(async () => {
+        await setDoc(userDocRef, { role: "author", updatedAt: new Date().toISOString() }, { merge: true });
+      });
+
+      // 2. Initialize author profile if not exists
+      const authorDocRef = doc(db, "authors", uid);
+      const authorSnap = await getDoc(authorDocRef);
+      if (!authorSnap.exists()) {
+        await setDoc(authorDocRef, {
+          uid: uid,
+          displayName: displayName,
+          photoURL: user?.photoURL || auth.currentUser.photoURL || "",
+          bio: `Hello! I am ${displayName}, an author on EBOOKVALA.`,
+          socialLinks: {},
+          isVerified: false,
+          verificationStatus: "unverified",
+          totalEarnings: 0,
+          availableBalance: 0,
+          pendingBalance: 0,
+          followers: [],
+          totalSales: 0,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      // 3. Re-sync user profile state
+      return await syncUserProfile(auth.currentUser);
+    } catch (err) {
+      console.error("Error upgrading user to author in AuthContext:", err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -363,6 +415,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         forgotPassword,
         updateProfile,
+        upgradeToAuthor,
       }}
     >
       {children}

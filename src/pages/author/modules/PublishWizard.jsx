@@ -25,6 +25,7 @@ export const PublishWizard = ({ user, initialBook = null, onFinish }) => {
   const [savingDraft, setSavingDraft] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [hasContentConsent, setHasContentConsent] = useState(false);
 
   const [form, setForm] = useState({
     title: initialBook?.title || "",
@@ -132,14 +133,26 @@ export const PublishWizard = ({ user, initialBook = null, onFinish }) => {
       toast.error("Please provide a book title.");
       return;
     }
-    const toastId = toast.loading("Publishing eBook to EbookVala marketplace...");
+    if (statusOverride === "published" && !hasContentConsent) {
+      toast.error("You must confirm content rights & ownership consent before publishing.");
+      return;
+    }
+
+    const toastId = toast.loading("Submitting eBook for admin review...");
     try {
       const payload = {
         ...form,
         authorId: user.uid,
         tags: typeof form.tags === "string" ? form.tags.split(",").map(t => t.trim()).filter(Boolean) : form.tags,
         couponCodes: typeof form.couponCodes === "string" ? form.couponCodes.split(",").map(c => c.trim()).filter(Boolean) : form.couponCodes,
-        status: statusOverride,
+        status: statusOverride === "published" ? "pending" : "draft", // Pending admin approval gate
+        contentConsent: {
+          granted: true,
+          timestamp: new Date().toISOString(),
+          authorId: user.uid,
+          authorEmail: user.email || "",
+          termsVersion: "v1.0"
+        },
         publishedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -153,11 +166,11 @@ export const PublishWizard = ({ user, initialBook = null, onFinish }) => {
       await dbService.createEvent({
         authorId: user.uid,
         type: "book_published",
-        title: "eBook Published",
-        description: `Published "${form.title}" on EbookVala`
+        title: "eBook Submitted for Moderation",
+        description: `Submitted "${form.title}" for admin moderation`
       });
 
-      toast.success(`🎉 "${form.title}" is now Live on EbookVala!`, { id: toastId });
+      toast.success(`🎉 "${form.title}" submitted with content consent! It will go live upon admin approval.`, { id: toastId });
       if (onFinish) onFinish();
     } catch (err) {
       toast.error("Failed to publish book.", { id: toastId });
@@ -385,16 +398,42 @@ export const PublishWizard = ({ user, initialBook = null, onFinish }) => {
           {currentStep === 7 && (
             <motion.div key="step7" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
               <div className="border-b border-brand-border/40 pb-4">
-                <h3 className="text-lg font-display font-black text-brand-text">7. Ready to Publish!</h3>
-                <p className="text-xs text-brand-text-secondary">Publish immediately or schedule release date.</p>
+                <h3 className="text-lg font-display font-black text-brand-text">7. Content Rights & Moderation Approval</h3>
+                <p className="text-xs text-brand-text-secondary">Confirm content ownership and submit for administrative review.</p>
+              </div>
+
+              {/* Mandatory Content Rights & Consent Agreement */}
+              <div className="bg-[#111113] border border-brand-accent/30 rounded-2xl p-5 space-y-3 text-left">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-brand-accent flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4" /> Content Ownership & Copyright Consent *
+                </p>
+                <div className="flex items-start gap-3">
+                  <input 
+                    type="checkbox" 
+                    id="content-rights-consent"
+                    checked={hasContentConsent}
+                    onChange={(e) => setHasContentConsent(e.target.checked)}
+                    className="mt-1 h-4.5 w-4.5 rounded border-brand-border text-brand-accent focus:ring-brand-accent cursor-pointer"
+                  />
+                  <label htmlFor="content-rights-consent" className="text-xs text-brand-text leading-relaxed font-semibold cursor-pointer select-none">
+                    I confirm that I own the rights to this content (or have full permission to publish it), and that it does not contain adult, illegal, or plagiarized material. I understand that violating this policy may result in immediate book removal and account suspension.
+                  </label>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-[#111113] border border-brand-border/60 rounded-2xl p-6 text-center space-y-3">
                   <Send className="h-8 w-8 text-brand-accent mx-auto" />
-                  <h4 className="text-sm font-bold text-brand-text">Publish Immediately</h4>
-                  <p className="text-xs text-brand-text-secondary">Make this eBook available on EbookVala right away.</p>
-                  <Button variant="primary" className="w-full" onClick={() => handlePublish("published")}>Publish Now 🚀</Button>
+                  <h4 className="text-sm font-bold text-brand-text">Submit for Admin Review</h4>
+                  <p className="text-xs text-brand-text-secondary">Submit with content consent to admin moderation queue.</p>
+                  <Button 
+                    variant="primary" 
+                    className="w-full" 
+                    disabled={!hasContentConsent}
+                    onClick={() => handlePublish("published")}
+                  >
+                    Submit for Approval 🚀
+                  </Button>
                 </div>
 
                 <div className="bg-[#111113] border border-brand-border/60 rounded-2xl p-6 text-center space-y-3">
@@ -427,8 +466,13 @@ export const PublishWizard = ({ user, initialBook = null, onFinish }) => {
                 Next Step <ArrowRight className="h-3.5 w-3.5 ml-1" />
               </Button>
             ) : (
-              <Button variant="primary" size="sm" onClick={() => handlePublish("published")}>
-                Publish eBook 🚀
+              <Button 
+                variant="primary" 
+                size="sm" 
+                disabled={!hasContentConsent}
+                onClick={() => handlePublish("published")}
+              >
+                Submit for Approval 🚀
               </Button>
             )}
           </div>

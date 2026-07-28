@@ -1624,7 +1624,18 @@ export const AdminDashboard = () => {
                               <div className="h-9.5 w-7 bg-brand-bg-secondary border border-brand-border/40 rounded overflow-hidden shrink-0 select-none shadow-sm">
                                 <img src={book.coverURL || "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=120&auto=format&fit=crop"} alt="" className="h-full w-full object-cover animate-fade-in" />
                               </div>
-                              <span className="font-bold text-brand-text truncate max-w-[180px] font-display">{book.title}</span>
+                              <div className="flex flex-col text-left">
+                                <span className="font-bold text-brand-text truncate max-w-[180px] font-display">{book.title}</span>
+                                {book.contentConsent?.granted ? (
+                                  <span className="text-[9px] font-mono font-bold text-emerald-400 flex items-center gap-1 mt-0.5" title={`Rights & Content consent verified at ${new Date(book.contentConsent.timestamp).toLocaleString()}`}>
+                                    <ShieldCheck className="h-3 w-3" /> Rights Consent Verified 📜
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-mono text-brand-text-secondary opacity-65 flex items-center gap-1 mt-0.5">
+                                    <ShieldCheck className="h-3 w-3" /> Standard Entry
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </td>
                           <td className="py-4 px-5 font-semibold text-brand-text-secondary">{book.authorName}</td>

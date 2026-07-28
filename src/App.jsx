@@ -139,16 +139,9 @@ function App() {
                   <Register />
                 </GuestRoute>
               } />
-              <Route path="/admin/login" element={
-                <GuestRoute>
-                  <AdminLogin />
-                </GuestRoute>
-              } />
-              <Route path="/admin2412" element={
-                <GuestRoute>
-                  <SecretAdminEntry />
-                </GuestRoute>
-              } />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin2412" element={<SecretAdminEntry />} />
+              <Route path="/635284" element={<SecretAdminEntry />} />
 
 
 

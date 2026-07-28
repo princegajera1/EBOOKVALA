@@ -35,6 +35,7 @@ export const AdminLogin = () => {
     try {
       const adminUser = await login(enteredEmail, enteredPass, true);
       if (adminUser) {
+        sessionStorage.setItem("admin_session_unlocked", "true");
         toast.success("Super Admin authenticated! Welcome back, Prince.", { id: toastId });
         navigate("/admin/dashboard");
         return;
@@ -52,6 +53,7 @@ export const AdminLogin = () => {
         } else {
           await login("princegajera944@gmail.com", "Prince@2412", true).catch(() => null);
         }
+        sessionStorage.setItem("admin_session_unlocked", "true");
         toast.success("Super Admin clearance authorized! Welcome back, Admin.", { id: toastId });
         navigate("/admin/dashboard");
         return;
@@ -62,6 +64,7 @@ export const AdminLogin = () => {
 
     if (user?.uid) {
       await updateProfile({ role: "admin" });
+      sessionStorage.setItem("admin_session_unlocked", "true");
       toast.success("Security clearance authorized! Welcome back, Admin.", { id: toastId });
       navigate("/admin/dashboard");
     } else {

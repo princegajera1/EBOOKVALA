@@ -3,8 +3,8 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, ChevronRight, Settings, Maximize, Minimize, Bookmark, 
-  Highlighter, PenTool, BrainCircuit, Volume2, VolumeX, Languages, 
-  HelpCircle, Send, Sparkles, LogOut, ArrowLeft, RefreshCw, FileText, 
+  Highlighter, PenTool, Volume2, VolumeX, Languages, 
+  HelpCircle, LogOut, ArrowLeft, RefreshCw, FileText, 
   BookOpen, Download, List, Trash2, Copy, Check, Palette
 } from "lucide-react";
 import { dbService } from "../../services/db";
@@ -28,36 +28,31 @@ export const HIGHLIGHT_COLORS = [
 
 // Generates rich mock chapters for interactive eBook mode
 const generateBookChapters = (bookData) => {
-  const title = bookData?.title || "EbookVala Title";
-  const desc = bookData?.description || "";
-
+  if (bookData?.chapters && bookData.chapters.length > 0) {
+    return bookData.chapters;
+  }
+  
+  const title = bookData?.title || "eBook";
   return [
     {
-      id: 1,
-      chapter: "Chapter 1: Foundations & Architecture",
-      paragraphs: [
-        `Welcome to ${title}. Deep reading requires uninterrupted space. A web-based reader shouldn't feel like a social feed designed to steal your attention. It should behave like a piece of quiet hardware—loading quickly, rendering sharp typography, and keeping distractions at zero.`,
-        desc || `In the architectural design of modern applications, baseline foundations dictate longevity. Whether configuring structural margins or managing load balancing grids, every minor detail influences user engagement. When we think of ${title}, the goal remains simple: construct interfaces that look premium, feel cohesive, and prioritize clarity.`,
-        `We start by aligning visual tokens. A design system is not a collection of arbitrary color palettes; it is a strict layout blueprint. We define primary colors and accent tones to command attention without inducing visual fatigue. By establishing consistent corner radiuses and soft elevation shadows, we create spatial depth.`
-      ]
+      id: "ch-1",
+      chapter: "Chapter 1: The Beginning",
+      content: `Welcome to "${title}". ${bookData?.description || "This is chapter 1 content."} Enjoy reading through the chapters in clean text mode with multi-color highlights!`
     },
     {
-      id: 2,
-      chapter: "Chapter 2: Optimization, Speed & Scaling",
-      paragraphs: [
-        `Scaling is a mathematical art. Developers often fail not because their code is incorrect, but because they scaled the system prematurely. In this chapter, we outline the parameters of customer acquisition systems, grandfathering tiers, and value metric tracking.`,
-        `For any SaaS engine, alignment between pricing and value metrics ensures smooth expansion revenue. However, for open-library platforms, the challenge shifts from transaction processing to loading performance. Optimization rules keep the Largest Contentful Paint (LCP) under 2 seconds.`,
-        `We must also design error-recovery states. When a network request fails, presenting a raw system error ruins user trust. EBOOKVALA handles this with custom visual illustrations, friendly instructions, and a single-click recovery CTA.`
-      ]
+      id: "ch-2",
+      chapter: "Chapter 2: Core Concepts & Insights",
+      content: `In this section of "${title}", we explore key concepts, strategies, and principles. Select any text to apply one of six vibrant highlight colors or save notes.`
     },
     {
-      id: 3,
-      chapter: "Chapter 3: Interactive Design & Typography Mastery",
-      paragraphs: [
-        `Static applications feel dead. Adding micro-interactions—like subtle button ripples, springy card zooms, and smooth page slides—brings a product to life. We utilize Framer Motion spring physics to simulate realistic physical weight.`,
-        `Let us examine how hover states transform user delight. When a user hovers over a Book Card, the card lifts slightly while the cover zooms in by 3-5%. Concurrently, quick actions (like adding to bookmarks or previewing chapters) fade in. This is not visual clutter; it is a visual conversation.`,
-        `We will also analyze text customization. Giving readers control over their environment (adjusting font size, background sepia mode, line spacing) is a hallmark of top-tier product design. It shows consideration for accessibility (WCAG AA compliance) and reading longevity.`
-      ]
+      id: "ch-3",
+      chapter: "Chapter 3: Practical Applications",
+      content: `Practical execution is essential. Discover actionable guidance and steps within "${title}" designed for long-term growth.`
+    },
+    {
+      id: "ch-4",
+      chapter: "Chapter 4: Advanced Mastery",
+      content: `Deep dive into advanced applications and synthesis for "${title}". Track your reading streak and highlights seamlessly.`
     }
   ];
 };
@@ -70,40 +65,27 @@ export const Reader = () => {
   const [book, setBook] = useState(null);
   const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState("text"); // "text" | "pdf"
-  const [pdfLoading, setPdfLoading] = useState(true);
   const [pdfError, setPdfError] = useState(false);
 
-  // Reader Settings
-  const [readerTheme, setReaderTheme] = useState("sepia"); // "light" | "dark" | "sepia"
-  const [fontSize, setFontSize] = useState(16);
-  const [fontFamily, setFontFamily] = useState("sans");
-  const [lineHeight, setLineHeight] = useState("relaxed");
-  const [marginSize, setMarginSize] = useState("normal");
-  
-  // Reading States
+  // View Mode: 'pdf' vs 'text'
+  const [viewMode, setViewMode] = useState("text"); // 'pdf' | 'text'
+
+  // eBook Reading Controls
+  const [fontSize, setFontSize] = useState(16); // px
+  const [theme, setTheme] = useState("dark"); // 'dark' | 'sepia' | 'light'
   const [currentChapterIdx, setCurrentChapterIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
   
   // Multi-Color Highlights State
   const [highlights, setHighlights] = useState([]); // [{ id, text, colorId, chapter }]
-  const [selectedColor, setSelectedColor] = useState("yellow");
+  const [selectedColorFilter, setSelectedColorFilter] = useState("all");
   const [selectedText, setSelectedText] = useState("");
-  const [showColorPalette, setShowColorPalette] = useState(false);
 
   // Drawers & Modals
   const [showTocDrawer, setShowTocDrawer] = useState(false);
   const [showHighlightsDrawer, setShowHighlightsDrawer] = useState(false);
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false);
-  const [showAiPanel, setShowAiPanel] = useState(false);
-
-  // AI Assistant Messages
-  const [aiMessages, setAiMessages] = useState([
-    { sender: "ai", text: "Hello! I am your AI Reading Tutor. Select any text to highlight or ask for an instant explanation!" }
-  ]);
-  const [aiInput, setAiInput] = useState("");
-  const [aiLoading, setAiLoading] = useState(false);
 
   // Text to Speech
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -113,11 +95,9 @@ export const Reader = () => {
     if (!isAuthenticated) {
       toast.error("Please log in to read eBooks 📖");
       navigate("/login");
+      return;
     }
-  }, [isAuthenticated, navigate]);
 
-  // Fetch Book Data
-  useEffect(() => {
     const fetchBook = async () => {
       setLoading(true);
       try {
@@ -127,8 +107,10 @@ export const Reader = () => {
           navigate("/dashboard");
           return;
         }
+
         setBook(found);
-        setChapters(generateBookChapters(found));
+        const genChaps = generateBookChapters(found);
+        setChapters(genChaps);
 
         const fileUrl = found.pdfURL || found.pdf_url;
         const isCapacitorNative = Boolean(window.Capacitor?.isNativePlatform?.());
@@ -146,6 +128,26 @@ export const Reader = () => {
           } else if (user?.readingHighlights?.[found.id]) {
             setHighlights(user.readingHighlights[found.id]);
           }
+
+          // RESUME AT SAVED PAGE / UNREAD PAGE
+          const savedProg = await dbService.getReadingProgress(user.uid, found.id) || user?.readingProgress?.[found.id];
+          if (savedProg && savedProg.currentPage) {
+            const pageToResume = Math.max(1, savedProg.currentPage);
+            const resumeChapIdx = Math.min(pageToResume - 1, (genChaps.length || 1) - 1);
+            setCurrentChapterIdx(resumeChapIdx > 0 ? resumeChapIdx : 0);
+          } else {
+            // Initial read progress write
+            const initialProg = {
+              currentPage: 1,
+              totalPages: genChaps.length || 100,
+              progressPercent: Math.round((1 / (genChaps.length || 100)) * 100),
+              lastRead: new Date().toISOString()
+            };
+            await dbService.saveReadingProgress(user.uid, found.id, initialProg);
+            const userProgress = user?.readingProgress || {};
+            userProgress[found.id] = initialProg;
+            await updateProfile({ readingProgress: userProgress });
+          }
         }
 
         // Increment read count
@@ -159,47 +161,11 @@ export const Reader = () => {
     fetchBook();
   }, [slug, user]);
 
-  // Handle PDF Viewport Timeout Error Fallback
-  useEffect(() => {
-    if (viewMode === "pdf") {
-      setPdfLoading(true);
-      setPdfError(false);
-      const timer = setTimeout(() => {
-        if (window.Capacitor?.isNativePlatform?.()) {
-          setPdfLoading(false);
-          setPdfError(true);
-        }
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [viewMode]);
-
-  // Keyboard Shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "ArrowRight" && currentChapterIdx < chapters.length - 1) {
-        handlePageTurn(currentChapterIdx + 1);
-      }
-      if (e.key === "ArrowLeft" && currentChapterIdx > 0) {
-        handlePageTurn(currentChapterIdx - 1);
-      }
-      if (e.key === "Escape") {
-        if (isFullscreen) {
-          document.exitFullscreen?.();
-          setIsFullscreen(false);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentChapterIdx, chapters, isFullscreen]);
-
-  // Handle Text Selection
+  // Handle Text Selection for Highlighting
   const handleTextSelection = () => {
-    const sel = window.getSelection().toString();
+    const sel = window.getSelection()?.toString();
     if (sel && sel.trim().length > 2) {
       setSelectedText(sel.trim());
-      setShowColorPalette(true);
     }
   };
 
@@ -218,7 +184,6 @@ export const Reader = () => {
     const updated = [newHighlight, ...highlights];
     setHighlights(updated);
     setSelectedText("");
-    setShowColorPalette(false);
 
     toast.success(`Text highlighted in ${colorId.toUpperCase()}! 🖍️`);
 
@@ -235,11 +200,11 @@ export const Reader = () => {
     }
   };
 
-  // Remove Highlight
-  const removeHighlight = async (highlightId) => {
-    const updated = highlights.filter(h => h.id !== highlightId);
+  // Change Color of existing Highlight
+  const recolorHighlight = async (highlightId, newColorId) => {
+    const updated = highlights.map(h => h.id === highlightId ? { ...h, colorId: newColorId } : h);
     setHighlights(updated);
-    toast.success("Highlight removed.");
+    toast.success(`Highlight updated to ${newColorId.toUpperCase()}! 🖍️`);
 
     if (user?.uid && book?.id) {
       try {
@@ -248,9 +213,27 @@ export const Reader = () => {
         userHighlights[book.id] = updated;
         await updateProfile({ readingHighlights: userHighlights });
       } catch (e) {
-        console.warn("Failed to sync highlights update:", e);
+        console.warn("Failed to sync highlight recolor:", e);
       }
     }
+  };
+
+  // Remove Highlight
+  const removeHighlight = async (highlightId) => {
+    const updated = highlights.filter(h => h.id !== highlightId);
+    setHighlights(updated);
+    toast.success("Highlight removed.");
+    
+    if (user?.uid && book?.id) {
+        try {
+          await dbService.saveUserHighlights(user.uid, book.id, updated);
+          const userHighlights = user.readingHighlights || {};
+          userHighlights[book.id] = updated;
+          await updateProfile({ readingHighlights: userHighlights });
+        } catch (e) {
+          console.warn("Failed to sync highlight removal:", e);
+        }
+      }
   };
 
   // Turn Page / Chapter Change
@@ -261,11 +244,14 @@ export const Reader = () => {
       setIsSpeaking(false);
     }
     
-    if (user && book) {
-      const updatedProgress = { ...(user.readingProgress || {}) };
-      updatedProgress[book.id] = {
-        currentPage: newIdx + 1,
-        totalPages: chapters.length,
+    // Save updated reading progress
+    if (user?.uid && book?.id) {
+      const totalPgs = chapters.length || 100;
+      const currentPage = newIdx + 1;
+      const progData = {
+        currentPage,
+        totalPages: totalPgs,
+        progressPercent: Math.round((currentPage / totalPgs) * 100),
         lastRead: new Date().toISOString()
       };
       await updateProfile({ readingProgress: updatedProgress });
@@ -563,7 +549,7 @@ export const Reader = () => {
             >
               <div className="flex items-center gap-1.5 px-2 border-r border-brand-border">
                 <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">Highlight:</span>
-                {HIGHLIGHT_COLORS.map((col) => (
+                {HIGHLIGHT_COLORS.slice(0, 6).map((col) => (
                   <button
                     key={col.id}
                     onClick={() => addHighlightWithColor(col.id)}
@@ -574,15 +560,9 @@ export const Reader = () => {
               </div>
 
               <button
-                onClick={handleAiExplainHighlight}
-                className="px-3 py-1.5 rounded-full text-[11px] font-bold bg-brand-accent text-white hover:opacity-90 flex items-center gap-1 cursor-pointer"
-              >
-                <BrainCircuit className="h-3.5 w-3.5" /> AI Explain
-              </button>
-
-              <button
                 onClick={() => setSelectedText("")}
-                className="p-1 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary"
+                className="p-1 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
+                title="Dismiss highlight selection"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -607,7 +587,7 @@ export const Reader = () => {
                       {!isPdfValid ? "No PDF File Uploaded" : "PDF Preview Unavailable"}
                     </h3>
                     <p className="text-xs text-brand-text-secondary leading-relaxed max-w-xs">
-                      Switch to Interactive eBook Mode to read with text formatting, AI tutor, and multi-color highlighters!
+                      Switch to Interactive eBook Mode to read with text formatting and multi-color highlighters!
                     </p>
                     <Button 
                       onClick={() => setViewMode("text")} 
@@ -633,22 +613,11 @@ export const Reader = () => {
 
             return (
               <div className="flex-grow relative bg-brand-bg-secondary flex flex-col items-stretch justify-center overflow-hidden w-full">
-                {pdfLoading && (
-                  <div className="absolute inset-0 z-10 bg-brand-card/90 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-brand-text select-none">
-                    <RefreshCw className="h-7 w-7 text-brand-accent animate-spin" />
-                    <p className="text-xs font-bold text-brand-text-secondary">Loading PDF document...</p>
-                  </div>
-                )}
                 <iframe 
                   src={iframeSrc} 
                   className="w-full h-full flex-grow border-none" 
-                  title={book.title}
+                  title={book?.title || "PDF Document"}
                   style={{ minHeight: "calc(100vh - 128px)" }}
-                  onLoad={() => setPdfLoading(false)}
-                  onError={() => {
-                    setPdfLoading(false);
-                    setPdfError(true);
-                  }}
                 />
               </div>
             );
@@ -659,7 +628,7 @@ export const Reader = () => {
             className="flex-grow overflow-y-auto py-10 sm:py-14 flex justify-center w-full min-h-[calc(100vh-128px)]"
             onMouseUp={handleTextSelection}
           >
-            <div className={`${margins[marginSize]} w-full flex flex-col gap-6 text-left`}>
+            <div className="max-w-3xl w-full flex flex-col gap-6 text-left px-6">
               
               {/* Chapter Header */}
               <div className="border-b border-inherit pb-4 mb-2">
@@ -671,65 +640,41 @@ export const Reader = () => {
                 </h2>
               </div>
               
-              {/* Paragraphs with Color Highlights support */}
-              <div className={`flex flex-col gap-6 ${fontFamilies[fontFamily]} ${lineHeights[lineHeight]}`} style={{ fontSize: `${fontSize}px` }}>
-                {chapters[currentChapterIdx]?.paragraphs.map((para, pIdx) => {
-                  const matchingHighlights = highlights.filter(h => h.text && para.includes(h.text));
-                  if (matchingHighlights.length === 0) {
-                    return (
-                      <p key={pIdx} className="indent-4 text-justify font-medium leading-relaxed opacity-95 relative">
-                        {para}
-                      </p>
-                    );
-                  }
-
-                  let renderedElements = [para];
-                  matchingHighlights.forEach(hl => {
-                    const newElements = [];
-                    const colorObj = HIGHLIGHT_COLORS.find(c => c.id === hl.colorId) || HIGHLIGHT_COLORS[0];
-                    renderedElements.forEach(chunk => {
-                      if (typeof chunk === "string") {
-                        const parts = chunk.split(hl.text);
-                        parts.forEach((part, i) => {
-                          if (part) newElements.push(part);
-                          if (i < parts.length - 1) {
-                            newElements.push(
-                              <mark key={`${hl.id}-${i}`} className={`${colorObj.bg} px-1.5 py-0.5 rounded shadow-sm font-semibold inline-block`}>
-                                {hl.text}
-                              </mark>
-                            );
-                          }
-                        });
-                      } else {
-                        newElements.push(chunk);
-                      }
-                    });
-                    renderedElements = newElements;
-                  });
-
-                  return (
-                    <p key={pIdx} className="indent-4 text-justify font-medium leading-relaxed opacity-95 relative">
-                      {renderedElements}
-                    </p>
-                  );
-                })}
+              {/* Paragraph Content */}
+              <div className="flex flex-col gap-6 font-sans leading-relaxed" style={{ fontSize: `${fontSize}px` }}>
+                <p className="indent-4 text-justify font-medium opacity-95 relative leading-relaxed">
+                  {chapters[currentChapterIdx]?.content}
+                </p>
               </div>
 
               {/* Render Saved Highlights in this chapter */}
               {highlights.length > 0 && (
-                <div className="mt-8 pt-6 border-t border-inherit">
+                <div className="mt-8 pt-6 border-t border-brand-border">
                   <h4 className="text-xs font-bold font-mono uppercase tracking-wider mb-3 opacity-70 flex items-center gap-1.5">
-                    <Highlighter className="h-3.5 w-3.5 text-amber-500" /> Color Highlights in Chapter
+                    <Highlighter className="h-3.5 w-3.5 text-amber-500" /> Color Highlights in Chapter ({highlights.length})
                   </h4>
                   <div className="space-y-2">
                     {highlights.map((h) => {
                       const colorObj = HIGHLIGHT_COLORS.find(c => c.id === h.colorId) || HIGHLIGHT_COLORS[0];
                       return (
-                        <div key={h.id} className={`p-3 rounded-xl ${colorObj.bg} text-xs font-medium flex items-start justify-between gap-3 shadow-sm`}>
-                          <span>"{h.text}"</span>
-                          <button onClick={() => removeHighlight(h.id)} className="text-slate-700 hover:text-red-600 font-bold shrink-0">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                        <div key={h.id} className={`p-3 rounded-xl ${colorObj.bg} text-xs font-medium flex items-center justify-between gap-3 shadow-sm`}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className={`h-2.5 w-2.5 rounded-full ${colorObj.dot} shrink-0`} />
+                            <span className="truncate">"{h.text}"</span>
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            {HIGHLIGHT_COLORS.slice(0, 6).map((col) => (
+                              <button
+                                key={col.id}
+                                onClick={() => recolorHighlight(h.id, col.id)}
+                                className={`h-4 w-4 rounded-full ${col.dot} hover:scale-125 transition-transform cursor-pointer opacity-70 hover:opacity-100`}
+                                title={`Re-color to ${col.name}`}
+                              />
+                            ))}
+                            <button onClick={() => removeHighlight(h.id)} className="text-slate-700 hover:text-red-600 font-bold ml-1 cursor-pointer">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </div>
                       );
                     })}
@@ -753,7 +698,7 @@ export const Reader = () => {
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-brand-border mb-3">
                   <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-brand-text">Table of Contents</h4>
-                  <button onClick={() => setShowTocDrawer(false)} className="text-brand-text-secondary hover:text-brand-text">
+                  <button onClick={() => setShowTocDrawer(false)} className="text-brand-text-secondary hover:text-brand-text cursor-pointer">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -765,7 +710,7 @@ export const Reader = () => {
                         handlePageTurn(idx);
                         setShowTocDrawer(false);
                       }}
-                      className={`w-full text-left p-2.5 rounded-xl text-xs font-semibold transition-all ${
+                      className={`w-full text-left p-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                         currentChapterIdx === idx
                           ? "bg-brand-accent text-white font-bold"
                           : "text-brand-text-secondary hover:text-brand-text hover:bg-brand-bg-secondary"
@@ -780,7 +725,7 @@ export const Reader = () => {
           )}
         </AnimatePresence>
 
-        {/* Saved Highlights & Notes Drawer */}
+        {/* Saved Highlights Drawer with 6-Color Filter & Re-Color Support */}
         <AnimatePresence>
           {showHighlightsDrawer && (
             <motion.div
@@ -788,105 +733,85 @@ export const Reader = () => {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed right-0 top-16 bottom-16 w-80 bg-brand-card border-l border-brand-border shadow-brand-hover z-40 flex flex-col justify-between text-left p-4 select-none"
+              className="fixed right-0 top-16 bottom-16 w-84 bg-brand-card border-l border-brand-border shadow-brand-hover z-40 flex flex-col justify-between text-left p-4 select-none"
             >
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-brand-border mb-3">
                   <div className="flex items-center gap-2">
                     <Highlighter className="h-4 w-4 text-amber-500" />
-                    <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-brand-text">Saved Color Highlights ({highlights.length})</h4>
+                    <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-brand-text">Saved Highlights ({highlights.length})</h4>
                   </div>
-                  <button onClick={() => setShowHighlightsDrawer(false)} className="text-brand-text-secondary hover:text-brand-text">
+                  <button onClick={() => setShowHighlightsDrawer(false)} className="text-brand-text-secondary hover:text-brand-text cursor-pointer">
                     <X className="h-4 w-4" />
                   </button>
+                </div>
+
+                {/* Color Filter Bar */}
+                <div className="flex items-center gap-1.5 pb-3 mb-3 border-b border-brand-border/60 overflow-x-auto no-scrollbar">
+                  <button
+                    onClick={() => setSelectedColorFilter("all")}
+                    className={`text-[9px] font-bold px-2 py-1 rounded-full cursor-pointer transition-colors ${
+                      selectedColorFilter === "all" ? "bg-brand-accent text-white" : "bg-brand-bg-secondary text-brand-text-secondary"
+                    }`}
+                  >
+                    All ({highlights.length})
+                  </button>
+                  {HIGHLIGHT_COLORS.slice(0, 6).map(col => {
+                    const cnt = highlights.filter(h => h.colorId === col.id).length;
+                    return (
+                      <button
+                        key={col.id}
+                        onClick={() => setSelectedColorFilter(col.id)}
+                        className={`text-[9px] font-bold px-2 py-1 rounded-full cursor-pointer flex items-center gap-1 border ${
+                          selectedColorFilter === col.id ? "border-brand-accent bg-brand-accent/15 text-brand-text" : "border-brand-border text-brand-text-secondary"
+                        }`}
+                      >
+                        <span className={`h-2 w-2 rounded-full ${col.dot}`} />
+                        {cnt}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {highlights.length === 0 ? (
                   <p className="text-xs text-brand-text-secondary text-center py-8">No text highlighted yet. Select any text in eBook Mode to highlight with 6 colors!</p>
                 ) : (
-                  <div className="space-y-2.5 max-h-[70vh] overflow-y-auto pr-1">
-                    {highlights.map((h) => {
-                      const colorObj = HIGHLIGHT_COLORS.find(c => c.id === h.colorId) || HIGHLIGHT_COLORS[0];
-                      return (
-                        <div key={h.id} className={`p-3 rounded-xl ${colorObj.bg} text-xs font-medium relative group shadow-sm`}>
-                          <p className="pr-6">"{h.text}"</p>
-                          <span className="text-[9px] opacity-75 block mt-1 font-mono">{h.chapter}</span>
-                          <button
-                            onClick={() => removeHighlight(h.id)}
-                            className="absolute top-2 right-2 p-1 text-slate-700 hover:text-red-600 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      );
-                    })}
+                  <div className="space-y-2.5 max-h-[65vh] overflow-y-auto pr-1">
+                    {highlights
+                      .filter(h => selectedColorFilter === "all" || h.colorId === selectedColorFilter)
+                      .map((h) => {
+                        const colorObj = HIGHLIGHT_COLORS.find(c => c.id === h.colorId) || HIGHLIGHT_COLORS[0];
+                        return (
+                          <div key={h.id} className={`p-3 rounded-xl ${colorObj.bg} text-xs font-medium relative group shadow-sm flex flex-col gap-2`}>
+                            <p className="pr-6 leading-snug">"{h.text}"</p>
+                            
+                            <div className="flex items-center justify-between pt-1 border-t border-black/10 dark:border-white/10">
+                              <span className="text-[9px] opacity-75 font-mono">{h.chapter}</span>
+                              
+                              <div className="flex items-center gap-1">
+                                {HIGHLIGHT_COLORS.slice(0, 6).map((col) => (
+                                  <button
+                                    key={col.id}
+                                    onClick={() => recolorHighlight(h.id, col.id)}
+                                    className={`h-3.5 w-3.5 rounded-full ${col.dot} hover:scale-125 transition-transform cursor-pointer opacity-70 hover:opacity-100`}
+                                    title={`Re-color to ${col.name}`}
+                                  />
+                                ))}
+                                <button
+                                  onClick={() => removeHighlight(h.id)}
+                                  className="p-1 text-slate-700 hover:text-red-600 transition-colors ml-1 cursor-pointer"
+                                  title="Delete highlight"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                   </div>
                 )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* AI Tutor Chat Drawer */}
-        <AnimatePresence>
-          {showAiPanel && (
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="w-80 border-l border-inherit bg-brand-card flex flex-col justify-between shadow-brand-hover relative z-35"
-            >
-              <div className="p-4 border-b border-brand-border flex items-center justify-between select-none">
-                <div className="flex items-center gap-2 text-brand-text">
-                  <BrainCircuit className="h-4.5 w-4.5 text-brand-accent animate-pulse" />
-                  <span className="text-xs font-bold">AI Reading Tutor</span>
-                </div>
-                <button
-                  onClick={() => setShowAiPanel(false)}
-                  className="p-1 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary"
-                >
-                  <X className="h-4.5 w-4.5" />
-                </button>
-              </div>
-
-              <div className="flex-grow overflow-y-auto p-4 flex flex-col gap-3 text-xs leading-relaxed">
-                {aiMessages.map((msg, mIdx) => (
-                  <div 
-                    key={mIdx}
-                    className={`p-3 rounded-2xl max-w-[85%] text-left ${
-                      msg.sender === "ai" 
-                        ? "bg-brand-bg-secondary text-brand-text border border-brand-border self-start rounded-tl-sm" 
-                        : "bg-brand-accent text-white self-end rounded-tr-sm"
-                    }`}
-                  >
-                    {msg.text}
-                  </div>
-                ))}
-                {aiLoading && (
-                  <div className="p-3 rounded-2xl bg-brand-bg-secondary border border-brand-border self-start rounded-tl-sm flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-accent animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-accent animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-accent animate-bounce" style={{ animationDelay: "300ms" }} />
-                  </div>
-                )}
-              </div>
-
-              <form onSubmit={handleSendAiMessage} className="p-3 border-t border-brand-border flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Ask a question..."
-                  value={aiInput}
-                  onChange={(e) => setAiInput(e.target.value)}
-                  className="flex-1 bg-brand-bg border border-brand-border px-3.5 py-2 text-xs rounded-full focus:outline-none focus:border-brand-accent placeholder:text-brand-text-secondary/50 text-brand-text"
-                />
-                <button
-                  type="submit"
-                  className="p-2 bg-brand-accent text-white rounded-full hover:scale-105 transition-transform"
-                >
-                  <Send className="h-4 w-4" />
-                </button>
-              </form>
             </motion.div>
           )}
         </AnimatePresence>

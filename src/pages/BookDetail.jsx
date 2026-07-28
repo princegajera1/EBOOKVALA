@@ -416,16 +416,27 @@ export const BookDetail = () => {
             {/* CTAs & Payment Gateway */}
             <div className="flex flex-col gap-4">
               <div className="flex items-center gap-3 text-left">
-                <span className="text-3xl font-mono font-black text-brand-text">₹{book.price || 499}</span>
-                {book.originalPrice && (
-                  <span className="text-sm font-mono text-brand-text-secondary line-through">₹{book.originalPrice}</span>
+                {(book.isFree || book.price === 0 || book.price === "0" || book.pricingType === "free" || !book.price || IS_FREE_YEAR_ACTIVE) ? (
+                  <>
+                    <span className="text-3xl font-mono font-black text-emerald-400">FREE</span>
+                    <span className="text-[10px] font-extrabold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase font-mono">
+                      100% Free Open Library
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-3xl font-mono font-black text-brand-text">₹{book.price}</span>
+                    {book.originalPrice && (
+                      <span className="text-sm font-mono text-brand-text-secondary line-through">₹{book.originalPrice}</span>
+                    )}
+                    <span className="text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase">
+                      Razorpay Verified
+                    </span>
+                  </>
                 )}
-                <span className="text-[10px] font-extrabold text-emerald-500 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full uppercase">
-                  Razorpay Verified
-                </span>
               </div>
 
-              {!isPurchased ? (
+              {!(book.isFree || book.price === 0 || book.price === "0" || book.pricingType === "free" || !book.price || IS_FREE_YEAR_ACTIVE) && !isPurchased ? (
                 <div className="flex flex-col gap-3.5 mt-1">
                   <div className="flex flex-wrap sm:flex-nowrap gap-3">
                     <Button 

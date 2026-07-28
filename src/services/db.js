@@ -736,14 +736,20 @@ export const dbService = {
       };
       await setDoc(docRef, newReview);
 
+      try {
+        let local = JSON.parse(localStorage.getItem(`reviews_${reviewData.bookId}`) || "[]");
+        local.unshift(newReview);
+        localStorage.setItem(`reviews_${reviewData.bookId}`, JSON.stringify(local));
+      } catch (e) {}
+
       if (reviewData.bookId) {
         const reviewsSnap = await getDocs(query(collection(db, "reviews"), where("bookId", "==", reviewData.bookId)));
         const allRevs = reviewsSnap.docs.map(d => d.data());
-        const avgRating = parseFloat((allRevs.reduce((acc, r) => acc + (r.rating || 5), 0) / allRevs.length).toFixed(1));
+        const avgRating = parseFloat((allRevs.reduce((acc, r) => acc + (r.rating || 5), 0) / (allRevs.length || 1)).toFixed(1));
         await updateDoc(doc(db, "books", reviewData.bookId), {
           rating: avgRating,
           reviewCount: allRevs.length
-        });
+        }).catch(err => console.warn("Book rating update warning:", err));
       }
 
       if (reviewData.authorId) {
@@ -765,6 +771,67 @@ export const dbService = {
       console.error("Error creating book review:", err);
       throw err;
     }
+  },
+
+  getReviewsByBookId: async (bookId) => {
+    try {
+      const q = query(collection(db, "reviews"), where("bookId", "==", String(bookId)));
+      const snap = await getDocs(q);
+      const firestoreReviews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem(`reviews_${bookId}`) || "[]");
+      } catch (e) {}
+      const combined = [...firestoreReviews, ...local];
+      return Array.from(new Map(combined.map(r => [r.id, r])).values()).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } catch (e) {
+      console.warn("getReviewsByBookId fallback to local:", e);
+      try {
+        return JSON.parse(localStorage.getItem(`reviews_${bookId}`) || "[]");
+      } catch (err) {
+        return [];
+      }
+    }
+  },
+
+  // READING PROGRESS PERSISTENCE
+  getReadingProgress: async (userId, bookId) => {
+    const key = `user_progress_${userId || "guest"}_${bookId}`;
+    try {
+      const docRef = doc(db, "users", userId || "guest", "progress", String(bookId));
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        localStorage.setItem(key, JSON.stringify(data));
+        return data;
+      }
+    } catch (e) {
+      console.warn("getReadingProgress error, fallback to local:", e);
+    }
+    try {
+      const local = localStorage.getItem(key);
+      return local ? JSON.parse(local) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  saveReadingProgress: async (userId, bookId, progressData) => {
+    const key = `user_progress_${userId || "guest"}_${bookId}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(progressData));
+    } catch (e) {}
+    try {
+      const docRef = doc(db, "users", userId || "guest", "progress", String(bookId));
+      await setDoc(docRef, {
+        bookId: String(bookId),
+        ...progressData,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (e) {
+      console.warn("saveReadingProgress Firestore write fallback:", e);
+    }
+    return true;
   },
 
   getReviewsByAuthorId: async (authorId) => {

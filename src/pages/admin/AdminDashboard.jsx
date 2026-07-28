@@ -794,12 +794,7 @@ export const AdminDashboard = () => {
     { id: "authors", label: "Authors", icon: ShieldCheck },
     { id: "users", label: "Readers", icon: Users },
     { id: "all-users", label: "All Users", icon: UserCheck },
-    { id: "analytics", label: "Analytics", icon: TrendingUp },
-    { id: "live-tracker", label: "Live Tracker", icon: Zap },
-    { id: "activity", label: "Activity", icon: Activity },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "settings", label: "Settings", icon: Settings },
-    { id: "support", label: "Support", icon: HelpCircle }
+    { id: "settings", label: "Settings", icon: Settings }
   ];
 
   const pendingBooks = books.filter(b => b.status === "pending");
@@ -1098,12 +1093,12 @@ export const AdminDashboard = () => {
                 {[
                   { label: "Total Books", value: books.length, trend: "+4.2%", isPositive: true, icon: BookOpen, seed: 1 },
                   { label: "Total Readers", value: usersList.filter(u => u.role !== "admin" && u.role !== "author").length, trend: "+12.8%", isPositive: true, icon: Users, seed: 2 },
-                  { label: "Total Authors", value: authors.length, trend: "+8.4%", isPositive: true, icon: ShieldCheck, seed: 3 },
-                  { label: "Books Read Today", value: usersList.reduce((acc, u) => acc + (u.progress ? Object.keys(u.progress).length : 0), 0) || 5, trend: "+15.2%", isPositive: true, icon: Play, seed: 4 },
-                  { label: "Total Downloads", value: orders.length, trend: "+24.3%", isPositive: true, icon: Download, seed: 5 },
+                  { label: "Total Authors", value: authors.length || usersList.filter(u => u.role === "author").length, trend: "+8.4%", isPositive: true, icon: ShieldCheck, seed: 3 },
+                  { label: "Books Read Today", value: usersList.reduce((acc, u) => acc + (u.readingProgress ? Object.keys(u.readingProgress).length : 0), 0), trend: "+15.2%", isPositive: true, icon: Play, seed: 4 },
+                  { label: "Total Downloads", value: books.reduce((acc, b) => acc + (b.salesCount || b.downloadCount || 0), 0) + orders.length, trend: "+24.3%", isPositive: true, icon: Download, seed: 5 },
                   { label: "Online Users", value: activeCount, trend: "+3.1%", isPositive: true, icon: Compass, seed: 6 },
-                  { label: "New Users", value: usersList.filter(u => u.createdAt && new Date(u.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length || 3, trend: "+9.2%", isPositive: true, icon: PlusCircle, seed: 7 },
-                  { label: "Pending Reports", value: books.filter(b => b.status === "flagged" || b.reported).length || 2, trend: "-15.0%", isPositive: false, icon: ShieldAlert, seed: 8 }
+                  { label: "New Users", value: usersList.filter(u => u.createdAt && new Date(u.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length, trend: "+9.2%", isPositive: true, icon: PlusCircle, seed: 7 },
+                  { label: "Pending Reports", value: books.filter(b => b.status === "flagged" || b.reported).length, trend: "-15.0%", isPositive: false, icon: ShieldAlert, seed: 8 }
                 ].map((card, idx) => {
                   const sparklineData = Array.from({ length: 8 }).map((_, i) => ({
                     value: Math.floor(10 + Math.sin(i + card.seed) * 8)

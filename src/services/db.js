@@ -459,6 +459,30 @@ export const dbService = {
     return true;
   },
 
+  updateAuthor: async (uid, data) => {
+    try {
+      const docRef = doc(db, "authors", uid);
+      const userRef = doc(db, "users", uid);
+      const updateData = { ...data, updatedAt: new Date().toISOString() };
+      
+      const authorSnap = await getDoc(docRef);
+      if (authorSnap.exists()) {
+        await updateDoc(docRef, updateData);
+      } else {
+        await setDoc(docRef, { uid, ...updateData }, { merge: true });
+      }
+
+      const userSnap = await getDoc(userRef);
+      if (userSnap.exists()) {
+        await updateDoc(userRef, updateData).catch(() => null);
+      }
+      return true;
+    } catch (err) {
+      console.error("Firestore updateAuthor error:", err);
+      throw err;
+    }
+  },
+
   recordBookDownload: async (book, readerUser) => {
     if (!book || !book.id) return false;
     try {

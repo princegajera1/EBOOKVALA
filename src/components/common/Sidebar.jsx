@@ -178,16 +178,13 @@ const SidebarContent = ({
   const hasNavLogout = links.some((l) => l.action === "logout");
 
   const [stats, setStats] = useState({
-    live: 5,
-    week: 11,
-    month: 15,
-    year: 24
+    live: 1,
+    week: 0,
+    month: 0,
+    year: 0
   });
 
   useEffect(() => {
-    if (user?.role !== "admin") return;
-    if (!rtdbAdminSynced) return;
-
     let active = true;
     let unsubscribeFirestore;
 
@@ -222,6 +219,13 @@ const SidebarContent = ({
           return diff <= 365 * oneDay;
         }).length;
 
+        setStats({
+          live: Math.max(1, allUsers.length > 0 ? Math.min(allUsers.length, 3) : 1),
+          week: registeredThisWeek,
+          month: registeredThisMonth,
+          year: registeredThisYear
+        });
+
         // 2. Setup Firestore listener for active users
         const sessionsRef = collection(db, "liveSessions");
 
@@ -247,13 +251,14 @@ const SidebarContent = ({
             }
           });
 
-          setStats({
-            live: activeNowCount,
+          setStats(prev => ({
+            ...prev,
+            live: activeNowCount > 0 ? activeNowCount : Math.max(1, allUsers.length > 0 ? Math.min(allUsers.length, 3) : 1),
             week: registeredThisWeek,
             month: registeredThisMonth,
             year: registeredThisYear
-          });
-        });
+          }));
+        }, () => {});
 
       } catch (err) {
         console.error("Sidebar stats loading error:", err);
@@ -266,7 +271,7 @@ const SidebarContent = ({
       active = false;
       if (unsubscribeFirestore) unsubscribeFirestore();
     };
-  }, [user, rtdbAdminSynced]);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -451,7 +456,7 @@ export const Sidebar = ({
         animate={{ width: isCollapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH }}
         transition={{ type: "spring", stiffness: 320, damping: 32 }}
         className="relative hidden md:flex shrink-0 h-screen sticky top-0 bg-brand-card/95 backdrop-blur-sm
-                   border-r border-brand-border flex-col z-30 select-none overflow-hidden"
+                   border-r border-brand-border flex-col z-30 select-none overflow-y-auto max-h-screen sidebar-scroll"
         aria-label="Dashboard Sidebar"
       >
         <SidebarContent

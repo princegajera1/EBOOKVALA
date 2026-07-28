@@ -5,7 +5,8 @@ import {
   Plus, Settings, Grid, BarChart2, ShieldAlert, Edit, FileText, Upload, Download,
   Zap, Activity, Cpu, Database, DatabaseZap, Terminal, Bell, Lock, ToggleLeft,
   Sliders, Calendar, PlusCircle, ArrowRight, Play, Eye, Layers, DollarSign,
-  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles, HelpCircle, Home, RotateCcw
+  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles, HelpCircle, Home, RotateCcw,
+  Mail
 } from "lucide-react";
 import { 
   AreaChart, Area, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,

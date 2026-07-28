@@ -434,23 +434,33 @@ export const dbService = {
   },
   
   deleteBook: async (id, uid = "") => {
-    const docRef = doc(db, "books", id);
-    await updateDoc(docRef, {
-      isDeleted: true,
-      deletedAt: new Date().toISOString(),
-      deletedBy: uid
-    });
-    return true;
+    try {
+      const docRef = doc(db, "books", id);
+      await setDoc(docRef, {
+        isDeleted: true,
+        deletedAt: new Date().toISOString(),
+        deletedBy: uid
+      }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error("Firestore deleteBook error:", err);
+      throw err;
+    }
   },
 
   restoreBook: async (id) => {
-    const docRef = doc(db, "books", id);
-    await updateDoc(docRef, {
-      isDeleted: false,
-      deletedAt: null,
-      deletedBy: null
-    });
-    return true;
+    try {
+      const docRef = doc(db, "books", id);
+      await setDoc(docRef, {
+        isDeleted: false,
+        deletedAt: null,
+        deletedBy: null
+      }, { merge: true });
+      return true;
+    } catch (err) {
+      console.error("Firestore restoreBook error:", err);
+      throw err;
+    }
   },
 
   permanentlyDeleteBook: async (id) => {

@@ -562,13 +562,14 @@ export const AdminDashboard = () => {
   };
 
   const handleDeleteBook = async (id) => {
-    if (!window.confirm("Are you sure you want to permanently delete this eBook?")) return;
+    const toastId = toast.loading("Moving eBook to Recycle Bin...");
     try {
-      await dbService.deleteBook(id);
-      toast.success("eBook deleted successfully.");
+      await dbService.deleteBook(id, user?.uid || "admin");
+      toast.success("eBook moved to Recycle Bin! 🗑️", { id: toastId });
       loadAdminData();
     } catch (err) {
-      toast.error("Failed to delete eBook.");
+      console.error("Delete book error:", err);
+      toast.error("Failed to move eBook to Recycle Bin.", { id: toastId });
     }
   };
 

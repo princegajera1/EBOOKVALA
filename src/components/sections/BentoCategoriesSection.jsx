@@ -161,27 +161,27 @@ export const BentoCategoriesSection = () => {
               />
 
               {/* Top Header: Icon & eBook Count Badge */}
-              <div className="flex items-center justify-between z-10 mb-5">
-                <div className="h-12 w-12 rounded-2xl bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-accent group-hover:scale-110 group-hover:border-brand-accent/40 transition-all duration-300 shadow-sm">
+              <div className="flex items-center justify-between z-10 mb-4 sm:mb-5 gap-3">
+                <div className="h-12 w-12 rounded-2xl bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-accent group-hover:scale-105 group-hover:border-brand-accent/40 transition-all duration-300 shadow-sm shrink-0">
                   <Icon className="h-6 w-6" />
                 </div>
-                <span className={`text-xs font-bold px-3 py-1 rounded-full border shadow-sm ${cat.badgeColor}`}>
+                <span className={`text-xs font-bold px-3 py-1 rounded-full border shadow-sm shrink-0 whitespace-nowrap ${cat.badgeColor}`}>
                   {count} eBooks
                 </span>
               </div>
 
-              {/* Title & Short Description */}
+              {/* Title & Full Description */}
               <div className="z-10 flex-1 flex flex-col justify-start">
-                <h3 className="text-lg font-bold text-brand-text group-hover:text-brand-accent transition-colors font-display tracking-tight">
+                <h3 className="text-lg font-bold text-brand-text group-hover:text-brand-accent transition-colors font-display tracking-tight leading-snug">
                   {cat.title}
                 </h3>
-                <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed line-clamp-2">
+                <p className="text-xs sm:text-sm text-brand-text-secondary mt-2 leading-relaxed font-normal">
                   {cat.description}
                 </p>
               </div>
 
-              {/* Bottom Link with Hover Arrow & Subtle Gradient Glow */}
-              <div className="z-10 pt-5 mt-4 border-t border-brand-border/60 flex items-center justify-between">
+              {/* Bottom Link */}
+              <div className="z-10 pt-4 mt-4 border-t border-brand-border/60 flex items-center justify-between">
                 <span className="text-xs font-bold text-brand-accent group-hover:translate-x-1 transition-transform flex items-center gap-1.5">
                   Explore Books
                   <ArrowRight className="h-3.5 w-3.5" />

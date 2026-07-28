@@ -674,9 +674,42 @@ export const Reader = () => {
               {/* Paragraphs with Color Highlights support */}
               <div className={`flex flex-col gap-6 ${fontFamilies[fontFamily]} ${lineHeights[lineHeight]}`} style={{ fontSize: `${fontSize}px` }}>
                 {chapters[currentChapterIdx]?.paragraphs.map((para, pIdx) => {
+                  const matchingHighlights = highlights.filter(h => h.text && para.includes(h.text));
+                  if (matchingHighlights.length === 0) {
+                    return (
+                      <p key={pIdx} className="indent-4 text-justify font-medium leading-relaxed opacity-95 relative">
+                        {para}
+                      </p>
+                    );
+                  }
+
+                  let renderedElements = [para];
+                  matchingHighlights.forEach(hl => {
+                    const newElements = [];
+                    const colorObj = HIGHLIGHT_COLORS.find(c => c.id === hl.colorId) || HIGHLIGHT_COLORS[0];
+                    renderedElements.forEach(chunk => {
+                      if (typeof chunk === "string") {
+                        const parts = chunk.split(hl.text);
+                        parts.forEach((part, i) => {
+                          if (part) newElements.push(part);
+                          if (i < parts.length - 1) {
+                            newElements.push(
+                              <mark key={`${hl.id}-${i}`} className={`${colorObj.bg} px-1.5 py-0.5 rounded shadow-sm font-semibold inline-block`}>
+                                {hl.text}
+                              </mark>
+                            );
+                          }
+                        });
+                      } else {
+                        newElements.push(chunk);
+                      }
+                    });
+                    renderedElements = newElements;
+                  });
+
                   return (
                     <p key={pIdx} className="indent-4 text-justify font-medium leading-relaxed opacity-95 relative">
-                      {para}
+                      {renderedElements}
                     </p>
                   );
                 })}

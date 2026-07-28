@@ -1803,6 +1803,49 @@ export const dbService = {
     ];
   },
 
+  // USER HIGHLIGHTS PERSISTENCE
+  getUserHighlights: async (userId, bookId) => {
+    const key = `user_highlights_${userId || "guest"}_${bookId}`;
+    try {
+      const docRef = doc(db, "users", userId || "guest", "highlights", String(bookId));
+      const snap = await getDoc(docRef);
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data && data.items) {
+          localStorage.setItem(key, JSON.stringify(data.items));
+          return data.items;
+        }
+      }
+    } catch (e) {
+      console.warn("getUserHighlights Firestore error, using local fallback:", e);
+    }
+    try {
+      const local = localStorage.getItem(key);
+      return local ? JSON.parse(local) : [];
+    } catch (e) {
+      return [];
+    }
+  },
+
+  saveUserHighlights: async (userId, bookId, highlightsArray) => {
+    const key = `user_highlights_${userId || "guest"}_${bookId}`;
+    try {
+      localStorage.setItem(key, JSON.stringify(highlightsArray));
+    } catch (e) {}
+
+    try {
+      const docRef = doc(db, "users", userId || "guest", "highlights", String(bookId));
+      await setDoc(docRef, {
+        bookId: String(bookId),
+        items: highlightsArray,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    } catch (e) {
+      console.warn("saveUserHighlights Firestore fallback:", e);
+    }
+    return true;
+  },
+
   // USERS MANAGEMENT
   getUsers: async () => {
     try {

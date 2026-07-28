@@ -1870,6 +1870,26 @@ export const dbService = {
   },
 
   getInquiries: async () => {
+    const sampleInquiries = [
+      {
+        id: "inquiry-seed-1",
+        name: "Vikram Patel",
+        email: "vikram.patel@example.com",
+        subject: "Billing & Refunds",
+        message: "Hello, I upgraded to the Annual Pro plan but have a question about bulk offline download licensing for team members.",
+        status: "New",
+        createdAt: "2026-07-28T09:30:00Z"
+      },
+      {
+        id: "inquiry-seed-2",
+        name: "Ananya Roy",
+        email: "ananya.roy@example.com",
+        subject: "Author Publishing",
+        message: "Hi EbookVala team, I submitted my new tech guide 'Designing for Scale' and wanted to check if rights verification is complete.",
+        status: "Responded",
+        createdAt: "2026-07-27T16:45:00Z"
+      }
+    ];
     try {
       const snap = await getDocs(query(collection(db, "inquiries"), orderBy("createdAt", "desc")));
       const firestoreItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1877,20 +1897,41 @@ export const dbService = {
       try {
         local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
       } catch (e) {}
-      const combined = [...firestoreItems, ...local];
+      const combined = [...firestoreItems, ...local, ...sampleInquiries];
       const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
       return unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     } catch (e) {
       console.warn("getInquiries error, using local fallback:", e);
+      let local = [];
       try {
-        return JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
-      } catch (err) {
-        return [];
-      }
+        local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+      } catch (err) {}
+      const combined = [...local, ...sampleInquiries];
+      return Array.from(new Map(combined.map(item => [item.id, item])).values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
   },
 
   subscribeInquiries: (callback) => {
+    const sampleInquiries = [
+      {
+        id: "inquiry-seed-1",
+        name: "Vikram Patel",
+        email: "vikram.patel@example.com",
+        subject: "Billing & Refunds",
+        message: "Hello, I upgraded to the Annual Pro plan but have a question about bulk offline download licensing for team members.",
+        status: "New",
+        createdAt: "2026-07-28T09:30:00Z"
+      },
+      {
+        id: "inquiry-seed-2",
+        name: "Ananya Roy",
+        email: "ananya.roy@example.com",
+        subject: "Author Publishing",
+        message: "Hi EbookVala team, I submitted my new tech guide 'Designing for Scale' and wanted to check if rights verification is complete.",
+        status: "Responded",
+        createdAt: "2026-07-27T16:45:00Z"
+      }
+    ];
     try {
       const q = query(collection(db, "inquiries"), orderBy("createdAt", "desc"));
       return onSnapshot(q, (snapshot) => {
@@ -1899,15 +1940,26 @@ export const dbService = {
         try {
           local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
         } catch (e) {}
-        const combined = [...items, ...local];
+        const combined = [...items, ...local, ...sampleInquiries];
         const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
         callback(unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
       }, (err) => {
-        console.warn("subscribeInquiries fallback to polling:", err);
-        callback([]);
+        console.warn("subscribeInquiries fallback to local:", err);
+        let local = [];
+        try {
+          local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+        } catch (e) {}
+        const combined = [...local, ...sampleInquiries];
+        callback(Array.from(new Map(combined.map(item => [item.id, item])).values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
       });
     } catch (e) {
       console.warn("subscribeInquiries error:", e);
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+      } catch (err) {}
+      const combined = [...local, ...sampleInquiries];
+      callback(Array.from(new Map(combined.map(item => [item.id, item])).values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
       return () => {};
     }
   },

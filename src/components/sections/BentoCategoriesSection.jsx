@@ -134,8 +134,8 @@ export const BentoCategoriesSection = () => {
         </p>
       </div>
 
-      {/* Responsive Bento Grid (3 per row on desktop) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Responsive Bento Grid: 3 columns on mobile, tablet & desktop */}
+      <div className="grid grid-cols-3 gap-2.5 sm:gap-6">
         {BENTO_CATEGORIES.map((cat, idx) => {
           const Icon = cat.icon;
           const count = counts[cat.id] !== undefined ? counts[cat.id] : 0;
@@ -149,7 +149,7 @@ export const BentoCategoriesSection = () => {
               transition={{ duration: 0.35, delay: idx * 0.06 }}
               whileHover={{ y: -5 }}
               onClick={() => navigate(`/marketplace?category=${encodeURIComponent(cat.slug)}`)}
-              className="relative group bg-brand-card border border-brand-border rounded-[24px] p-6 shadow-brand hover:shadow-brand-hover hover:border-brand-accent/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between"
+              className="relative group bg-brand-card border border-brand-border rounded-[18px] sm:rounded-[24px] p-2.5 sm:p-6 shadow-brand hover:shadow-brand-hover hover:border-brand-accent/50 transition-all duration-300 cursor-pointer overflow-hidden flex flex-col justify-between"
             >
               {/* Subtle Dotted Background Texture */}
               <div 
@@ -161,30 +161,30 @@ export const BentoCategoriesSection = () => {
               />
 
               {/* Top Header: Icon & eBook Count Badge */}
-              <div className="flex items-center justify-between z-10 mb-4 sm:mb-5 gap-3">
-                <div className="h-12 w-12 rounded-2xl bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-accent group-hover:scale-105 group-hover:border-brand-accent/40 transition-all duration-300 shadow-sm shrink-0">
-                  <Icon className="h-6 w-6" />
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between z-10 mb-2 sm:mb-5 gap-1.5 sm:gap-3">
+                <div className="h-8 w-8 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl bg-brand-bg-secondary border border-brand-border flex items-center justify-center text-brand-accent group-hover:scale-105 group-hover:border-brand-accent/40 transition-all duration-300 shadow-sm shrink-0">
+                  <Icon className="h-4 w-4 sm:h-6 sm:w-6" />
                 </div>
-                <span className={`text-xs font-bold px-3 py-1 rounded-full border shadow-sm shrink-0 whitespace-nowrap ${cat.badgeColor}`}>
-                  {count} eBooks
+                <span className={`text-[9px] sm:text-xs font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full border shadow-sm shrink-0 whitespace-nowrap ${cat.badgeColor}`}>
+                  {count} <span className="hidden sm:inline">eBooks</span>
                 </span>
               </div>
 
-              {/* Title & Full Description */}
+              {/* Title & Short Description */}
               <div className="z-10 flex-1 flex flex-col justify-start">
-                <h3 className="text-lg font-bold text-brand-text group-hover:text-brand-accent transition-colors font-display tracking-tight leading-snug">
+                <h3 className="text-xs sm:text-lg font-bold text-brand-text group-hover:text-brand-accent transition-colors font-display tracking-tight leading-snug">
                   {cat.title}
                 </h3>
-                <p className="text-xs sm:text-sm text-brand-text-secondary mt-2 leading-relaxed font-normal">
+                <p className="text-[10px] sm:text-sm text-brand-text-secondary mt-1 sm:mt-2 leading-relaxed font-normal line-clamp-2 sm:line-clamp-none">
                   {cat.description}
                 </p>
               </div>
 
               {/* Bottom Link */}
-              <div className="z-10 pt-4 mt-4 border-t border-brand-border/60 flex items-center justify-between">
-                <span className="text-xs font-bold text-brand-accent group-hover:translate-x-1 transition-transform flex items-center gap-1.5">
-                  Explore Books
-                  <ArrowRight className="h-3.5 w-3.5" />
+              <div className="z-10 pt-2 sm:pt-4 mt-2 sm:mt-4 border-t border-brand-border/60 flex items-center justify-between">
+                <span className="text-[10px] sm:text-xs font-bold text-brand-accent group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                  Explore <span className="hidden sm:inline">Books</span>
+                  <ArrowRight className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </span>
               </div>
 

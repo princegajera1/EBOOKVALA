@@ -377,12 +377,27 @@ export const AdminDashboard = () => {
 
   // Book Approvals
   const handleApproveBook = async (bookId) => {
+    const book = books.find(b => b.id === bookId) || await dbService.getBookById(bookId);
+    
+    // Optimistic UI update
+    setBooks(prev => prev.map(b => b.id === bookId ? { ...b, status: "published" } : b));
+    if (book) {
+      setRecentActivities(prev => [
+        {
+          id: `act-${Date.now()}`,
+          title: `eBook Approved`,
+          desc: `Approved and published "${book.title}" to marketplace catalog.`,
+          time: "Just now",
+          type: "success"
+        },
+        ...prev
+      ]);
+    }
+
     try {
-      const book = await dbService.getBookById(bookId);
-      await dbService.updateBook(bookId, { status: "published", publishedAt: new Date().toISOString() });
+      await dbService.approveBook(bookId);
       
-      if (book) {
-        // Trigger Author Notification: Category "Books", type "Book Approved"
+      if (book && book.authorId) {
         await dbService.createNotification({
           userId: book.authorId,
           role: "author",
@@ -396,20 +411,36 @@ export const AdminDashboard = () => {
         }).catch(err => console.warn("Failed to create book approval notification:", err));
       }
 
-      toast.success("eBook approved and published!");
-      loadAdminData();
+      toast.success(`"${book?.title || "eBook"}" approved & published! 🎉`);
     } catch (err) {
+      console.error("Approve book error:", err);
       toast.error("Failed to approve book.");
+      loadAdminData();
     }
   };
 
   const handleRejectBook = async (bookId) => {
+    const book = books.find(b => b.id === bookId) || await dbService.getBookById(bookId);
+    
+    // Optimistic UI update
+    setBooks(prev => prev.map(b => b.id === bookId ? { ...b, status: "rejected" } : b));
+    if (book) {
+      setRecentActivities(prev => [
+        {
+          id: `act-${Date.now()}`,
+          title: `eBook Rejected`,
+          desc: `Rejected "${book.title}" submission.`,
+          time: "Just now",
+          type: "warning"
+        },
+        ...prev
+      ]);
+    }
+
     try {
-      const book = await dbService.getBookById(bookId);
-      await dbService.updateBook(bookId, { status: "rejected", rejectionReason: "Violates content guidelines" });
+      await dbService.rejectBook(bookId, "Violates content guidelines");
       
-      if (book) {
-        // Trigger Author Notification: Category "Books", type "Book Rejected"
+      if (book && book.authorId) {
         await dbService.createNotification({
           userId: book.authorId,
           role: "author",
@@ -423,10 +454,11 @@ export const AdminDashboard = () => {
         }).catch(err => console.warn("Failed to create book rejection notification:", err));
       }
 
-      toast.success("eBook rejected.");
-      loadAdminData();
+      toast.success(`"${book?.title || "eBook"}" rejected.`);
     } catch (err) {
+      console.error("Reject book error:", err);
       toast.error("Failed to reject book.");
+      loadAdminData();
     }
   };
 

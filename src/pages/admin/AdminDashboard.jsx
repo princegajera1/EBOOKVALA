@@ -216,24 +216,41 @@ export const AdminDashboard = () => {
   const [recycleBookToPermanentDelete, setRecycleBookToPermanentDelete] = useState(null);
   const [recycleBinSearchQuery, setRecycleBinSearchQuery] = useState("");
 
-  const loadRecycleBinData = async () => {
-    setLoadingRecycleBin(true);
+  const loadAdminData = async () => {
+    setIsLoadingData(true);
     try {
       if (typeof dbService.purgeExpiredSoftDeletedBooks === "function") {
         await dbService.purgeExpiredSoftDeletedBooks().catch(() => null);
       }
-      const allDeleted = await dbService.getDeletedBooks();
-      setDeletedBooks(allDeleted);
+      const [allBooks, delBooks, allAuthors, allOrders, allUsers, allCats] = await Promise.all([
+        dbService.getBooks().catch(() => []),
+        dbService.getDeletedBooks().catch(() => []),
+        dbService.getAuthors().catch(() => []),
+        dbService.getOrders().catch(() => []),
+        dbService.getUsers().catch(() => []),
+        dbService.getCategories().catch(() => [])
+      ]);
+
+      setBooks(allBooks);
+      setDeletedBooks(delBooks);
+      setAuthors(allAuthors);
+      setOrders(allOrders);
+      setUsersList(allUsers);
+      setCategories(allCats);
     } catch (err) {
-      console.error("Failed to load admin recycle bin books:", err);
+      console.error("Failed to load admin dashboard data:", err);
     } finally {
-      setLoadingRecycleBin(false);
+      setIsLoadingData(false);
     }
   };
 
   useEffect(() => {
+    loadAdminData();
+  }, []);
+
+  useEffect(() => {
     if (activeTab === "recycle-bin") {
-      loadRecycleBinData();
+      dbService.getDeletedBooks().then(setDeletedBooks).catch(() => null);
     }
   }, [activeTab]);
 
@@ -250,7 +267,6 @@ export const AdminDashboard = () => {
       }
 
       toast.success(`"${title || 'eBook'}" restored successfully! 🔄`, { id: toastId });
-      await loadRecycleBinData();
       await loadAdminData();
     } catch (err) {
       toast.error("Failed to restore eBook.", { id: toastId });
@@ -264,7 +280,7 @@ export const AdminDashboard = () => {
       await dbService.permanentlyDeleteBook(recycleBookToPermanentDelete.id);
       toast.success(`"${recycleBookToPermanentDelete.title}" permanently deleted!`, { id: toastId });
       setRecycleBookToPermanentDelete(null);
-      await loadRecycleBinData();
+      await loadAdminData();
     } catch (err) {
       toast.error("Failed to delete eBook permanently.", { id: toastId });
     }
@@ -401,37 +417,6 @@ export const AdminDashboard = () => {
     setSearchParams({ tab: tabId });
     setSearchQuery("");
   };
-
-  const loadAdminData = async () => {
-    setIsLoadingData(true);
-    try {
-      const allBooks = await dbService.getBooks();
-      setBooks(allBooks);
-
-      const delBooks = await dbService.getDeletedBooks();
-      setDeletedBooks(delBooks);
-
-      const allAuthors = await dbService.getAuthors();
-      setAuthors(allAuthors);
-
-      const allOrders = await dbService.getOrders();
-      setOrders(allOrders);
-
-      const allCategories = await dbService.getCategories();
-      setCategories(allCategories);
-
-      const realUsers = await dbService.getUsers();
-      setUsersList(realUsers);
-    } catch (err) {
-      console.error("Error loading admin dashboard stats:", err);
-    } finally {
-      setIsLoadingData(false);
-    }
-  };
-
-  useEffect(() => {
-    loadAdminData();
-  }, []);
 
   // Save fields state to localStorage
   useEffect(() => {
@@ -585,7 +570,6 @@ export const AdminDashboard = () => {
 
       toast.success("eBook moved to Recycle Bin! 🗑️", { id: toastId });
       loadAdminData();
-      if (typeof loadRecycleBinData === "function") loadRecycleBinData();
     } catch (err) {
       console.error("Delete book error:", err);
       toast.error("Failed to move eBook to Recycle Bin.", { id: toastId });

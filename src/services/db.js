@@ -282,6 +282,19 @@ export const dbService = {
     }
   },
   
+  getDeletedBooks: async () => {
+    await ensureSeeded();
+    try {
+      const colRef = collection(db, "books");
+      const snap = await getDocs(colRef);
+      const books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      return books.filter(b => b.isDeleted);
+    } catch (error) {
+      console.error("Firestore getDeletedBooks error:", error);
+      return [];
+    }
+  },
+
   getBookById: async (id) => {
     await ensureSeeded();
     try {

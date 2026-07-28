@@ -5,7 +5,7 @@ import {
   Plus, Settings, Grid, BarChart2, ShieldAlert, Edit, FileText, Upload, Download,
   Zap, Activity, Cpu, Database, DatabaseZap, Terminal, Bell, Lock, ToggleLeft,
   Sliders, Calendar, PlusCircle, ArrowRight, Play, Eye, Layers, DollarSign,
-  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles, HelpCircle, Home
+  TrendingUp, BarChart3, AlertCircle, Compass, HardDrive, RefreshCw, Sparkles, HelpCircle, Home, RotateCcw
 } from "lucide-react";
 import { 
   AreaChart, Area, LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
@@ -397,6 +397,9 @@ export const AdminDashboard = () => {
     try {
       const allBooks = await dbService.getBooks();
       setBooks(allBooks);
+
+      const delBooks = await dbService.getDeletedBooks();
+      setDeletedBooks(delBooks);
 
       const allAuthors = await dbService.getAuthors();
       setAuthors(allAuthors);
@@ -1736,6 +1739,104 @@ export const AdminDashboard = () => {
           </div>
         );
       })()}
+
+      {/* RECYCLE BIN TAB */}
+      {activeTab === "recycle-bin" && (() => {
+        return (
+          <div className="flex flex-col gap-6 text-left select-none animate-fade-in">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h1 className="text-2xl font-display font-black text-brand-text tracking-tight flex items-center gap-2">
+                  <Trash2 className="h-6 w-6 text-brand-danger" /> Recycle Bin
+                </h1>
+                <p className="text-xs text-brand-text-secondary mt-1 font-semibold">
+                  View, restore, or permanently erase soft-deleted eBooks from the platform.
+                </p>
+              </div>
+              <div className="px-3.5 py-1.5 rounded-full bg-brand-danger/10 border border-brand-danger/20 text-brand-danger text-xs font-mono font-bold">
+                {deletedBooks.length} Deleted {deletedBooks.length === 1 ? "eBook" : "eBooks"}
+              </div>
+            </div>
+
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">Deleted eBook</th>
+                      <th className="py-4 px-5">Author</th>
+                      <th className="py-4 px-5">Category</th>
+                      <th className="py-4 px-5">Deleted At</th>
+                      <th className="py-4 px-5 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-brand-border/40 font-medium">
+                    {deletedBooks.length > 0 ? (
+                      deletedBooks.map((book) => (
+                        <tr key={book.id} className="hover:bg-brand-bg-secondary/40 transition-colors">
+                          <td className="py-3.5 px-5">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={book.coverURL || "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=200"}
+                                alt={book.title}
+                                className="h-11 w-8 object-cover rounded shadow border border-brand-border"
+                              />
+                              <div>
+                                <p className="font-bold text-brand-text text-xs leading-tight">{book.title}</p>
+                                <p className="text-[10px] text-brand-text-secondary font-mono mt-0.5">${book.price || "Free"}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-5 font-semibold text-brand-text">
+                            {book.authorName || book.author || "Unknown"}
+                          </td>
+                          <td className="py-3.5 px-5">
+                            <span className="px-2.5 py-1 rounded-full bg-brand-bg-secondary text-brand-text-secondary text-[10px] font-bold">
+                              {book.category || "General"}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-5 font-mono text-[11px] text-brand-text-secondary">
+                            {book.deletedAt ? new Date(book.deletedAt).toLocaleString() : "Recently"}
+                          </td>
+                          <td className="py-3.5 px-5 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleRestoreBook(book.id)}
+                                className="px-3.5 py-1.5 rounded-full bg-brand-success/15 hover:bg-brand-success/25 text-brand-success text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                                title="Restore eBook to published status"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5" /> Restore
+                              </button>
+                              <button
+                                onClick={() => handlePermanentDeleteBook(book.id)}
+                                className="px-3.5 py-1.5 rounded-full bg-brand-danger/15 hover:bg-brand-danger/25 text-brand-danger text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1.5"
+                                title="Permanently delete from database"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Delete Permanently
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center font-semibold italic text-brand-text-secondary select-none">
+                          <div className="flex flex-col items-center gap-2">
+                            <Trash2 className="h-8 w-8 text-brand-text-secondary/30" />
+                            <p>Recycle Bin is empty. No deleted eBooks found.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 8. LIVE TRAFFIC & VISITORS TAB */}
 
 
 

@@ -117,11 +117,8 @@ export const Reader = () => {
 
         const fileUrl = found.pdfURL || found.pdf_url;
         const isCapacitorNative = Boolean(window.Capacitor?.isNativePlatform?.());
-        if (!fileUrl || fileUrl.trim() === "" || isCapacitorNative) {
-          setViewMode("text");
-        } else {
-          setViewMode("pdf");
-        }
+        // Default to interactive eBook text mode so text highlighting and customization work out-of-the-box
+        setViewMode("text");
 
         // Load saved highlights from user profile
         if (user?.uid && found?.id) {
@@ -401,6 +398,36 @@ export const Reader = () => {
 
         <div className="flex items-center gap-2">
           
+          {/* View Mode Toggle: eBook Mode vs PDF View */}
+          {book && (book.pdfURL || book.pdf_url) && (
+            <div className="flex items-center bg-black/10 dark:bg-white/10 p-0.5 rounded-full border border-brand-border/60 text-[11px] font-bold select-none">
+              <button
+                onClick={() => setViewMode("text")}
+                className={`px-3 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 ${
+                  viewMode === "text" 
+                    ? "bg-brand-accent text-white shadow-sm font-extrabold" 
+                    : "text-brand-text-secondary hover:text-brand-text"
+                }`}
+                title="Switch to Interactive eBook Mode for 6-color highlighting"
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">eBook Mode</span>
+              </button>
+              <button
+                onClick={() => setViewMode("pdf")}
+                className={`px-3 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 ${
+                  viewMode === "pdf" 
+                    ? "bg-brand-accent text-white shadow-sm font-extrabold" 
+                    : "text-brand-text-secondary hover:text-brand-text"
+                }`}
+                title="Switch to Original PDF View"
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">PDF View</span>
+              </button>
+            </div>
+          )}
+
           {/* Highlights & Notes Drawer Trigger */}
           <button
             onClick={() => setShowHighlightsDrawer(!showHighlightsDrawer)}
@@ -764,6 +791,15 @@ export const Reader = () => {
                     );
                   })}
                 </div>
+
+                {viewMode === "pdf" && (
+                  <div className="p-3 mb-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex flex-col gap-2 select-none">
+                    <p className="leading-snug font-semibold">⚡ You are in PDF View. Switch to <strong>eBook Mode</strong> to select text and highlight in 6 colors!</p>
+                    <Button onClick={() => setViewMode("text")} size="sm" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold h-7 text-[10px] rounded-lg cursor-pointer">
+                      Switch to eBook Mode
+                    </Button>
+                  </div>
+                )}
 
                 {highlights.length === 0 ? (
                   <p className="text-xs text-brand-text-secondary text-center py-8">No text highlighted yet. Select any text in eBook Mode to highlight with 6 colors!</p>

@@ -13,6 +13,7 @@ import { BookPreview } from "../components/book/BookPreview";
 import { Button } from "../components/ui/Button";
 import { toast } from "react-hot-toast";
 import { initiateRazorpayCheckout } from "../services/razorpay";
+import { IS_FREE_YEAR_ACTIVE } from "../config/featureFlags";
 
 // Seed flashcards template
 const MOCK_FLASHCARDS = [
@@ -162,7 +163,7 @@ export const BookDetail = () => {
     );
   }
 
-  const isPurchased = user?.purchasedBooks?.includes(book.id) || user?.role === "admin";
+  const isPurchased = IS_FREE_YEAR_ACTIVE || user?.purchasedBooks?.includes(book.id) || user?.role === "admin";
   const wishlisted = isWishlisted(book.id);
 
   const handleAddToLibrary = async () => {

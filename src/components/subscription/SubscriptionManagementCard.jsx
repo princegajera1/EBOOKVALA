@@ -5,6 +5,7 @@ import { Button } from "../ui/Button";
 import { toast } from "react-hot-toast";
 import { dbService } from "../../services/db";
 import { useNavigate } from "react-router-dom";
+import { IS_FREE_YEAR_ACTIVE } from "../../config/featureFlags";
 
 export const SubscriptionManagementCard = ({ user, onUpgradeClick }) => {
   const navigate = useNavigate();
@@ -68,6 +69,81 @@ export const SubscriptionManagementCard = ({ user, onUpgradeClick }) => {
       setIsCancelling(false);
     }
   };
+
+  if (IS_FREE_YEAR_ACTIVE) {
+    return (
+      <div className="bg-brand-card border border-emerald-500/30 rounded-[24px] p-6 shadow-brand text-left select-none relative overflow-hidden">
+        {/* Background Glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-brand-border">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <Crown className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-display font-black text-brand-text">1-Year Free Access</span>
+                <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                  <Sparkles className="h-3 w-3" /> VIP Active
+                </span>
+              </div>
+              <p className="text-xs text-brand-text-secondary mt-0.5 font-normal">
+                All premium features unlocked 100% free for 365 days. Zero paywalls.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 my-5">
+          <div className="p-4 bg-brand-bg-secondary border border-brand-border rounded-2xl">
+            <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-wider block">Access Status</span>
+            <span className="text-xl font-black font-display text-emerald-400 mt-1 block">
+              100% Free Pass
+            </span>
+          </div>
+
+          <div className="p-4 bg-brand-bg-secondary border border-brand-border rounded-2xl">
+            <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-wider block">Duration</span>
+            <span className="text-sm font-bold text-brand-text mt-2 block">
+              1 Full Year Access
+            </span>
+          </div>
+
+          <div className="p-4 bg-brand-bg-secondary border border-brand-border rounded-2xl">
+            <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase tracking-wider block">Billing Amount</span>
+            <span className="text-sm font-bold text-emerald-400 mt-2 block font-mono">
+              ₹0 / Entire Year
+            </span>
+          </div>
+        </div>
+
+        {/* Features list */}
+        <div className="p-4 bg-brand-bg-secondary/60 border border-brand-border rounded-2xl">
+          <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider block mb-2.5">
+            Unlocked Features & VIP Perks:
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            {[
+              "Access to 10,000+ Premium eBooks",
+              "AI Chat with Book & Chapter Summaries",
+              "Unlimited Offline Downloads",
+              "AI Flashcards & Quiz Generator",
+              "Multi-Device Sync",
+              "Zero Ads & Zero Paywalls"
+            ].map((feat, i) => (
+              <div key={i} className="flex items-center gap-2 text-[11px] text-brand-text-secondary">
+                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                <span>{feat}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-brand-card border border-brand-border rounded-[24px] p-6 shadow-brand text-left select-none relative overflow-hidden">

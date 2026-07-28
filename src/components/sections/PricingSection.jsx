@@ -11,6 +11,7 @@ import { AuthModal } from "../auth/AuthModal";
 import { PlanCheckoutModal } from "../checkout/PlanCheckoutModal";
 import { PaymentSuccessModal } from "../checkout/PaymentSuccessModal";
 import { dbService } from "../../services/db";
+import { IS_FREE_YEAR_ACTIVE } from "../../config/featureFlags";
 
 export const PRICING_PLANS = [
   {
@@ -280,6 +281,67 @@ export const PricingSection = () => {
       }
     }
   };
+
+  if (IS_FREE_YEAR_ACTIVE) {
+    return (
+      <section className="w-full max-w-5xl mx-auto px-6 py-14 select-none text-center">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-brand-card border border-brand-accent/30 rounded-[32px] p-8 md:p-12 shadow-2xl relative overflow-hidden text-center space-y-6"
+        >
+          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <span className="text-xs font-mono font-black tracking-widest uppercase bg-brand-accent/15 border border-brand-accent/30 text-brand-accent px-4 py-1.5 rounded-full inline-flex items-center gap-2 mx-auto">
+            <Sparkles className="h-3.5 w-3.5" /> 1-YEAR FREE ACCESS CAMPAIGN
+          </span>
+
+          <h2 className="text-3xl md:text-5xl font-display font-black text-brand-text tracking-tight max-w-2xl mx-auto leading-tight">
+            The Entire Platform is Free for the Next 12 Months 🎉
+          </h2>
+
+          <p className="text-sm md:text-base text-brand-text-secondary max-w-xl mx-auto leading-relaxed">
+            Enjoy 100% unrestricted access to all 10,000+ eBooks, AI Summaries, Audiobooks, Flashcards, and Author Publishing tools. Zero paywalls. No credit card required.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto pt-4 text-left">
+            <div className="p-4 rounded-2xl bg-brand-bg-secondary border border-brand-border flex items-start gap-3">
+              <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-brand-text">10,000+ eBooks</h4>
+                <p className="text-[11px] text-brand-text-secondary mt-0.5">Read any book anytime</p>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-brand-bg-secondary border border-brand-border flex items-start gap-3">
+              <Zap className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-brand-text">Pro AI Suite</h4>
+                <p className="text-[11px] text-brand-text-secondary mt-0.5">AI Summaries & Chat</p>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl bg-brand-bg-secondary border border-brand-border flex items-start gap-3">
+              <Crown className="h-5 w-5 text-brand-accent shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-brand-text">Author Tools</h4>
+                <p className="text-[11px] text-brand-text-secondary mt-0.5">Publish & distribution free</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4">
+            <Button
+              onClick={() => navigate(isAuthenticated ? "/marketplace" : "/register")}
+              variant="primary"
+              className="px-8 py-3.5 text-sm font-bold rounded-full shadow-brand inline-flex items-center gap-2"
+            >
+              {isAuthenticated ? "Explore Free Marketplace 🚀" : "Create Free Account & Start Reading 🚀"}
+            </Button>
+          </div>
+        </motion.div>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full max-w-7xl mx-auto px-6 py-14 select-none text-left">

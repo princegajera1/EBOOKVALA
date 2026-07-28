@@ -58,25 +58,24 @@ const MOTIVATION_QUOTES = [
   "“There is no agony like bearing an untold story inside you.” – Maya Angelou"
 ];
 
+const getTimeBasedGreeting = () => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) {
+    return { greeting: "Good Morning", emoji: "🌅" };
+  } else if (hour >= 12 && hour < 17) {
+    return { greeting: "Good Afternoon", emoji: "☀️" };
+  } else if (hour >= 17 && hour < 21) {
+    return { greeting: "Good Evening", emoji: "🌆" };
+  } else {
+    return { greeting: "Good Night", emoji: "🌙" };
+  }
+};
+
 const AUTHOR_NAV_LINKS = [
   { id: "overview", label: "Dashboard", icon: Home },
   { id: "my-books", label: "My Books", icon: BookOpen },
   { id: "publish-wizard", label: "Write Book", icon: Edit },
-  { id: "analytics", label: "Analytics", icon: BarChart2 },
-  { id: "revenue", label: "Revenue & Royalties", icon: DollarSign },
-  { id: "orders", label: "Orders", icon: ShoppingBag },
-  { id: "subscribers", label: "Subscribers", icon: Mail },
   { id: "reviews", label: "Reviews", icon: Star },
-  { id: "messages", label: "Messages", icon: MessageSquare },
-  { id: "community", label: "Community", icon: Users },
-  { id: "marketing", label: "Marketing", icon: Tag },
-  { id: "coupons", label: "Coupons", icon: Percent },
-  { id: "affiliate", label: "Affiliate", icon: Share2 },
-  { id: "payouts", label: "Payouts", icon: ShieldCheck },
-  { id: "achievements", label: "Achievements", icon: Trophy },
-  { id: "ai-studio", label: "AI Studio", icon: Bot },
-  { id: "media", label: "Documents & Media", icon: HardDrive },
-  { id: "seo", label: "SEO Center", icon: Globe },
   { id: "settings", label: "Settings", icon: Settings }
 ];
 
@@ -168,36 +167,23 @@ export const AuthorDashboard = () => {
   const refundRateVal = totalSales > 0 ? `${((refundsSum / totalSales) * 100).toFixed(1)}%` : "0.0%";
   const storageUsedGb = (books.reduce((s, b) => s + (b.fileSizeMb || 0), 0) / 1024).toFixed(2);
 
-  // 28 KPI Grid Definitions — 100% REAL FIRESTORE METRICS
-  const KPI_GRID = [
+  const [timeGreeting, setTimeGreeting] = useState(getTimeBasedGreeting());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeGreeting(getTimeBasedGreeting());
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Essential KPI Definitions for clean, professional layout
+  const ESSENTIAL_KPIS = [
     { label: "Total Books", value: totalBooks, icon: BookOpen, color: "text-sky-400" },
     { label: "Published Books", value: publishedBooks, icon: CheckCircle2, color: "text-emerald-400" },
-    { label: "Draft Books", value: draftBooks, icon: Edit, color: "text-amber-400" },
-    { label: "Under Review", value: inReviewBooks, icon: Clock, color: "text-purple-400" },
     { label: "Total Readers", value: totalSales.toLocaleString(), icon: Users, color: "text-indigo-400" },
-    { label: "Followers", value: followers.length.toLocaleString(), icon: Heart, color: "text-rose-400" },
-    { label: "Profile Visits", value: (authorProfile?.viewCount || 0).toLocaleString(), icon: Eye, color: "text-cyan-400" },
-    { label: "Book Views", value: totalViews.toLocaleString(), icon: Eye, color: "text-blue-400" },
-    { label: "Downloads", value: totalDownloads.toLocaleString(), icon: Download, color: "text-emerald-400" },
-    { label: "Purchases", value: totalSales.toLocaleString(), icon: Zap, color: "text-amber-400" },
-    { label: "Gross Revenue", value: `₹${grossRev.toLocaleString()}`, icon: DollarSign, color: "text-emerald-400" },
-    { label: "Net Royalties (80%)", value: `₹${netRoyalties.toLocaleString()}`, icon: TrendingUp, color: "text-emerald-400" },
-    { label: "Pending Payout", value: `₹${pendingPayout.toLocaleString()}`, icon: Clock, color: "text-amber-400" },
+    { label: "Total Downloads", value: totalDownloads.toLocaleString(), icon: Download, color: "text-emerald-400" },
     { label: "Average Rating", value: `${avgRating} ★`, icon: Star, color: "text-amber-400" },
-    { label: "Total Reviews", value: allReviews.length.toLocaleString(), icon: MessageSquare, color: "text-purple-400" },
-    { label: "Reading Hours", value: `${readingHoursSum} hrs`, icon: Clock, color: "text-sky-400" },
-    { label: "Completion Rate", value: completionRateVal, icon: CheckCircle2, color: "text-emerald-400" },
-    { label: "Bookmarks", value: bookmarksSum.toLocaleString(), icon: Bookmark, color: "text-amber-400" },
-    { label: "Wishlists", value: wishlistsSum.toLocaleString(), icon: Heart, color: "text-rose-400" },
-    { label: "Shares", value: sharesSum.toLocaleString(), icon: Share2, color: "text-blue-400" },
-    { label: "Conversion Rate", value: conversionRateVal, icon: Percent, color: "text-emerald-400" },
-    { label: "Refund Rate", value: refundRateVal, icon: ShieldCheck, color: "text-indigo-400" },
-    { label: "Subscribers", value: (authorProfile?.subscribersCount || 0).toLocaleString(), icon: Mail, color: "text-purple-400" },
-    { label: "Newsletter Opens", value: `${authorProfile?.newsletterOpenRate || 0}%`, icon: Mail, color: "text-sky-400" },
-    { label: "AI Usage", value: `${authorProfile?.aiPromptsUsed || 0} Prompts`, icon: Bot, color: "text-brand-accent" },
-    { label: "Storage Used", value: `${storageUsedGb} GB / 50 GB`, icon: HardDrive, color: "text-cyan-400" },
-    { label: "API Calls", value: (authorProfile?.apiCallsCount || 0).toLocaleString(), icon: Cpu, color: "text-emerald-400" },
-    { label: "Author XP", value: `${publishedBooks * 100 + totalSales * 20} XP`, icon: Trophy, color: "text-amber-400" }
+    { label: "Total Reviews", value: allReviews.length.toLocaleString(), icon: MessageSquare, color: "text-purple-400" }
   ];
 
   return (
@@ -220,20 +206,23 @@ export const AuthorDashboard = () => {
                 </span>
               </div>
               <h1 className="text-2xl md:text-3xl font-display font-black text-brand-text tracking-tight">
-                Good Morning, {user?.displayName || user?.name || "Author Pro"} 👋
+                {timeGreeting.emoji} {timeGreeting.greeting}, {user?.displayName || user?.name || "Author Pro"} 👋
               </h1>
               <p className="text-xs text-brand-text-secondary italic max-w-xl">
                 {todayQuote}
               </p>
             </div>
 
-            {/* Monthly Goal Progress Ring & Live Revenue */}
+            {/* Monthly Goal Progress Ring & Live Revenue (Preserved intact) */}
             <div className="flex items-center gap-6 bg-[#161618] border border-white/10 rounded-xl p-4">
               <div className="space-y-1">
                 <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-text-secondary">Monthly Goal Target</p>
-                <p className="text-sm font-display font-black text-brand-text">₹25,000 / Month</p>
+                <p className="text-sm font-display font-black text-brand-text">₹{(authorProfile?.monthlyGoalTarget || 25000).toLocaleString()} / Month</p>
                 <div className="w-36">
-                  <ProgressBar value={72} color="emerald" />
+                  <ProgressBar 
+                    value={Math.min(100, Math.round((netRoyalties / (authorProfile?.monthlyGoalTarget || 25000)) * 100))} 
+                    color="emerald" 
+                  />
                 </div>
               </div>
 
@@ -250,25 +239,25 @@ export const AuthorDashboard = () => {
         {/* OVERVIEW TAB CONTENT */}
         {activeTab === "overview" && (
           <>
-            {/* 28-KPI ANIMATED GRID */}
+            {/* ESSENTIAL METRICS GRID */}
             <div className="space-y-3">
               <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-brand-text-secondary">
-                Executive KPI Metrics Grid (28 Real Counters)
+                Overview & Key Metrics
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                {KPI_GRID.map((kpi, idx) => {
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {ESSENTIAL_KPIS.map((kpi, idx) => {
                   const Icon = kpi.icon;
                   return (
                     <motion.div
                       key={idx}
-                      whileHover={{ scale: 1.03 }}
-                      className="bg-[#161618] border border-white/10 hover:border-brand-accent/40 rounded-xl p-3.5 space-y-1.5 transition-all shadow-sm cursor-pointer"
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-[#161618] border border-white/10 hover:border-brand-accent/40 rounded-2xl p-4 space-y-2 transition-all shadow-sm cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-text-secondary truncate">{kpi.label}</span>
-                        <Icon className={`h-3.5 w-3.5 ${kpi.color}`} />
+                        <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-text-secondary truncate">{kpi.label}</span>
+                        <Icon className={`h-4 w-4 ${kpi.color}`} />
                       </div>
-                      <p className="text-base font-display font-black text-brand-text truncate">{kpi.value}</p>
+                      <p className="text-xl font-display font-black text-brand-text truncate">{kpi.value}</p>
                     </motion.div>
                   );
                 })}

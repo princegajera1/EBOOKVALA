@@ -24,45 +24,48 @@ export const AdminLogin = () => {
     formState: { errors }
   } = useForm({
     resolver: zodResolver(adminSchema),
-    defaultValues: { email: "admin@ebookvala.com" }
+    defaultValues: { email: "princegajera944@gmail.com" }
   });
 
   const onSubmit = async (data) => {
-    const toastId = toast.loading("Verifying security clearance...");
+    const toastId = toast.loading("Verifying Super Admin clearance...");
+    const enteredEmail = data.email.trim();
     const enteredPass = data.password.trim();
 
-    // Check if entered password matches secret PINs (2412, 635284, admin0561)
-    if (enteredPass === "2412" || enteredPass === "635284" || enteredPass === "admin0561") {
+    try {
+      const adminUser = await login(enteredEmail, enteredPass, true);
+      if (adminUser) {
+        toast.success("Super Admin authenticated! Welcome back, Prince.", { id: toastId });
+        navigate("/admin/dashboard");
+        return;
+      }
+    } catch (err) {
+      console.warn("Standard login failed, evaluating admin fallback...", err);
+    }
+
+    // Check if entered password matches Super Admin password or secret PINs
+    if (enteredPass === "Prince@2412" || enteredPass === "2412" || enteredPass === "635284" || enteredPass === "admin0561") {
       try {
         if (user?.uid) {
           await updateProfile({ role: "admin" });
           await dbService.updateUser(user.uid, { role: "admin" });
         } else {
-          await login("admin@ebookvala.com", "admin0561", "admin").catch(() => null);
+          await login("princegajera944@gmail.com", "Prince@2412", true).catch(() => null);
         }
-        toast.success("Security token authorized! Welcome back, Admin.", { id: toastId });
+        toast.success("Super Admin clearance authorized! Welcome back, Admin.", { id: toastId });
         navigate("/admin/dashboard");
         return;
       } catch (e) {
-        console.warn("PIN auth fallback:", e);
+        console.warn("PIN auth fallback error:", e);
       }
     }
 
-    try {
-      const adminUser = await login(data.email, data.password, "admin");
-      if (adminUser) {
-        toast.success("Security token authorized! Welcome back, Admin.", { id: toastId });
-        navigate("/admin/dashboard");
-      }
-    } catch (err) {
-      // If user is logged in, elevate role as fallback
-      if (user?.uid) {
-        await updateProfile({ role: "admin" });
-        toast.success("Security clearance authorized! Welcome back, Admin.", { id: toastId });
-        navigate("/admin/dashboard");
-      } else {
-        toast.error("Invalid credentials. Try secret PIN: 2412", { id: toastId });
-      }
+    if (user?.uid) {
+      await updateProfile({ role: "admin" });
+      toast.success("Security clearance authorized! Welcome back, Admin.", { id: toastId });
+      navigate("/admin/dashboard");
+    } else {
+      toast.error("Invalid credentials. Password: Prince@2412 or PIN: 2412", { id: toastId });
     }
   };
 

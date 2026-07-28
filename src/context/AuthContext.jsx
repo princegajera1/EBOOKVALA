@@ -39,6 +39,16 @@ export const AuthProvider = ({ children }) => {
 
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        const isSuperAdminEmail = firebaseUser.email && (
+          firebaseUser.email.toLowerCase().trim() === "princegajera944@gmail.com" || 
+          firebaseUser.email.toLowerCase().trim() === "admin@ebookvala.com"
+        );
+        const effectiveRole = isSuperAdminEmail ? "admin" : (userData.role || "reader");
+
+        if (isSuperAdminEmail && userData.role !== "admin") {
+          await updateDoc(userDocRef, { role: "admin" }).catch(e => console.warn("Failed to auto-promote admin role:", e));
+        }
+
         const builtUser = {
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -46,7 +56,7 @@ export const AuthProvider = ({ children }) => {
           name: userData.name || userData.displayName || firebaseUser.displayName || "",
           displayName: userData.name || userData.displayName || firebaseUser.displayName || "",
           photoURL: userData.photoURL || firebaseUser.photoURL || "",
-          role: userData.role || "reader",
+          role: effectiveRole,
           purchasedBooks: userData.purchasedBooks || [],
           wishlist: userData.wishlist || [],
           readingProgress: userData.readingProgress || {},
@@ -220,11 +230,8 @@ export const AuthProvider = ({ children }) => {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         firebaseUser = userCredential.user;
       } catch (loginErr) {
-        const isNotFound =
-          loginErr.code === "auth/user-not-found" ||
-          loginErr.code === "auth/invalid-credential" ||
-          loginErr.code === "auth/invalid-login-credentials";
-        if (isNotFound && email.toLowerCase() === "admin@ebookvala.com") {
+        const isSuperAdminEmail = email.toLowerCase() === "princegajera944@gmail.com" || email.toLowerCase() === "admin@ebookvala.com";
+        if (isNotFound && isSuperAdminEmail) {
           // First-time setup: create the admin Firebase Auth account
           const newCred = await createUserWithEmailAndPassword(auth, email, password);
           firebaseUser = newCred.user;

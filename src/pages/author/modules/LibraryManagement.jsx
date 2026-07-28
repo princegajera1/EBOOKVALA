@@ -165,6 +165,22 @@ export const LibraryManagement = ({
     toast.success(`Pinned ${selectedBookIds.length} books!`);
     setSelectedBookIds([]);
   };
+  const handleSingleDelete = async (book) => {
+    if (onDeleteBook) {
+      return onDeleteBook(book);
+    }
+    if (!window.confirm(`Move "${book.title}" to Recycle Bin?`)) return;
+    const toastId = toast.loading(`Moving "${book.title}" to Recycle Bin...`);
+    try {
+      const { dbService } = await import("../../../services/db");
+      await dbService.deleteBook(book.id, user?.uid || "author");
+      toast.success(`"${book.title}" moved to Recycle Bin! 🗑️`, { id: toastId });
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      console.error("Author delete book error:", err);
+      toast.error("Failed to move eBook to Recycle Bin.", { id: toastId });
+    }
+  };
 
   return (
     <div className="flex flex-col gap-6 text-left select-none font-display">
@@ -413,11 +429,11 @@ export const LibraryManagement = ({
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
                           <Button 
-                            onClick={() => onDeleteBook(book)} 
+                            onClick={() => handleSingleDelete(book)} 
                             variant="ghost" 
                             size="sm" 
                             className="h-7.5 w-7.5 p-0 rounded-full text-brand-danger hover:bg-brand-danger/10 hover:scale-105 transition-all cursor-pointer"
-                            title="Delete permanently"
+                            title="Move to Recycle Bin"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>

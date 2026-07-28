@@ -297,10 +297,39 @@ export const dbService = {
         localDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
       } catch (e) {}
 
-      return books.filter(b => b.isDeleted || localDeleted.includes(b.id));
+      return books
+        .filter(b => b.isDeleted || localDeleted.includes(b.id))
+        .map(b => ({
+          ...b,
+          isDeleted: true,
+          deletedAt: b.deletedAt || new Date().toISOString()
+        }));
     } catch (error) {
       console.error("Firestore getDeletedBooks error:", error);
       return [];
+    }
+  },
+
+  purgeExpiredSoftDeletedBooks: async () => {
+    try {
+      const colRef = collection(db, "books");
+      const snap = await getDocs(colRef);
+      const now = Date.now();
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      
+      snap.docs.forEach(d => {
+        const book = d.data();
+        if (book.isDeleted && book.deletedAt) {
+          const deletedTime = new Date(book.deletedAt).getTime();
+          if (now - deletedTime > thirtyDaysMs) {
+            deleteDoc(doc(db, "books", d.id)).catch(() => null);
+          }
+        }
+      });
+      return true;
+    } catch (err) {
+      console.warn("purgeExpiredSoftDeletedBooks non-critical error:", err);
+      return false;
     }
   },
 

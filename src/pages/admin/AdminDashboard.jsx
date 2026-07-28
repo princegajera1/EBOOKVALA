@@ -219,7 +219,9 @@ export const AdminDashboard = () => {
   const loadRecycleBinData = async () => {
     setLoadingRecycleBin(true);
     try {
-      await dbService.purgeExpiredSoftDeletedBooks();
+      if (typeof dbService.purgeExpiredSoftDeletedBooks === "function") {
+        await dbService.purgeExpiredSoftDeletedBooks().catch(() => null);
+      }
       const allDeleted = await dbService.getDeletedBooks();
       setDeletedBooks(allDeleted);
     } catch (err) {

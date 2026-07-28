@@ -72,7 +72,10 @@ export const Reader = () => {
 
   // eBook Reading Controls
   const [fontSize, setFontSize] = useState(16); // px
-  const [theme, setTheme] = useState("dark"); // 'dark' | 'sepia' | 'light'
+  const [readerTheme, setReaderTheme] = useState("dark"); // 'dark' | 'sepia' | 'light'
+  const [fontFamily, setFontFamily] = useState("sans");
+  const [lineHeight, setLineHeight] = useState("relaxed");
+  const [marginSize, setMarginSize] = useState("normal");
   const [currentChapterIdx, setCurrentChapterIdx] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -410,17 +413,6 @@ export const Reader = () => {
                 {highlights.length}
               </span>
             )}
-          </button>
-
-          {/* AI Tutor Toggle */}
-          <button
-            onClick={() => setShowAiPanel(!showAiPanel)}
-            className={`p-2 rounded-full transition-colors cursor-pointer ${
-              showAiPanel ? "bg-brand-accent/20 text-brand-accent" : "hover:bg-black/5 dark:hover:bg-white/5"
-            }`}
-            title="AI Reading Tutor"
-          >
-            <BrainCircuit className="h-4.5 w-4.5" />
           </button>
 
           {/* Reader Configs Dropdown */}

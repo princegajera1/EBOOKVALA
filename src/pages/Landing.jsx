@@ -379,21 +379,21 @@ export const Landing = () => {
             </p>
           </FadeUp>
 
-          {/* 8 Cards Grid: 4 columns on desktop (lg), 3 columns on tablet (md), 1 column on mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          {/* 8 Cards Grid: 3 columns on mobile & tablet, 4 columns on desktop (lg) */}
+          <div className="grid grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4">
             {PLATFORM_BENEFITS.map((benefit, idx) => {
               const Icon = benefit.icon;
               return (
                 <FadeUp key={idx} delay={idx * 0.05} className="h-full">
                   <Link to="/reader" className="block h-full focus:outline-none">
-                    <div className="h-full p-4 sm:p-5 bg-brand-card border border-brand-border rounded-[22px] shadow-sm text-left hover:bg-brand-card/90 hover:border-brand-border hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-start group">
-                      <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-2xl border flex items-center justify-center mb-3 sm:mb-4 shrink-0 shadow-sm ${benefit.color}`}>
-                        <Icon className="h-5 w-5" />
+                    <div className="h-full p-2.5 sm:p-4 md:p-5 bg-brand-card border border-brand-border rounded-[18px] sm:rounded-[22px] shadow-sm text-left hover:bg-brand-card/90 hover:border-brand-border hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-start group">
+                      <div className={`h-8 w-8 sm:h-11 sm:w-11 rounded-xl sm:rounded-2xl border flex items-center justify-center mb-2 sm:mb-4 shrink-0 shadow-sm ${benefit.color}`}>
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                       </div>
-                      <h3 className="text-sm sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight group-hover:text-brand-text transition-colors">
+                      <h3 className="text-xs sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight group-hover:text-brand-text transition-colors">
                         {benefit.title}
                       </h3>
-                      <p className="text-[11px] sm:text-xs text-brand-text-secondary mt-1.5 leading-relaxed">
+                      <p className="text-[10px] sm:text-xs text-brand-text-secondary mt-1 sm:mt-1.5 leading-relaxed line-clamp-3 sm:line-clamp-none">
                         {benefit.description}
                       </p>
                     </div>

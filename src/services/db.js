@@ -723,34 +723,7 @@ export const dbService = {
     return null;
   },
 
-  saveUserHighlights: async (userId, bookId, highlightsList) => {
-    if (!userId || !bookId) return false;
-    try {
-      const userRef = doc(db, "users", userId);
-      await updateDoc(userRef, {
-        [`highlights.${bookId}`]: highlightsList
-      });
-      return true;
-    } catch (err) {
-      console.error("Error saving user highlights:", err);
-      return false;
-    }
-  },
 
-  getUserHighlights: async (userId, bookId) => {
-    if (!userId || !bookId) return [];
-    try {
-      const userRef = doc(db, "users", userId);
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        const uData = userSnap.data();
-        return uData.highlights?.[bookId] || [];
-      }
-    } catch (err) {
-      console.error("Error getting user highlights:", err);
-    }
-    return [];
-  },
 
   createBookReview: async (reviewData) => {
     try {

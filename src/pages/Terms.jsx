@@ -6,10 +6,13 @@ export const Terms = () => {
     { id: "acceptance", title: "1. Acceptance of Terms" },
     { id: "license", title: "2. Intellectual Property" },
     { id: "accounts", title: "3. User Conduct & Accounts" },
-    { id: "disclaimers", title: "4. Disclaimers & Warranties" },
+    { id: "disclaimer", title: "4. Disclaimers & Warranties" },
     { id: "liability", title: "5. Limitation of Liability" },
     { id: "governing", title: "6. Governing Law" },
-    { id: "modifications", title: "7. Modifications" }
+    { id: "modifications", title: "7. Modifications" },
+    { id: "dmca", title: "8. DMCA Takedown Policy" },
+    { id: "refund", title: "9. Refund & Purchase Policy" },
+    { id: "copyright", title: "10. Copyright Notice" }
   ];
 
   return (
@@ -60,11 +63,11 @@ export const Terms = () => {
         </div>
       </section>
 
-      <section id="disclaimers">
+      <section id="disclaimer">
         <h2 className="text-base font-bold text-brand-text mb-3">4. Disclaimers & Warranties</h2>
         <div className="space-y-3 font-normal">
           <p>
-            The services, books, summaries, and AIoutlines provided on EBOOKVALA are supplied "as is" and "as available". We do not guarantee that the library platform will be uninterrupted, error-free, or secure.
+            The services, books, summaries, and AI outlines provided on EBOOKVALA are supplied "as is" and "as available". We do not guarantee that the library platform will be uninterrupted, error-free, or secure.
           </p>
           <p>
             Any advice, strategy, code syntax, or recommendation contained in ebooks listed on EBOOKVALA is the sole opinion of its respective author. EBOOKVALA holds no liability for implementations of knowledge read on this site.
@@ -98,6 +101,39 @@ export const Terms = () => {
         <div className="space-y-3 font-normal">
           <p>
             We reserve the right to modify or replace these Terms of Service at any time. We will post notification of changes by updating the "Last Updated" date at the top of this document. Continued use of the platform following updates represents agreement to the amended terms.
+          </p>
+        </div>
+      </section>
+
+      <section id="dmca">
+        <h2 className="text-base font-bold text-brand-text mb-3">8. DMCA Takedown & Copyright Infringement Policy</h2>
+        <div className="space-y-3 font-normal">
+          <p>
+            EBOOKVALA respects the intellectual property rights of authors, creators, and publishers. If you believe your copyrighted work has been reproduced or distributed on our platform without authorization, please submit a formal DMCA Takedown Notice to copyright@ebookvala.com.
+          </p>
+          <p>
+            Your notice must include: (a) physical or electronic signature of the copyright owner, (b) identification of the copyrighted work claimed to have been infringed, (c) URL link or exact location of the infringing material on EBOOKVALA, (d) your full name, physical address, phone number, and email, and (e) a statement that you have a good-faith belief that the use is unauthorized.
+          </p>
+        </div>
+      </section>
+
+      <section id="refund">
+        <h2 className="text-base font-bold text-brand-text mb-3">9. Refund & Digital Content License Policy</h2>
+        <div className="space-y-3 font-normal">
+          <p>
+            EBOOKVALA offers open-access reading and premium digital downloads. Digital book purchases and subscription upgrades grant immediate access to non-returnable digital content.
+          </p>
+          <p>
+            If you encounter technical issues accessing a purchased eBook, or if a transaction was processed in error, you may request a full refund within 7 days of purchase by contacting support@ebookvala.com. Approved refunds will be credited back to your original payment method within 5–7 business days.
+          </p>
+        </div>
+      </section>
+
+      <section id="copyright">
+        <h2 className="text-base font-bold text-brand-text mb-3">10. Copyright Notice & Ownership</h2>
+        <div className="space-y-3 font-normal">
+          <p>
+            © 2026 EBOOKVALA. All rights reserved. All trademarks, service marks, logos, brand names, and registered titles displayed on this site are the property of their respective owners and used strictly for cataloging and educational identification.
           </p>
         </div>
       </section>

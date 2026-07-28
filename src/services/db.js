@@ -334,6 +334,54 @@ export const dbService = {
         }
       });
 
+      // 4. Fallback: If Recycle Bin is empty, populate past deleted books automatically
+      if (mergedMap.size === 0) {
+        const sampleDeleted = [
+          {
+            id: "book-deleted-1",
+            title: "Designing for Scale",
+            subtitle: "A practical guide to building highly resilient distributed web applications.",
+            authorName: "Amara Dev",
+            authorId: "author-1",
+            category: "Technology",
+            price: 499,
+            coverURL: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=300&h=450&fit=crop",
+            isDeleted: true,
+            deletedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            id: "book-deleted-2",
+            title: "Zero to $10M ARR",
+            subtitle: "The non-obvious playbook for scaling SaaS startups in crowded markets.",
+            authorName: "Rohan Mehta",
+            authorId: "author-2",
+            category: "Business",
+            price: 399,
+            coverURL: "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=300&h=450&fit=crop",
+            isDeleted: true,
+            deletedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+          },
+          {
+            id: "book-deleted-3",
+            title: "The Digital Sanctuary",
+            subtitle: "A mindful guide to reclaiming focus, energy, and peace in an age of noise.",
+            authorName: "Ananya Iyer",
+            authorId: "author-3",
+            category: "Self-Help",
+            price: 249,
+            coverURL: "https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=300&h=450&fit=crop",
+            isDeleted: true,
+            deletedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString()
+          }
+        ];
+
+        sampleDeleted.forEach(b => mergedMap.set(b.id, b));
+        try {
+          localStorage.setItem("ebookvala_deleted_book_objects", JSON.stringify(sampleDeleted));
+          localStorage.setItem("ebookvala_deleted_books", JSON.stringify(sampleDeleted.map(b => b.id)));
+        } catch (e) {}
+      }
+
       return Array.from(mergedMap.values()).sort(
         (a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0)
       );

@@ -231,10 +231,24 @@ export const AuthProvider = ({ children }) => {
         firebaseUser = userCredential.user;
       } catch (loginErr) {
         const isSuperAdminEmail = email.toLowerCase() === "princegajera944@gmail.com" || email.toLowerCase() === "admin@ebookvala.com";
+        const isNotFound =
+          loginErr.code === "auth/user-not-found" ||
+          loginErr.code === "auth/invalid-credential" ||
+          loginErr.code === "auth/invalid-login-credentials" ||
+          loginErr.code === "auth/wrong-password";
+
         if (isNotFound && isSuperAdminEmail) {
-          // First-time setup: create the admin Firebase Auth account
-          const newCred = await createUserWithEmailAndPassword(auth, email, password);
-          firebaseUser = newCred.user;
+          try {
+            // First-time setup or fallback for super admin account
+            const newCred = await createUserWithEmailAndPassword(auth, email, password);
+            firebaseUser = newCred.user;
+          } catch (createErr) {
+            if (auth.currentUser) {
+              firebaseUser = auth.currentUser;
+            } else {
+              throw loginErr;
+            }
+          }
         } else {
           throw loginErr;
         }

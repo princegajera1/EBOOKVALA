@@ -15,6 +15,7 @@ import { AdminRoute } from "./components/layout/AdminRoute";
 import { GuestRoute } from "./components/layout/GuestRoute";
 import { ScrollToTop } from "./components/layout/ScrollToTop";
 import ShapeGrid from "./components/ShapeGrid/ShapeGrid";
+import PWAInstallPrompt from "./components/common/PWAInstallPrompt";
 
 // Critical pages — loaded eagerly (above the fold)
 import { Landing } from "./pages/Landing";
@@ -192,6 +193,8 @@ function App() {
             }
           }}
         />
+        {/* PWA App Installation Prompt */}
+        <PWAInstallPrompt />
       </AppProvider>
     </AuthProvider>
   </QueryClientProvider>

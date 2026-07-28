@@ -1,0 +1,61 @@
+{
+  "name": "EBOOKVALA — Premium eBook Marketplace",
+  "short_name": "EbookVala",
+  "description": "Discover, read, and publish curated technical and business eBooks. 100% free.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0B0F19",
+  "theme_color": "#0B0F19",
+  "lang": "en-US",
+  "categories": ["books", "education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Explore Library",
+      "short_name": "Library",
+      "description": "Browse eBooks marketplace",
+      "url": "/#/explore",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Reader Dashboard",
+      "short_name": "Reader",
+      "description": "View reading activity & continue books",
+      "url": "/#/reader/dashboard",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Author Dashboard",
+      "short_name": "Author",
+      "description": "Publish & manage catalog",
+      "url": "/#/author/dashboard",
+      "icons": [{ "src": "/pwa-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

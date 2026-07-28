@@ -2,7 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
 import { ErrorBoundary } from './components/ErrorBoundary.jsx'
+import { registerServiceWorker } from './registerServiceWorker'
 import './index.css'
+
+registerServiceWorker();
 
 // Handle Vite deployment / chunk load errors automatically by refreshing the client
 window.addEventListener('vite:preloadError', () => {

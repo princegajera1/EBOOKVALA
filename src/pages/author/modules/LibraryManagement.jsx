@@ -367,6 +367,11 @@ export const LibraryManagement = ({
                       {/* Status */}
                       <td className="p-4">
                         <StatusBadge status={book.status} />
+                        {book.status === "rejected" && book.rejectionReason && (
+                          <p className="text-[9px] text-red-400 font-mono font-semibold mt-1 max-w-[140px] truncate" title={`Rejection reason: ${book.rejectionReason}`}>
+                            Reason: {book.rejectionReason}
+                          </p>
+                        )}
                       </td>
 
                       {/* Downloads */}

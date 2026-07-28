@@ -1592,11 +1592,30 @@ export const AdminDashboard = () => {
                           <td className="py-4 px-5 text-right">
                             <div className="flex gap-1.5 justify-end select-none">
                               {book.status === "pending" && (
+                                <>
+                                  <button 
+                                    onClick={() => handleApproveBook(book.id, book.title)}
+                                    className="px-2.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-bold cursor-pointer transition-colors"
+                                    title="Approve & Publish live"
+                                  >
+                                    Approve 🟢
+                                  </button>
+                                  <button 
+                                    onClick={() => handleRejectBook(book.id, book.title)}
+                                    className="px-2.5 py-1.5 rounded-full bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20 text-[10px] font-bold cursor-pointer transition-colors"
+                                    title="Reject eBook"
+                                  >
+                                    Reject 🔴
+                                  </button>
+                                </>
+                              )}
+                              {book.status === "rejected" && (
                                 <button 
-                                  onClick={() => handleApproveBook(book.id)}
-                                  className="px-3 py-1.5 rounded-full bg-brand-success/10 text-brand-success hover:bg-brand-success/20 text-[10px] font-bold cursor-pointer transition-colors"
+                                  onClick={() => handleApproveBook(book.id, book.title)}
+                                  className="px-2.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-bold cursor-pointer transition-colors"
+                                  title="Re-approve & Publish live"
                                 >
-                                  Approve
+                                  Approve 🟢
                                 </button>
                               )}
                               <button 

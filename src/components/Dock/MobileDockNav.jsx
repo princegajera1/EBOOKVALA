@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, Compass, Heart, User, LayoutDashboard, Settings } from "lucide-react";
+import { Home, Compass, Heart, User, LayoutDashboard, Settings, Smartphone } from "lucide-react";
 import { useApp } from "../../store/AppContext";
 import { useWishlist } from "../../hooks/useWishlist";
 import Dock from "./Dock";
@@ -51,6 +51,12 @@ export const MobileDockNav = () => {
       icon: <LayoutDashboard className={`h-5.5 w-5.5 ${activePath.includes("dashboard") ? "text-brand-accent" : "text-brand-text-secondary"}`} />,
       onClick: () => navigate(getDashboardPath()),
       className: activePath.includes("dashboard") ? "border-brand-accent bg-brand-accent/5" : ""
+    },
+    {
+      label: "Install App",
+      icon: <Smartphone className="h-5.5 w-5.5 text-brand-accent animate-pulse" />,
+      onClick: () => window.dispatchEvent(new Event("trigger-pwa-install")),
+      className: "border-brand-accent/50 bg-brand-accent/10"
     },
     {
       label: "Support",

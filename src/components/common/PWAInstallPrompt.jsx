@@ -9,54 +9,67 @@ export const PWAInstallPrompt = () => {
   const [isStandalone, setIsStandalone] = useState(false);
 
   useEffect(() => {
-    // 1. Check if already installed / standalone mode
+    // 1. Check if already running as standalone PWA
     const isStandaloneMode =
       window.matchMedia("(display-mode: standalone)").matches ||
       window.navigator.standalone === true ||
       document.referrer.includes("android-app://");
 
     setIsStandalone(isStandaloneMode);
-    if (isStandaloneMode) return;
 
-    // 2. Check dismiss timestamp preference (dont prompt if dismissed within 7 days)
-    const lastDismissed = localStorage.getItem("pwa_install_prompt_dismissed");
-    if (lastDismissed) {
-      const diffDays = (Date.now() - Number(lastDismissed)) / (1000 * 60 * 60 * 24);
-      if (diffDays < 7) return;
-    }
-
-    // 3. Detect iOS Safari
+    // 2. Detect iOS Safari
     const ua = window.navigator.userAgent.toLowerCase();
     const isAppleIOS = /iphone|ipad|ipod/.test(ua) && !window.MSStream;
     setIsIOS(isAppleIOS);
 
-    if (isAppleIOS) {
-      // Delay showing iOS tooltip slightly for smooth page load
-      const timer = setTimeout(() => setShowPrompt(true), 3000);
-      return () => clearTimeout(timer);
+    // 3. Show prompt by default after 2 seconds if not standalone
+    if (!isStandaloneMode) {
+      const timer = setTimeout(() => {
+        const lastDismissed = localStorage.getItem("pwa_install_prompt_dismissed");
+        if (!lastDismissed) {
+          setShowPrompt(true);
+        }
+      }, 2000);
+
+      // 4. Capture beforeinstallprompt event for Android / Chrome / Desktop
+      const handleBeforeInstallPrompt = (e) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+        setShowPrompt(true);
+      };
+
+      // 5. Custom event trigger when user clicks "Install App" button in navbar/dock
+      const handleTriggerInstall = () => {
+        setShowPrompt(true);
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+        }
+      };
+
+      window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      window.addEventListener("trigger-pwa-install", handleTriggerInstall);
+
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+        window.removeEventListener("trigger-pwa-install", handleTriggerInstall);
+      };
     }
-
-    // 4. Capture beforeinstallprompt event for Android / Chrome / Desktop
-    const handleBeforeInstallPrompt = (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowPrompt(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    };
-  }, []);
+  }, [deferredPrompt]);
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log("[PWA Install] Choice outcome:", outcome);
-    setDeferredPrompt(null);
-    setShowPrompt(false);
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log("[PWA Install] Choice outcome:", outcome);
+      setDeferredPrompt(null);
+      setShowPrompt(false);
+    } else {
+      const { toast } = await import("react-hot-toast");
+      toast.success("To install: Tap your browser menu (⋮) and select 'Install app' or 'Add to Home Screen' 📲", {
+        duration: 5000
+      });
+    }
   };
 
   const handleDismiss = () => {

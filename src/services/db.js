@@ -290,20 +290,53 @@ export const dbService = {
     try {
       const colRef = collection(db, "books");
       const snap = await getDocs(colRef);
-      const books = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const firestoreBooks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-      let localDeleted = [];
+      let localDeletedIds = [];
+      let localDeletedObjs = [];
       try {
-        localDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+        localDeletedIds = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+        localDeletedObjs = JSON.parse(localStorage.getItem("ebookvala_deleted_book_objects") || "[]");
       } catch (e) {}
 
-      return books
-        .filter(b => b.isDeleted || localDeleted.includes(b.id))
-        .map(b => ({
-          ...b,
-          isDeleted: true,
-          deletedAt: b.deletedAt || new Date().toISOString()
-        }));
+      const mergedMap = new Map();
+
+      // 1. Add saved local deleted objects
+      localDeletedObjs.forEach(obj => {
+        if (obj && obj.id) {
+          mergedMap.set(obj.id, {
+            ...obj,
+            isDeleted: true,
+            deletedAt: obj.deletedAt || new Date().toISOString()
+          });
+        }
+      });
+
+      // 2. Add seed books matching localDeletedIds if missing
+      SEED_BOOKS.forEach(seed => {
+        if (localDeletedIds.includes(seed.id) && !mergedMap.has(seed.id)) {
+          mergedMap.set(seed.id, {
+            ...seed,
+            isDeleted: true,
+            deletedAt: seed.deletedAt || new Date().toISOString()
+          });
+        }
+      });
+
+      // 3. Add Firestore books where isDeleted == true or ID is in localDeletedIds
+      firestoreBooks.forEach(b => {
+        if (b.isDeleted || localDeletedIds.includes(b.id)) {
+          mergedMap.set(b.id, {
+            ...b,
+            isDeleted: true,
+            deletedAt: b.deletedAt || new Date().toISOString()
+          });
+        }
+      });
+
+      return Array.from(mergedMap.values()).sort(
+        (a, b) => new Date(b.deletedAt || 0) - new Date(a.deletedAt || 0)
+      );
     } catch (error) {
       console.error("Firestore getDeletedBooks error:", error);
       return [];
@@ -472,11 +505,28 @@ export const dbService = {
   },
   
   deleteBook: async (id, uid = "") => {
+    let bookObj = null;
+    try {
+      bookObj = await dbService.getBookById(id);
+    } catch (e) {}
+
+    if (!bookObj) {
+      bookObj = SEED_BOOKS.find(b => b.id === id || b.slug === id);
+    }
+
+    const deletedTimestamp = new Date().toISOString();
+    const deletedRecord = {
+      ...(bookObj || { id, title: "Deleted eBook" }),
+      isDeleted: true,
+      deletedAt: deletedTimestamp,
+      deletedBy: uid || "admin"
+    };
+
     try {
       const docRef = doc(db, "books", id);
       await setDoc(docRef, {
         isDeleted: true,
-        deletedAt: new Date().toISOString(),
+        deletedAt: deletedTimestamp,
         deletedBy: uid || "admin"
       }, { merge: true });
     } catch (err) {
@@ -489,6 +539,11 @@ export const dbService = {
         savedDeleted.push(id);
         localStorage.setItem("ebookvala_deleted_books", JSON.stringify(savedDeleted));
       }
+
+      const savedObjs = JSON.parse(localStorage.getItem("ebookvala_deleted_book_objects") || "[]");
+      const filteredObjs = savedObjs.filter(o => o.id !== id);
+      filteredObjs.push(deletedRecord);
+      localStorage.setItem("ebookvala_deleted_book_objects", JSON.stringify(filteredObjs));
     } catch (e) {}
 
     return true;
@@ -510,6 +565,10 @@ export const dbService = {
       const savedDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
       const updated = savedDeleted.filter(delId => delId !== id);
       localStorage.setItem("ebookvala_deleted_books", JSON.stringify(updated));
+
+      const savedObjs = JSON.parse(localStorage.getItem("ebookvala_deleted_book_objects") || "[]");
+      const updatedObjs = savedObjs.filter(o => o.id !== id);
+      localStorage.setItem("ebookvala_deleted_book_objects", JSON.stringify(updatedObjs));
     } catch (e) {}
 
     return true;
@@ -527,15 +586,19 @@ export const dbService = {
           await deleteFile(bookData.pdfURL).catch(() => null);
         }
       }
-      await deleteDoc(doc(db, "books", id));
+      await deleteDoc(doc(db, "books", id)).catch(() => null);
     } catch (err) {
-      console.warn("Failed to delete storage files for book:", id, err);
+      console.warn("Firestore permanent delete warning:", err);
     }
 
     try {
       const savedDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
       const updated = savedDeleted.filter(delId => delId !== id);
       localStorage.setItem("ebookvala_deleted_books", JSON.stringify(updated));
+
+      const savedObjs = JSON.parse(localStorage.getItem("ebookvala_deleted_book_objects") || "[]");
+      const updatedObjs = savedObjs.filter(o => o.id !== id);
+      localStorage.setItem("ebookvala_deleted_book_objects", JSON.stringify(updatedObjs));
     } catch (e) {}
 
     return true;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   Languages, Globe, Sparkles, BookOpen, CheckCircle, 
-  AlertCircle, ChevronRight, HelpCircle, Save
+  AlertCircle, ChevronRight, HelpCircle, Save, RefreshCw
 } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { toast } from "react-hot-toast";

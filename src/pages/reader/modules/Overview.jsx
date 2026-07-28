@@ -33,12 +33,7 @@ export const Overview = ({ user, books = [] }) => {
     }
   });
 
-  // Fallback active book if progress is empty
-  if (!activeBook && availableBooks.length > 0) {
-    activeBook = availableBooks[0];
-    activeProgress = { currentPage: 1, totalPages: activeBook.pages || 100, lastRead: new Date().toISOString() };
-  }
-
+  // Calculate real greeting
   const greetingObj = getGreeting(user?.displayName || user?.name || "Reader");
 
   // Derive real stats

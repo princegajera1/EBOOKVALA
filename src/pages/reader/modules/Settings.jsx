@@ -9,11 +9,11 @@ export const Settings = ({ user, onSaveProfile }) => {
   const [photoURL, setPhotoURL] = useState(user?.photoURL || "");
   const [saving, setSaving] = useState(false);
 
-  const [notifications, setNotifications] = useState({
-    readingAlerts: true,
-    weeklyStreak: true,
-    newReleases: false
-  });
+  const [notifications, setNotifications] = useState(() => ({
+    readingAlerts: user?.notificationSettings?.readingAlerts ?? true,
+    weeklyStreak: user?.notificationSettings?.weeklyStreak ?? true,
+    newReleases: user?.notificationSettings?.newReleases ?? false
+  }));
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -29,7 +29,8 @@ export const Settings = ({ user, onSaveProfile }) => {
         await onSaveProfile({
           displayName: name,
           name: name,
-          photoURL
+          photoURL,
+          notificationSettings: notifications
         });
       }
       toast.success("Profile settings updated successfully!", { id: toastId });

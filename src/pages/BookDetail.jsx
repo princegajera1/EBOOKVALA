@@ -129,10 +129,17 @@ export const BookDetail = () => {
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownload = async (e) => {
+    if (!isAuthenticated) {
+      e?.preventDefault?.();
+      toast.error("Please log in to download eBooks 📥");
+      navigate("/login");
+      return;
+    }
     try {
-      await dbService.updateBook(book.id, { downloadCount: (book.downloadCount || 0) + 1 });
-      setBook(prev => ({ ...prev, downloadCount: (prev.downloadCount || 0) + 1 }));
+      await dbService.recordBookDownload(book, user);
+      setBook(prev => prev ? ({ ...prev, downloadCount: (prev.downloadCount || 0) + 1 }) : prev);
+      toast.success(`Download started for "${book.title}"! 📥`);
     } catch (err) {
       console.error("Error updating download count:", err);
     }
@@ -419,7 +426,17 @@ export const BookDetail = () => {
                     </div>
                   </div>
                   
-                  <Link to={`/read/${book.slug || book.id}`} className="w-full">
+                  <Link 
+                    to={`/read/${book.slug || book.id}`} 
+                    className="w-full"
+                    onClick={(e) => {
+                      if (!isAuthenticated) {
+                        e.preventDefault();
+                        toast.error("Please log in to read eBooks 📖");
+                        navigate("/login");
+                      }
+                    }}
+                  >
                     <Button variant="primary" className="w-full h-13 rounded-full font-bold text-sm bg-brand-success text-white shadow-sm flex items-center justify-center gap-2">
                       <BookOpen className="h-4.5 w-4.5" />
                       Read eBook Online

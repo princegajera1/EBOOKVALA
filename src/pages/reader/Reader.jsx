@@ -105,6 +105,13 @@ export const Reader = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const speechUtteranceRef = useRef(null);
 
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to read eBooks 📖");
+      navigate("/login");
+    }
+  }, [isAuthenticated, navigate]);
+
   // Fetch Book Data
   useEffect(() => {
     const fetchBook = async () => {

@@ -459,6 +459,41 @@ export const dbService = {
     return true;
   },
 
+  recordBookDownload: async (book, readerUser) => {
+    if (!book || !book.id) return false;
+    try {
+      // 1. Increment download count on the book
+      const bookDocRef = doc(db, "books", book.id);
+      const bookSnap = await getDoc(bookDocRef);
+      if (bookSnap.exists()) {
+        const bookData = bookSnap.data();
+        await updateDoc(bookDocRef, {
+          downloadCount: (bookData.downloadCount || 0) + 1
+        });
+      }
+
+      // 2. Dispatch real-time author notification
+      const readerName = readerUser?.displayName || readerUser?.name || (readerUser?.email ? readerUser.email.split('@')[0] : "A reader");
+      if (book.authorId) {
+        await dbService.createNotification({
+          userId: book.authorId,
+          role: "author",
+          category: "Downloads",
+          type: "Book Downloaded",
+          title: "eBook Downloaded 📥",
+          message: `${readerName} downloaded your eBook "${book.title}".`,
+          link: `/author/dashboard?tab=overview`,
+          isRead: false,
+          createdAt: new Date().toISOString()
+        }).catch(err => console.warn("Failed to notify author of download:", err));
+      }
+      return true;
+    } catch (err) {
+      console.error("Error recording book download:", err);
+      return false;
+    }
+  },
+
   getDeletedBooks: async () => {
     try {
       const colRef = collection(db, "books");

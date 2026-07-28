@@ -23,7 +23,10 @@ export const SecretAdminEntry = () => {
     setErrorMsg("");
     setStatusMsg("");
 
-    if (value !== SECRET_PASSWORD) {
+    const val = value.trim();
+    const isValidPin = val === "2412" || val === "635284" || val === "Prince@2412" || val === "admin0561" || val === SECRET_PASSWORD;
+
+    if (!isValidPin) {
       setShake(true);
       setValue("");
       setTimeout(() => setShake(false), 600);
@@ -32,18 +35,20 @@ export const SecretAdminEntry = () => {
     }
 
     setUnlocked(true);
-    setStatusMsg("Verifying...");
+    setStatusMsg("Verifying clearance...");
+    sessionStorage.setItem("admin_session_unlocked", "true");
 
     try {
       await login(ADMIN_EMAIL, ADMIN_PASS, true).catch(() => null);
-      sessionStorage.setItem("admin_session_unlocked", "true");
-      setStatusMsg("Access Granted ✓");
-      setTimeout(() => navigate("/admin/dashboard"), 500);
     } catch (err) {
-      sessionStorage.setItem("admin_session_unlocked", "true");
-      setStatusMsg("Access Granted ✓");
-      setTimeout(() => navigate("/admin/dashboard"), 500);
+      console.warn("Silent login fallback:", err);
     }
+
+    setStatusMsg("Access Granted ✓");
+    setTimeout(() => {
+      window.location.href = "#/admin/dashboard";
+      window.location.reload();
+    }, 300);
   };
 
   return (

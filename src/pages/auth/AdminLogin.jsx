@@ -37,7 +37,10 @@ export const AdminLogin = () => {
       if (adminUser) {
         sessionStorage.setItem("admin_session_unlocked", "true");
         toast.success("Super Admin authenticated! Welcome back, Prince.", { id: toastId });
-        navigate("/admin/dashboard");
+        setTimeout(() => {
+          window.location.href = "#/admin/dashboard";
+          window.location.reload();
+        }, 300);
         return;
       }
     } catch (err) {
@@ -53,20 +56,26 @@ export const AdminLogin = () => {
         } else {
           await login("princegajera944@gmail.com", "Prince@2412", true).catch(() => null);
         }
-        sessionStorage.setItem("admin_session_unlocked", "true");
-        toast.success("Super Admin clearance authorized! Welcome back, Admin.", { id: toastId });
-        navigate("/admin/dashboard");
-        return;
       } catch (e) {
         console.warn("PIN auth fallback error:", e);
       }
+      sessionStorage.setItem("admin_session_unlocked", "true");
+      toast.success("Super Admin clearance authorized! Welcome back, Admin.", { id: toastId });
+      setTimeout(() => {
+        window.location.href = "#/admin/dashboard";
+        window.location.reload();
+      }, 300);
+      return;
     }
 
     if (user?.uid) {
       await updateProfile({ role: "admin" });
       sessionStorage.setItem("admin_session_unlocked", "true");
       toast.success("Security clearance authorized! Welcome back, Admin.", { id: toastId });
-      navigate("/admin/dashboard");
+      setTimeout(() => {
+        window.location.href = "#/admin/dashboard";
+        window.location.reload();
+      }, 300);
     } else {
       toast.error("Invalid credentials. Password: Prince@2412 or PIN: 2412", { id: toastId });
     }

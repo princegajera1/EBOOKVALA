@@ -10,14 +10,24 @@ export const AuthLayout = ({ children }) => {
       
       {/* Left side: Premium Brand Editorial */}
       <div className="hidden md:flex md:w-1/2 bg-brand-bg-secondary border-r border-brand-border flex-col justify-between p-12 lg:p-16 text-left">
-        <Link to="/" className="text-xl font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md">
-          EBOOKVALA
+        <Link to="/" className="flex items-center gap-3 group select-none hover:cursor-pointer focus-visible:outline-none shrink-0">
+          <img 
+            src="/logo.png" 
+            alt="EbookVala Logo" 
+            className="h-10 w-10 object-contain drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] transition-transform duration-300 group-hover:scale-105" 
+          />
+          <div className="flex flex-col text-left leading-tight">
+            <span className="text-2xl font-display font-extrabold tracking-tight">
+              <span className="text-brand-text">Ebook</span>
+              <span className="text-[#3B82F6]">Vala</span>
+            </span>
+            <span className="text-xs font-medium text-brand-text-secondary/80 tracking-wide font-sans mt-0.5">
+              Next-Gen Marketplace
+            </span>
+          </div>
         </Link>
 
         <div className="max-w-md my-auto flex flex-col gap-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-accent/10 border border-brand-accent/20 text-brand-accent text-[9px] font-bold tracking-widest uppercase w-fit">
-            <Sparkles className="h-3 w-3" /> 100% Free Open Library
-          </span>
           <h1 className="text-4xl lg:text-5xl font-display font-black text-brand-text leading-tight">
             Read the minds <br />
             of the masters.
@@ -57,9 +67,13 @@ export const AuthLayout = ({ children }) => {
       {/* Right side: Form container */}
       <div className="flex-1 flex flex-col justify-center bg-brand-bg px-6 py-12 md:px-12 lg:px-24 xl:px-32 relative">
         {/* Mobile Header */}
-        <div className="absolute top-8 left-6 md:hidden">
-          <Link to="/" className="text-lg font-display font-black tracking-tight text-brand-text hover:cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent focus-visible:ring-offset-2 focus-visible:ring-offset-brand-bg rounded-md">
-            EBOOKVALA
+        <div className="absolute top-6 left-6 md:hidden">
+          <Link to="/" className="flex items-center gap-2">
+            <img src="/logo.png" alt="EbookVala Logo" className="h-8 w-8 object-contain" />
+            <span className="text-xl font-display font-black tracking-tight">
+              <span className="text-brand-text">Ebook</span>
+              <span className="text-[#3B82F6]">Vala</span>
+            </span>
           </Link>
         </div>
 

@@ -14,7 +14,8 @@ import {
   addDoc,
   arrayUnion,
   arrayRemove,
-  increment
+  increment,
+  onSnapshot
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { deleteFile } from "./storage";
@@ -1800,5 +1801,246 @@ export const dbService = {
         tags: ["Book Club", "Live Q&A"]
       }
     ];
+  },
+
+  // USERS MANAGEMENT
+  getUsers: async () => {
+    try {
+      const snap = await getDocs(collection(db, "users"));
+      if (!snap.empty) {
+        return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      }
+    } catch (e) {
+      console.warn("getUsers fallback:", e);
+    }
+    let local = [];
+    try {
+      local = JSON.parse(localStorage.getItem("ebookvala_all_users") || "[]");
+    } catch (e) {}
+    const sampleUsers = [
+      { uid: "user-1", displayName: "Prince Gajera", name: "Prince Gajera", email: "princegajera944@gmail.com", role: "reader", createdAt: "2026-01-10T10:00:00Z" },
+      { uid: "user-2", displayName: "Aarav Sharma", name: "Aarav Sharma", email: "aarav.sharma@example.com", role: "reader", createdAt: "2026-02-15T12:00:00Z" },
+      { uid: "user-3", displayName: "Priya Patel", name: "Priya Patel", email: "priya.patel@example.com", role: "reader", createdAt: "2026-03-01T14:30:00Z" },
+      { uid: "user-4", displayName: "Rohan Mehta", name: "Rohan Mehta", email: "rohanmehta@ebookvala.com", role: "author", createdAt: "2023-09-10T10:15:00Z" },
+      { uid: "user-5", displayName: "Amara Dev", name: "Amara Dev", email: "amaradev@ebookvala.com", role: "author", createdAt: "2024-01-15T08:30:00Z" }
+    ];
+    const combined = [...sampleUsers, ...local];
+    return Array.from(new Map(combined.map(u => [u.uid, u])).values());
+  },
+  addInquiry: async (inquiryData) => {
+    try {
+      const docRef = await addDoc(collection(db, "inquiries"), {
+        ...inquiryData,
+        status: "New",
+        createdAt: new Date().toISOString()
+      });
+      return { success: true, id: docRef.id };
+    } catch (e) {
+      console.warn("Firestore addInquiry fallback to localStorage:", e);
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+      } catch (err) {}
+      const newInquiry = {
+        id: `inquiry-${Date.now()}`,
+        ...inquiryData,
+        status: "New",
+        createdAt: new Date().toISOString()
+      };
+      local.unshift(newInquiry);
+      localStorage.setItem("ebookvala_inquiries", JSON.stringify(local));
+      return { success: true, id: newInquiry.id };
+    }
+  },
+
+  getInquiries: async () => {
+    try {
+      const snap = await getDocs(query(collection(db, "inquiries"), orderBy("createdAt", "desc")));
+      const firestoreItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+      } catch (e) {}
+      const combined = [...firestoreItems, ...local];
+      const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+      return unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } catch (e) {
+      console.warn("getInquiries error, using local fallback:", e);
+      try {
+        return JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+      } catch (err) {
+        return [];
+      }
+    }
+  },
+
+  subscribeInquiries: (callback) => {
+    try {
+      const q = query(collection(db, "inquiries"), orderBy("createdAt", "desc"));
+      return onSnapshot(q, (snapshot) => {
+        const items = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        let local = [];
+        try {
+          local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+        } catch (e) {}
+        const combined = [...items, ...local];
+        const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+        callback(unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+      }, (err) => {
+        console.warn("subscribeInquiries fallback to polling:", err);
+        callback([]);
+      });
+    } catch (e) {
+      console.warn("subscribeInquiries error:", e);
+      return () => {};
+    }
+  },
+
+  updateInquiryStatus: async (id, status) => {
+    try {
+      const docRef = doc(db, "inquiries", id);
+      await updateDoc(docRef, { status });
+    } catch (e) {
+      console.warn("updateInquiryStatus local update:", e);
+    }
+    try {
+      let local = JSON.parse(localStorage.getItem("ebookvala_inquiries") || "[]");
+      local = local.map(item => item.id === id ? { ...item, status } : item);
+      localStorage.setItem("ebookvala_inquiries", JSON.stringify(local));
+    } catch (e) {}
+    return true;
+  },
+
+  // NEWSLETTER SUBSCRIPTION
+  subscribeNewsletter: async (email) => {
+    if (!email || !email.includes("@")) {
+      throw new Error("Please enter a valid email address");
+    }
+    const cleanEmail = email.toLowerCase().trim();
+    try {
+      const q = query(collection(db, "newsletter_subscriptions"), where("email", "==", cleanEmail));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        return { success: true, message: "You're already subscribed!" };
+      }
+      await addDoc(collection(db, "newsletter_subscriptions"), {
+        email: cleanEmail,
+        createdAt: new Date().toISOString()
+      });
+    } catch (e) {
+      console.warn("Firestore newsletter fallback to localStorage:", e);
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_subscribers") || "[]");
+      } catch (err) {}
+      if (local.includes(cleanEmail)) {
+        return { success: true, message: "You're already subscribed!" };
+      }
+      local.push(cleanEmail);
+      localStorage.setItem("ebookvala_subscribers", JSON.stringify(local));
+    }
+    return { success: true, message: "Successfully subscribed to newsletter!" };
+  },
+
+  // BOOK APPROVAL / REJECTION / DELETION
+  approveBook: async (bookId) => {
+    try {
+      const docRef = doc(db, "books", bookId);
+      await updateDoc(docRef, { status: "published", publishedAt: new Date().toISOString() });
+    } catch (e) {
+      console.warn("approveBook fallback:", e);
+    }
+    return true;
+  },
+
+  rejectBook: async (bookId, rejectionReason = "Does not meet platform guidelines") => {
+    try {
+      const docRef = doc(db, "books", bookId);
+      await updateDoc(docRef, { status: "rejected", rejectionReason });
+    } catch (e) {
+      console.warn("rejectBook fallback:", e);
+    }
+    return true;
+  },
+
+  deleteBook: async (bookId) => {
+    try {
+      const docRef = doc(db, "books", bookId);
+      await updateDoc(docRef, { isDeleted: true, deletedAt: new Date().toISOString() });
+    } catch (e) {
+      console.warn("deleteBook fallback:", e);
+    }
+    let localDeleted = [];
+    try {
+      localDeleted = JSON.parse(localStorage.getItem("ebookvala_deleted_books") || "[]");
+      if (!localDeleted.includes(bookId)) {
+        localDeleted.push(bookId);
+        localStorage.setItem("ebookvala_deleted_books", JSON.stringify(localDeleted));
+      }
+    } catch (e) {}
+    return true;
+  },
+
+  // REVIEWS SYSTEM
+  addReview: async (reviewData) => {
+    try {
+      const docRef = await addDoc(collection(db, "reviews"), {
+        ...reviewData,
+        createdAt: new Date().toISOString()
+      });
+      return { id: docRef.id, ...reviewData };
+    } catch (e) {
+      console.warn("addReview fallback:", e);
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_reviews") || "[]");
+      } catch (err) {}
+      const newRev = { id: `rev-${Date.now()}`, ...reviewData, createdAt: new Date().toISOString() };
+      local.unshift(newRev);
+      localStorage.setItem("ebookvala_reviews", JSON.stringify(local));
+      return newRev;
+    }
+  },
+
+  getReviews: async (bookId) => {
+    try {
+      const q = query(collection(db, "reviews"), where("bookId", "==", bookId));
+      const snap = await getDocs(q);
+      const firestoreItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_reviews") || "[]");
+      } catch (e) {}
+      const filteredLocal = local.filter(r => r.bookId === bookId);
+      const combined = [...firestoreItems, ...filteredLocal];
+      const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+      return unique.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } catch (e) {
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_reviews") || "[]");
+      } catch (err) {}
+      return local.filter(r => r.bookId === bookId);
+    }
+  },
+
+  getAllReviews: async () => {
+    try {
+      const snap = await getDocs(query(collection(db, "reviews")));
+      const firestoreItems = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      let local = [];
+      try {
+        local = JSON.parse(localStorage.getItem("ebookvala_reviews") || "[]");
+      } catch (e) {}
+      const combined = [...firestoreItems, ...local];
+      return Array.from(new Map(combined.map(item => [item.id, item])).values());
+    } catch (e) {
+      try {
+        return JSON.parse(localStorage.getItem("ebookvala_reviews") || "[]");
+      } catch (err) {
+        return [];
+      }
+    }
   }
 };
+

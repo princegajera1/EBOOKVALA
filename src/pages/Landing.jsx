@@ -165,36 +165,13 @@ export const Landing = () => {
     if (!subscriberEmail) return;
 
     try {
-      await addDoc(collection(db, "subscribers"), {
-        email: subscriberEmail,
-        subscribedAt: serverTimestamp()
-      });
-    } catch (firestoreErr) {
-      console.warn("Firestore subscription save failed (non-blocking):", firestoreErr);
-    }
-
-    try {
-      const emailRes = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          type: "newsletter",
-          email: subscriberEmail
-        })
-      });
-
-      if (!emailRes.ok) {
-        throw new Error("Email service failed");
-      }
-
+      const res = await dbService.subscribeNewsletter(subscriberEmail);
       setSubscribed(true);
       setEmail("");
-      toast.success("Thank you for joining our community! 📖");
+      toast.success(res.message || "Thank you for joining our community! 📖");
     } catch (err) {
-      console.error("Newsletter subscription mail dispatch error:", err);
-      toast.error("Failed to subscribe. Please try again.");
+      console.error("Newsletter subscription error:", err);
+      toast.error(err.message || "Failed to subscribe. Please try again.");
     }
   };
 
@@ -236,21 +213,6 @@ export const Landing = () => {
                 Publish a Book
               </Button>
             </Link>
-          </div>
-
-          {/* Embedded Hero Search */}
-          <div className="w-full max-w-lg mt-1">
-            <SearchBox
-              size="lg"
-              showButton
-              buttonLabel="Search"
-              placeholder="Search tech, design, business books..."
-              value={heroSearchQuery}
-              onChange={(e) => setHeroSearchQuery(e.target.value)}
-              onSubmit={handleHeroSearch}
-              onClear={() => setHeroSearchQuery("")}
-              aria-label="Search hero"
-            />
           </div>
 
           {/* SECTION 1: REDESIGNED STATS BAR WITH DESCRIPTIONS (Image 1 Specs) */}
@@ -388,10 +350,10 @@ export const Landing = () => {
             <div 
               ref={recentlyAddedRef}
               onScroll={updateRecentlyScrollState}
-              className="flex overflow-x-auto pb-4 gap-6 sm:gap-8 lg:gap-10 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-6 px-6 select-none"
+              className="flex overflow-x-auto pb-4 gap-3 sm:gap-6 lg:gap-8 scrollbar-none snap-x snap-mandatory scroll-smooth -mx-6 px-6 select-none"
             >
               {recentlyAdded.map((book) => (
-                <div key={book.id} className="snap-start shrink-0 w-[240px] sm:w-[270px] md:w-[290px] p-0.5">
+                <div key={book.id} className="snap-start shrink-0 w-[calc(33.333%-8px)] min-w-[105px] max-w-[280px] sm:w-[220px] md:w-[260px] p-0.5">
                   <BookCard book={book} />
                 </div>
               ))}
@@ -400,7 +362,7 @@ export const Landing = () => {
         </div>
       )}
 
-      {/* SECTION 3: PLATFORM BENEFITS (8 FEATURE CARDS: 4 columns x 2 rows on desktop) */}
+      {/* SECTION 3: PLATFORM BENEFITS (8 FEATURE CARDS) */}
       <div className="bg-brand-bg-secondary border-t border-brand-border pt-12 md:pt-16 pb-14 md:pb-20 transition-colors duration-300 scroll-mt-[76px]">
         <section className="max-w-7xl mx-auto px-6 w-full text-center">
           <FadeUp delay={0}>
@@ -417,23 +379,25 @@ export const Landing = () => {
             </p>
           </FadeUp>
 
-          {/* 8 Cards Grid: 4 columns on desktop (lg), 2 columns on tablet/mobile */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* 8 Cards Grid: 4 columns on desktop (lg), 3 columns on tablet (md), 1 column on mobile */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
             {PLATFORM_BENEFITS.map((benefit, idx) => {
               const Icon = benefit.icon;
               return (
                 <FadeUp key={idx} delay={idx * 0.05} className="h-full">
-                  <div className="h-full p-5 sm:p-6 bg-brand-card border border-brand-border rounded-[22px] shadow-brand text-left hover:shadow-brand-hover hover:border-brand-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-start group">
-                    <div className={`h-11 w-11 rounded-2xl border flex items-center justify-center mb-4 shrink-0 shadow-sm ${benefit.color}`}>
-                      <Icon className="h-5.5 w-5.5" />
+                  <Link to="/reader" className="block h-full">
+                    <div className="h-full p-4 sm:p-5 bg-brand-card border border-brand-border rounded-[22px] shadow-brand text-left hover:shadow-brand-hover hover:border-brand-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-start group">
+                      <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-2xl border flex items-center justify-center mb-3 sm:mb-4 shrink-0 shadow-sm ${benefit.color}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="text-sm sm:text-base font-bold text-brand-text font-display shrink-0 leading-tight group-hover:text-brand-accent transition-colors">
+                        {benefit.title}
+                      </h3>
+                      <p className="text-[11px] sm:text-xs text-brand-text-secondary mt-1.5 leading-relaxed">
+                        {benefit.description}
+                      </p>
                     </div>
-                    <h3 className="text-base font-bold text-brand-text font-display shrink-0 leading-tight group-hover:text-brand-accent transition-colors">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed">
-                      {benefit.description}
-                    </p>
-                  </div>
+                  </Link>
                 </FadeUp>
               );
             })}

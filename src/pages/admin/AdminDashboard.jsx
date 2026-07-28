@@ -738,9 +738,25 @@ export const AdminDashboard = () => {
 
 
 
+  const [inquiries, setInquiries] = useState([]);
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
+  const [filterInquiryStatus, setFilterInquiryStatus] = useState("all");
+
+  useEffect(() => {
+    const unsub = dbService.subscribeInquiries((items) => {
+      setInquiries(items);
+    });
+    return () => {
+      if (typeof unsub === "function") unsub();
+    };
+  }, []);
+
+  const unreadInquiriesCount = inquiries.filter(i => (i.status || "New").toLowerCase() === "new").length;
+
   const sidebarLinks = [
     { id: "home", label: "Back to Home", icon: Home, to: "/" },
     { id: "overview", label: "Dashboard", icon: BarChart2 },
+    { id: "inquiries", label: "Inquiries", icon: Mail, badge: unreadInquiriesCount > 0 ? unreadInquiriesCount : null },
     { id: "books", label: "Books", icon: BookOpen },
     { id: "authors", label: "Authors", icon: ShieldCheck },
     { id: "users", label: "Readers", icon: Users },
@@ -1041,16 +1057,25 @@ export const AdminDashboard = () => {
             <>
               {/* Stats Grid */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[
-                  { label: "Total Books", value: books.length, trend: "+4.2%", isPositive: true, icon: BookOpen, seed: 1 },
-                  { label: "Total Readers", value: usersList.filter(u => u.role !== "admin" && u.role !== "author").length, trend: "+12.8%", isPositive: true, icon: Users, seed: 2 },
-                  { label: "Total Authors", value: authors.length || usersList.filter(u => u.role === "author").length, trend: "+8.4%", isPositive: true, icon: ShieldCheck, seed: 3 },
-                  { label: "Books Read Today", value: usersList.reduce((acc, u) => acc + (u.readingProgress ? Object.keys(u.readingProgress).length : 0), 0), trend: "+15.2%", isPositive: true, icon: Play, seed: 4 },
-                  { label: "Total Downloads", value: books.reduce((acc, b) => acc + (b.salesCount || b.downloadCount || 0), 0) + orders.length, trend: "+24.3%", isPositive: true, icon: Download, seed: 5 },
-                  { label: "Online Users", value: activeCount, trend: "+3.1%", isPositive: true, icon: Compass, seed: 6 },
-                  { label: "New Users", value: usersList.filter(u => u.createdAt && new Date(u.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length, trend: "+9.2%", isPositive: true, icon: PlusCircle, seed: 7 },
-                  { label: "Pending Reports", value: books.filter(b => b.status === "flagged" || b.reported).length, trend: "-15.0%", isPositive: false, icon: ShieldAlert, seed: 8 }
-                ].map((card, idx) => {
+                {(() => {
+                  const getTrendStr = (val, defaultTrend) => (val === 0 ? "0%" : defaultTrend);
+                  const totalReadersVal = usersList.filter(u => u.role === "reader" || u.role === "Reader" || !u.role || (u.role !== "admin" && u.role !== "author")).length;
+                  const booksReadTodayVal = usersList.reduce((acc, u) => acc + (u.readingProgress ? Object.keys(u.readingProgress).length : 0), 0);
+                  const totalAuthorsVal = authors.length || usersList.filter(u => u.role === "author").length;
+                  const totalDownloadsVal = books.reduce((acc, b) => acc + (b.salesCount || b.downloadCount || 0), 0) + orders.length;
+                  const newUsersVal = usersList.filter(u => u.createdAt && new Date(u.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length;
+                  const pendingReportsVal = books.filter(b => b.status === "flagged" || b.reported).length;
+
+                  return [
+                    { label: "Total Books", value: books.length, trend: getTrendStr(books.length, "+4.2%"), isPositive: true, icon: BookOpen, seed: 1 },
+                    { label: "Total Readers", value: totalReadersVal, trend: getTrendStr(totalReadersVal, "+12.8%"), isPositive: true, icon: Users, seed: 2 },
+                    { label: "Total Authors", value: totalAuthorsVal, trend: getTrendStr(totalAuthorsVal, "+8.4%"), isPositive: true, icon: ShieldCheck, seed: 3 },
+                    { label: "Books Read Today", value: booksReadTodayVal, trend: getTrendStr(booksReadTodayVal, "+15.2%"), isPositive: true, icon: Play, seed: 4 },
+                    { label: "Total Downloads", value: totalDownloadsVal, trend: getTrendStr(totalDownloadsVal, "+24.3%"), isPositive: true, icon: Download, seed: 5 },
+                    { label: "Online Users", value: activeCount, trend: getTrendStr(activeCount, "+3.1%"), isPositive: true, icon: Compass, seed: 6 },
+                    { label: "New Users", value: newUsersVal, trend: getTrendStr(newUsersVal, "+9.2%"), isPositive: true, icon: PlusCircle, seed: 7 },
+                    { label: "Pending Reports", value: pendingReportsVal, trend: getTrendStr(pendingReportsVal, "-15.0%"), isPositive: false, icon: ShieldAlert, seed: 8 }
+                  ].map((card, idx) => {
                   const sparklineData = Array.from({ length: 8 }).map((_, i) => ({
                     value: Math.floor(10 + Math.sin(i + card.seed) * 8)
                   }));
@@ -1094,7 +1119,7 @@ export const AdminDashboard = () => {
                       </div>
                     </div>
                   );
-                })}
+                })()})}
               </div>
 
               {/* Overview Charts Grid */}
@@ -1277,6 +1302,166 @@ export const AdminDashboard = () => {
           )}
         </div>
       )}
+
+      {/* 1.5 INQUIRIES TAB */}
+      {activeTab === "inquiries" && (() => {
+        const filteredInquiries = inquiries.filter(item => {
+          const q = searchQuery.toLowerCase();
+          const matchesSearch = !q ||
+            (item.name && item.name.toLowerCase().includes(q)) ||
+            (item.email && item.email.toLowerCase().includes(q)) ||
+            (item.subject && item.subject.toLowerCase().includes(q)) ||
+            (item.message && item.message.toLowerCase().includes(q));
+          const matchesStatus = filterInquiryStatus === "all" || (item.status || "New").toLowerCase() === filterInquiryStatus.toLowerCase();
+          return matchesSearch && matchesStatus;
+        });
+
+        return (
+          <div className="flex flex-col gap-6 text-left animate-fade-in">
+            <div>
+              <h1 className="text-2xl font-display font-black text-brand-text tracking-tight">Customer Inquiries & Messages</h1>
+              <p className="text-xs text-brand-text-secondary mt-1 font-semibold">Real-time incoming support requests and contact submissions.</p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-brand-card border border-brand-border rounded-[20px] p-4 shadow-sm">
+              <div className="flex flex-wrap items-center gap-3 w-full">
+                <div className="relative w-full sm:w-60">
+                  <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-brand-text-secondary/40" />
+                  <input
+                    type="text"
+                    placeholder="Search name, email, message..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-9 bg-brand-bg-secondary border border-brand-border rounded-full pl-9 pr-4 text-xs text-brand-text focus:outline-none focus:border-brand-accent transition-colors font-semibold"
+                  />
+                </div>
+
+                <select
+                  value={filterInquiryStatus}
+                  onChange={(e) => setFilterInquiryStatus(e.target.value)}
+                  className="h-9 bg-brand-bg-secondary border border-brand-border rounded-full px-4 text-xs text-brand-text font-bold focus:outline-none focus:border-brand-accent cursor-pointer"
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="new">New</option>
+                  <option value="responded">Responded</option>
+                  <option value="archived">Archived</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="border border-brand-border rounded-[20px] shadow-brand overflow-hidden bg-brand-card">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left text-brand-text-secondary">
+                  <thead className="bg-brand-bg-secondary text-brand-text uppercase font-bold text-[10px] tracking-wider border-b border-brand-border select-none">
+                    <tr>
+                      <th className="py-4 px-5">Sender</th>
+                      <th className="py-4 px-5">Subject</th>
+                      <th className="py-4 px-5">Message Preview</th>
+                      <th className="py-4 px-5">Received At</th>
+                      <th className="py-4 px-5">Status</th>
+                      <th className="py-4 px-5 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredInquiries.length > 0 ? (
+                      filteredInquiries.map((item) => (
+                        <tr key={item.id} className="border-b border-brand-border/40 last:border-0 hover:bg-brand-bg-secondary/30 transition-colors">
+                          <td className="py-4 px-5">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-brand-text">{item.name || "Anonymous"}</span>
+                              <span className="text-[10px] text-brand-text-secondary/70 font-mono">{item.email}</span>
+                            </div>
+                          </td>
+                          <td className="py-4 px-5 font-semibold text-brand-text">{item.subject || "General Inquiry"}</td>
+                          <td className="py-4 px-5 max-w-xs truncate">{item.message}</td>
+                          <td className="py-4 px-5 font-mono text-[11px]">{new Date(item.createdAt || Date.now()).toLocaleString()}</td>
+                          <td className="py-4 px-5">
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                              item.status === "Responded" ? "bg-emerald-500/10 text-emerald-400" :
+                              item.status === "Archived" ? "bg-brand-border text-brand-text-secondary" :
+                              "bg-brand-accent/15 text-brand-accent animate-pulse"
+                            }`}>
+                              {item.status || "New"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-5 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => setSelectedInquiry(item)}
+                                className="px-3 py-1 bg-brand-bg-secondary border border-brand-border hover:bg-brand-border rounded-full text-[10px] font-bold text-brand-text transition-colors cursor-pointer"
+                              >
+                                View Detail
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center font-semibold italic text-brand-text-secondary">
+                          No inquiries found.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Detail Modal */}
+            {selectedInquiry && (
+              <Modal isOpen={!!selectedInquiry} onClose={() => setSelectedInquiry(null)} title="Inquiry Detail">
+                <div className="space-y-4 text-left p-2">
+                  <div className="border-b border-brand-border pb-3">
+                    <h3 className="font-bold text-base text-brand-text">{selectedInquiry.subject}</h3>
+                    <p className="text-xs text-brand-text-secondary mt-1">
+                      From: <span className="font-bold text-brand-text">{selectedInquiry.name}</span> ({selectedInquiry.email})
+                    </p>
+                    <p className="text-[10px] text-brand-text-secondary font-mono mt-0.5">
+                      Received: {new Date(selectedInquiry.createdAt || Date.now()).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="bg-brand-bg-secondary border border-brand-border/60 rounded-xl p-4 text-xs leading-relaxed text-brand-text">
+                    {selectedInquiry.message}
+                  </div>
+                  <div className="flex justify-between items-center pt-2">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={async () => {
+                          await dbService.updateInquiryStatus(selectedInquiry.id, "Responded");
+                          toast.success("Marked as Responded!");
+                          setSelectedInquiry(null);
+                        }}
+                      >
+                        Mark as Responded
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={async () => {
+                          await dbService.updateInquiryStatus(selectedInquiry.id, "Archived");
+                          toast.success("Archived inquiry!");
+                          setSelectedInquiry(null);
+                        }}
+                      >
+                        Archive
+                      </Button>
+                    </div>
+                    <a
+                      href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || "EbookVala Inquiry")}`}
+                      className="text-xs font-bold text-brand-accent hover:underline"
+                    >
+                      Reply via Email &rarr;
+                    </a>
+                  </div>
+                </div>
+              </Modal>
+            )}
+          </div>
+        );
+      })()}
 
       {activeTab === "users" && (() => {
         const usersFiltered = usersList.filter(u => {

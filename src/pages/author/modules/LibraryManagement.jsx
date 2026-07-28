@@ -9,6 +9,7 @@ import { StatusBadge } from "../../../components/ui/StatusBadge";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { motion } from "framer-motion";
+import { dbService } from "../../../services/db";
 
 export const LibraryManagement = ({ 
   books = [], 
@@ -142,17 +143,17 @@ export const LibraryManagement = ({
 
   const handleBulkDelete = async () => {
     if (selectedBookIds.length === 0) return;
-    if (!window.confirm(`Are you sure you want to delete these ${selectedBookIds.length} eBooks permanently?`)) return;
+    if (!window.confirm(`Are you sure you want to delete these ${selectedBookIds.length} eBooks?`)) return;
     const toastId = toast.loading(`Deleting ${selectedBookIds.length} books...`);
     try {
       for (const id of selectedBookIds) {
-        const bookObj = books.find(b => b.id === id);
-        if (bookObj) await onDeleteBook(bookObj);
+        await dbService.deleteBook(id);
       }
       toast.success(`Deleted ${selectedBookIds.length} books!`, { id: toastId });
       setSelectedBookIds([]);
       if (onRefresh) onRefresh();
-    } catch {
+    } catch (err) {
+      console.error("Bulk delete error:", err);
       toast.error("Bulk deletion failed.", { id: toastId });
     }
   };
@@ -165,15 +166,12 @@ export const LibraryManagement = ({
     toast.success(`Pinned ${selectedBookIds.length} books!`);
     setSelectedBookIds([]);
   };
+
   const handleSingleDelete = async (book) => {
-    if (onDeleteBook) {
-      return onDeleteBook(book);
-    }
     if (!window.confirm(`Are you sure you want to delete "${book.title}"?`)) return;
     const toastId = toast.loading(`Deleting "${book.title}"...`);
     try {
-      const { dbService } = await import("../../../services/db");
-      await dbService.deleteBook(book.id, user?.uid || "author");
+      await dbService.deleteBook(book.id);
       toast.success(`"${book.title}" deleted successfully! 🗑️`, { id: toastId });
       if (onRefresh) onRefresh();
     } catch (err) {

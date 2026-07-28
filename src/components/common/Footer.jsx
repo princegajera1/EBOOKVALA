@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowUp, ShieldCheck, ChevronDown, ChevronUp, Mail } from "lucide-react";
 import { Button } from "../ui/Button";
 import { toast } from "react-hot-toast";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "../../lib/firebase";
+import { dbService } from "../../services/db";
 
 export const Footer = () => {
   const [openSection, setOpenSection] = useState(null);
@@ -24,39 +23,14 @@ export const Footer = () => {
     const subscriberEmail = email.trim().toLowerCase();
     if (!subscriberEmail) return;
 
-    // 1. Try to save subscriber to Firestore (non-blocking)
     try {
-      await addDoc(collection(db, "subscribers"), {
-        email: subscriberEmail,
-        subscribedAt: serverTimestamp()
-      });
-    } catch (firestoreErr) {
-      console.warn("Firestore subscription save failed (non-blocking):", firestoreErr);
-    }
-
-    // 2. Dispatch welcome email securely
-    try {
-      const emailRes = await fetch("/api/send-email", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          type: "newsletter",
-          email: subscriberEmail
-        })
-      });
-
-      if (!emailRes.ok) {
-        throw new Error("Email service failed");
-      }
-
+      const result = await dbService.subscribeNewsletter(subscriberEmail);
       setSubscribed(true);
       setEmail("");
-      toast.success("Thank you for joining our weekly digest! ✉️");
+      toast.success(result.message || "Thank you for joining our weekly digest! ✉️");
     } catch (err) {
-      console.error("Newsletter subscription mail dispatch error:", err);
-      toast.error("Failed to subscribe. Please try again.");
+      console.error("Newsletter subscription error:", err);
+      toast.error(err.message || "Failed to subscribe. Please try again.");
     }
   };
 

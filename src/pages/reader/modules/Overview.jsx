@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Trophy, BookOpen, Clock, Layers, Flame, Play, Calendar } from "lucide-react";
 import { Button } from "../../../components/ui/Button";
 import { SubscriptionManagementCard } from "../../../components/subscription/SubscriptionManagementCard";
+import { getGreeting } from "../../../utils/greeting";
 
 export const Overview = ({ user, books = [] }) => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ export const Overview = ({ user, books = [] }) => {
   // Find purchased books
   const purchasedBookIds = user?.purchasedBooks || [];
   const myBooks = books.filter(b => purchasedBookIds.includes(b.id));
+  const availableBooks = myBooks.length > 0 ? myBooks : books;
 
   // Determine active book (continue reading) from reading progress
   const progressMap = user?.readingProgress || {};
@@ -19,7 +21,7 @@ export const Overview = ({ user, books = [] }) => {
 
   // Find the most recently read book
   let latestReadTime = 0;
-  myBooks.forEach(b => {
+  availableBooks.forEach(b => {
     const prog = progressMap[b.id];
     if (prog && prog.lastRead) {
       const time = new Date(prog.lastRead).getTime();
@@ -31,11 +33,13 @@ export const Overview = ({ user, books = [] }) => {
     }
   });
 
-  // Fallback active book if progress is empty but reader has books
-  if (!activeBook && myBooks.length > 0) {
-    activeBook = myBooks[0];
-    activeProgress = { currentPage: 1, totalPages: 100, lastRead: new Date().toISOString() };
+  // Fallback active book if progress is empty
+  if (!activeBook && availableBooks.length > 0) {
+    activeBook = availableBooks[0];
+    activeProgress = { currentPage: 1, totalPages: activeBook.pages || 100, lastRead: new Date().toISOString() };
   }
+
+  const greetingObj = getGreeting(user?.displayName || user?.name || "Reader");
 
   // Derive real stats
   const completedBooksCount = myBooks.filter(b => {
@@ -127,7 +131,7 @@ export const Overview = ({ user, books = [] }) => {
         <div className="flex justify-between items-start z-10">
           <div>
             <h1 className="text-xl sm:text-2xl font-display font-black text-brand-text tracking-tight flex items-center gap-2">
-              Good morning, {user?.displayName || user?.name || "Reader"}
+              <span>{greetingObj.icon}</span> {greetingObj.text}
             </h1>
             <p className="text-[11px] text-brand-text-secondary mt-1 max-w-lg italic font-medium">
               "{quote}"

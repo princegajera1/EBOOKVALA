@@ -37,6 +37,8 @@ import { RevenueRoyaltiesCenter } from "./modules/RevenueRoyaltiesCenter";
 import { ReaderInsightsCenter } from "./modules/ReaderInsightsCenter";
 import { MessagesCommunityCenter } from "./modules/MessagesCommunityCenter";
 
+import { getGreeting } from "../../utils/greeting";
+
 const buildEmptyChartBins = () => {
   const bins = [];
   const now = new Date();
@@ -57,19 +59,6 @@ const MOTIVATION_QUOTES = [
   "“Start writing, no matter what. The water does not flow until the faucet is turned on.” – Louis L'Amour",
   "“There is no agony like bearing an untold story inside you.” – Maya Angelou"
 ];
-
-const getTimeBasedGreeting = () => {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) {
-    return { greeting: "Good Morning", emoji: "🌅" };
-  } else if (hour >= 12 && hour < 17) {
-    return { greeting: "Good Afternoon", emoji: "☀️" };
-  } else if (hour >= 17 && hour < 21) {
-    return { greeting: "Good Evening", emoji: "🌆" };
-  } else {
-    return { greeting: "Good Night", emoji: "🌙" };
-  }
-};
 
 const AUTHOR_NAV_LINKS = [
   { id: "overview", label: "Dashboard", icon: Home },
@@ -93,9 +82,6 @@ export const AuthorDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [chartData, setChartData] = useState(buildEmptyChartBins());
   const [todayQuote] = useState(MOTIVATION_QUOTES[Math.floor(Math.random() * MOTIVATION_QUOTES.length)]);
-
-  // Live Activity Stream Events Filter
-  const [eventFilter, setEventFilter] = useState("all");
 
   const loadAuthorData = async () => {
     if (!user) return;
@@ -156,25 +142,8 @@ export const AuthorDashboard = () => {
   const netRoyalties = Math.round(grossRev * 0.8);
   const pendingPayout = Math.round(netRoyalties * 0.15);
   const avgRating = allReviews.length > 0 ? (allReviews.reduce((s, r) => s + (r.rating || 0), 0) / allReviews.length).toFixed(1) : "0.0";
-  const readingHoursSum = books.reduce((s, b) => s + (b.readingHours || 0), 0).toFixed(1);
-  const completionsSum = books.reduce((s, b) => s + (b.completions || 0), 0);
-  const completionRateVal = totalSales > 0 ? `${((completionsSum / totalSales) * 100).toFixed(1)}%` : "0.0%";
-  const bookmarksSum = books.reduce((s, b) => s + (b.bookmarkCount || 0), 0);
-  const wishlistsSum = books.reduce((s, b) => s + (b.wishlistCount || 0), 0);
-  const sharesSum = books.reduce((s, b) => s + (b.shareCount || 0), 0);
-  const conversionRateVal = totalViews > 0 ? `${((totalSales / totalViews) * 100).toFixed(1)}%` : "0.0%";
-  const refundsSum = books.reduce((s, b) => s + (b.refundCount || 0), 0);
-  const refundRateVal = totalSales > 0 ? `${((refundsSum / totalSales) * 100).toFixed(1)}%` : "0.0%";
-  const storageUsedGb = (books.reduce((s, b) => s + (b.fileSizeMb || 0), 0) / 1024).toFixed(2);
 
-  const [timeGreeting, setTimeGreeting] = useState(getTimeBasedGreeting());
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeGreeting(getTimeBasedGreeting());
-    }, 30000);
-    return () => clearInterval(timer);
-  }, []);
+  const greetingObj = getGreeting(user?.displayName || user?.name || "Author Pro");
 
   // Essential KPI Definitions for clean, professional layout
   const ESSENTIAL_KPIS = [
@@ -205,8 +174,8 @@ export const AuthorDashboard = () => {
                   <UserCheck className="h-3 w-3" /> VERIFIED AUTHOR
                 </span>
               </div>
-              <h1 className="text-2xl md:text-3xl font-display font-black text-brand-text tracking-tight">
-                {timeGreeting.emoji} {timeGreeting.greeting}, {user?.displayName || user?.name || "Author Pro"} 👋
+              <h1 className="text-2xl md:text-3xl font-display font-black text-brand-text tracking-tight flex items-center gap-2">
+                <span>{greetingObj.icon}</span> {greetingObj.text} 👋
               </h1>
               <p className="text-xs text-brand-text-secondary italic max-w-xl">
                 {todayQuote}
@@ -243,10 +212,10 @@ export const AuthorDashboard = () => {
               </div>
             </div>
 
-            {/* Sales Chart & Live Activity Feed */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Sales Chart Container (Expanded Full Width) */}
+            <div className="grid grid-cols-1 gap-6">
               {/* Monthly Sales Area Chart */}
-              <div className="bg-[#161618] border border-white/10 rounded-2xl p-6 md:col-span-2 space-y-4">
+              <div className="bg-[#161618] border border-white/10 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div>
                     <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2">
@@ -256,7 +225,7 @@ export const AuthorDashboard = () => {
                   </div>
                 </div>
 
-                <div className="h-64 w-full pt-2">
+                <div className="h-72 w-full pt-2">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
@@ -272,47 +241,6 @@ export const AuthorDashboard = () => {
                       <Area type="monotone" dataKey="sales" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#salesGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Live Activity Stream */}
-              <div className="bg-[#161618] border border-white/10 rounded-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                  <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2">
-                    <Zap className="h-4 w-4 text-amber-400" /> Live Activity Feed
-                  </h3>
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping"></span>
-                </div>
-
-                <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                  {events.length === 0 ? (
-                    <div className="space-y-3">
-                      <div className="bg-[#111113] border border-white/5 rounded-xl p-3 text-xs flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-emerald-400 shrink-0" />
-                        <div>
-                          <p className="font-bold text-brand-text">Reader purchased Master Microservices</p>
-                          <p className="text-[10px] text-brand-text-secondary font-mono">2 minutes ago · ₹499</p>
-                        </div>
-                      </div>
-                      <div className="bg-[#111113] border border-white/5 rounded-xl p-3 text-xs flex items-center gap-2">
-                        <Star className="h-4 w-4 text-amber-400 shrink-0" />
-                        <div>
-                          <p className="font-bold text-brand-text">New 5-Star Review received</p>
-                          <p className="text-[10px] text-brand-text-secondary font-mono">15 minutes ago by Aarav</p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    events.map((e) => (
-                      <div key={e.id} className="bg-[#111113] border border-white/5 rounded-xl p-3 text-xs flex items-center gap-2">
-                        <Zap className="h-4 w-4 text-brand-accent shrink-0" />
-                        <div>
-                          <p className="font-bold text-brand-text">{e.title || "Event"}</p>
-                          <p className="text-[10px] text-brand-text-secondary font-mono">{e.description}</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
                 </div>
               </div>
             </div>

@@ -169,16 +169,16 @@ export const LibraryManagement = ({
     if (onDeleteBook) {
       return onDeleteBook(book);
     }
-    if (!window.confirm(`Move "${book.title}" to Recycle Bin?`)) return;
-    const toastId = toast.loading(`Moving "${book.title}" to Recycle Bin...`);
+    if (!window.confirm(`Are you sure you want to delete "${book.title}"?`)) return;
+    const toastId = toast.loading(`Deleting "${book.title}"...`);
     try {
       const { dbService } = await import("../../../services/db");
       await dbService.deleteBook(book.id, user?.uid || "author");
-      toast.success(`"${book.title}" moved to Recycle Bin! 🗑️`, { id: toastId });
+      toast.success(`"${book.title}" deleted successfully! 🗑️`, { id: toastId });
       if (onRefresh) onRefresh();
     } catch (err) {
       console.error("Author delete book error:", err);
-      toast.error("Failed to move eBook to Recycle Bin.", { id: toastId });
+      toast.error("Failed to delete eBook.", { id: toastId });
     }
   };
 
@@ -433,7 +433,7 @@ export const LibraryManagement = ({
                             variant="ghost" 
                             size="sm" 
                             className="h-7.5 w-7.5 p-0 rounded-full text-brand-danger hover:bg-brand-danger/10 hover:scale-105 transition-all cursor-pointer"
-                            title="Move to Recycle Bin"
+                            title="Delete eBook"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>

@@ -210,21 +210,11 @@ export const AdminDashboard = () => {
     ];
   });
 
-  // Recycle Bin States & Handlers
-  const [deletedBooks, setDeletedBooks] = useState([]);
-  const [loadingRecycleBin, setLoadingRecycleBin] = useState(false);
-  const [recycleBookToPermanentDelete, setRecycleBookToPermanentDelete] = useState(null);
-  const [recycleBinSearchQuery, setRecycleBinSearchQuery] = useState("");
-
   const loadAdminData = async () => {
     setIsLoadingData(true);
     try {
-      if (typeof dbService.purgeExpiredSoftDeletedBooks === "function") {
-        await dbService.purgeExpiredSoftDeletedBooks().catch(() => null);
-      }
-      const [allBooks, delBooks, allAuthors, allOrders, allUsers, allCats] = await Promise.all([
+      const [allBooks, allAuthors, allOrders, allUsers, allCats] = await Promise.all([
         dbService.getBooks().catch(() => []),
-        dbService.getDeletedBooks().catch(() => []),
         dbService.getAuthors().catch(() => []),
         dbService.getOrders().catch(() => []),
         dbService.getUsers().catch(() => []),
@@ -232,7 +222,6 @@ export const AdminDashboard = () => {
       ]);
 
       setBooks(allBooks);
-      setDeletedBooks(delBooks);
       setAuthors(allAuthors);
       setOrders(allOrders);
       setUsersList(allUsers);
@@ -247,44 +236,6 @@ export const AdminDashboard = () => {
   useEffect(() => {
     loadAdminData();
   }, []);
-
-  useEffect(() => {
-    if (activeTab === "recycle-bin") {
-      dbService.getDeletedBooks().then(setDeletedBooks).catch(() => null);
-    }
-  }, [activeTab]);
-
-  const handleRestoreBook = async (bookId, title) => {
-    const toastId = toast.loading(`Restoring "${title || 'eBook'}"...`);
-    try {
-      const targetBook = deletedBooks.find(b => b.id === bookId);
-      await dbService.restoreBook(bookId);
-
-      setDeletedBooks(prev => prev.filter(b => b.id !== bookId));
-      if (targetBook) {
-        const restoredDoc = { ...targetBook, isDeleted: false, deletedAt: null };
-        setBooks(prev => [restoredDoc, ...prev.filter(b => b.id !== bookId)]);
-      }
-
-      toast.success(`"${title || 'eBook'}" restored successfully! 🔄`, { id: toastId });
-      await loadAdminData();
-    } catch (err) {
-      toast.error("Failed to restore eBook.", { id: toastId });
-    }
-  };
-
-  const handlePermanentDeleteBook = async () => {
-    if (!recycleBookToPermanentDelete) return;
-    const toastId = toast.loading(`Permanently purging "${recycleBookToPermanentDelete.title}"...`);
-    try {
-      await dbService.permanentlyDeleteBook(recycleBookToPermanentDelete.id);
-      toast.success(`"${recycleBookToPermanentDelete.title}" permanently deleted!`, { id: toastId });
-      setRecycleBookToPermanentDelete(null);
-      await loadAdminData();
-    } catch (err) {
-      toast.error("Failed to delete eBook permanently.", { id: toastId });
-    }
-  };
 
   // Admin Public Profile States
   const [adminDisplayName, setAdminDisplayName] = useState("");
@@ -557,22 +508,16 @@ export const AdminDashboard = () => {
   };
 
   const handleDeleteBook = async (id) => {
-    const toastId = toast.loading("Moving eBook to Recycle Bin...");
+    if (!window.confirm("Are you sure you want to delete this eBook?")) return;
+    const toastId = toast.loading("Deleting eBook...");
     try {
-      const targetBook = books.find(b => b.id === id);
       await dbService.deleteBook(id, user?.uid || "admin");
-
       setBooks(prev => prev.filter(b => b.id !== id));
-      if (targetBook) {
-        const deletedDoc = { ...targetBook, isDeleted: true, deletedAt: new Date().toISOString() };
-        setDeletedBooks(prev => [deletedDoc, ...prev.filter(b => b.id !== id)]);
-      }
-
-      toast.success("eBook moved to Recycle Bin! 🗑️", { id: toastId });
+      toast.success("eBook deleted successfully! 🗑️", { id: toastId });
       loadAdminData();
     } catch (err) {
       console.error("Delete book error:", err);
-      toast.error("Failed to move eBook to Recycle Bin.", { id: toastId });
+      toast.error("Failed to delete eBook.", { id: toastId });
     }
   };
 
@@ -797,7 +742,6 @@ export const AdminDashboard = () => {
     { id: "home", label: "Back to Home", icon: Home, to: "/" },
     { id: "overview", label: "Dashboard", icon: BarChart2 },
     { id: "books", label: "Books", icon: BookOpen },
-    { id: "recycle-bin", label: "Recycle Bin", icon: Trash2 },
     { id: "authors", label: "Authors", icon: ShieldCheck },
     { id: "users", label: "Readers", icon: Users },
     { id: "all-users", label: "All Users", icon: UserCheck },

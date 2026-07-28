@@ -553,32 +553,20 @@ export const dbService = {
   },
   
   deleteBook: async (id, uid = "") => {
-    let bookObj = null;
     try {
-      bookObj = await dbService.getBookById(id);
-    } catch (e) {}
-
-    if (!bookObj) {
-      bookObj = SEED_BOOKS.find(b => b.id === id || b.slug === id);
-    }
-
-    const deletedTimestamp = new Date().toISOString();
-    const deletedRecord = {
-      ...(bookObj || { id, title: "Deleted eBook" }),
-      isDeleted: true,
-      deletedAt: deletedTimestamp,
-      deletedBy: uid || "admin"
-    };
-
-    try {
-      const docRef = doc(db, "books", id);
-      await setDoc(docRef, {
-        isDeleted: true,
-        deletedAt: deletedTimestamp,
-        deletedBy: uid || "admin"
-      }, { merge: true });
+      const snap = await getDoc(doc(db, "books", id));
+      if (snap.exists()) {
+        const bookData = snap.data();
+        if (bookData.coverURL) {
+          await deleteFile(bookData.coverURL).catch(() => null);
+        }
+        if (bookData.pdfURL) {
+          await deleteFile(bookData.pdfURL).catch(() => null);
+        }
+      }
+      await deleteDoc(doc(db, "books", id)).catch(() => null);
     } catch (err) {
-      console.warn("Firestore deleteBook permission warning, saving to local deleted cache:", err);
+      console.warn("Firestore deleteBook warning:", err);
     }
 
     try {
@@ -587,11 +575,6 @@ export const dbService = {
         savedDeleted.push(id);
         localStorage.setItem("ebookvala_deleted_books", JSON.stringify(savedDeleted));
       }
-
-      const savedObjs = JSON.parse(localStorage.getItem("ebookvala_deleted_book_objects") || "[]");
-      const filteredObjs = savedObjs.filter(o => o.id !== id);
-      filteredObjs.push(deletedRecord);
-      localStorage.setItem("ebookvala_deleted_book_objects", JSON.stringify(filteredObjs));
     } catch (e) {}
 
     return true;

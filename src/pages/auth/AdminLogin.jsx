@@ -36,11 +36,9 @@ export const AdminLogin = () => {
       const adminUser = await login(enteredEmail, enteredPass, true);
       if (adminUser) {
         sessionStorage.setItem("admin_session_unlocked", "true");
+        localStorage.setItem("admin_session_unlocked", "true");
         toast.success("Super Admin authenticated! Welcome back, Prince.", { id: toastId });
-        setTimeout(() => {
-          window.location.href = "#/admin/dashboard";
-          window.location.reload();
-        }, 300);
+        navigate("/admin/dashboard");
         return;
       }
     } catch (err) {
@@ -60,22 +58,18 @@ export const AdminLogin = () => {
         console.warn("PIN auth fallback error:", e);
       }
       sessionStorage.setItem("admin_session_unlocked", "true");
+      localStorage.setItem("admin_session_unlocked", "true");
       toast.success("Super Admin clearance authorized! Welcome back, Admin.", { id: toastId });
-      setTimeout(() => {
-        window.location.href = "#/admin/dashboard";
-        window.location.reload();
-      }, 300);
+      navigate("/admin/dashboard");
       return;
     }
 
     if (user?.uid) {
       await updateProfile({ role: "admin" });
       sessionStorage.setItem("admin_session_unlocked", "true");
+      localStorage.setItem("admin_session_unlocked", "true");
       toast.success("Security clearance authorized! Welcome back, Admin.", { id: toastId });
-      setTimeout(() => {
-        window.location.href = "#/admin/dashboard";
-        window.location.reload();
-      }, 300);
+      navigate("/admin/dashboard");
     } else {
       toast.error("Invalid credentials. Password: Prince@2412 or PIN: 2412", { id: toastId });
     }

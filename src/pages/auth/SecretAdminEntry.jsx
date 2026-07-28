@@ -37,6 +37,7 @@ export const SecretAdminEntry = () => {
     setUnlocked(true);
     setStatusMsg("Verifying clearance...");
     sessionStorage.setItem("admin_session_unlocked", "true");
+    localStorage.setItem("admin_session_unlocked", "true");
 
     try {
       await login(ADMIN_EMAIL, ADMIN_PASS, true).catch(() => null);
@@ -46,9 +47,8 @@ export const SecretAdminEntry = () => {
 
     setStatusMsg("Access Granted ✓");
     setTimeout(() => {
-      window.location.href = "#/admin/dashboard";
-      window.location.reload();
-    }, 300);
+      navigate("/admin/dashboard");
+    }, 200);
   };
 
   return (

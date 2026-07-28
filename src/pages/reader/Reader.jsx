@@ -431,32 +431,6 @@ export const Reader = () => {
 
         <div className="flex items-center gap-2">
           
-          {/* Mode Switcher Pill (eBook Mode vs PDF View) */}
-          <div className="flex items-center border border-inherit rounded-full p-1 bg-black/5 dark:bg-white/5 select-none shadow-inner">
-            <button
-              onClick={() => setViewMode("text")}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "text"
-                  ? "bg-brand-accent text-white shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">eBook Mode</span>
-            </button>
-            <button
-              onClick={() => setViewMode("pdf")}
-              className={`px-3 py-1 rounded-full text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                viewMode === "pdf"
-                  ? "bg-brand-accent text-white shadow-sm"
-                  : "opacity-70 hover:opacity-100"
-              }`}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">PDF View</span>
-            </button>
-          </div>
-
           {/* Table of Contents Drawer Trigger */}
           <button
             onClick={() => setShowTocDrawer(!showTocDrawer)}
@@ -672,7 +646,7 @@ export const Reader = () => {
                       {!isPdfValid ? "No PDF File Uploaded" : "PDF Preview Unavailable"}
                     </h3>
                     <p className="text-xs text-brand-text-secondary leading-relaxed max-w-xs">
-                      Switch to Interactive eBook Mode to read with text formatting, AI tutor, and multi-color highlighters!
+                      Switch to Text Reader mode to read formatted text with AI tutor and multi-color highlighters!
                     </p>
                     <Button 
                       onClick={() => setViewMode("text")} 
@@ -680,7 +654,7 @@ export const Reader = () => {
                       className="w-full rounded-full text-xs font-bold h-10 shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-2"
                     >
                       <BookOpen className="h-4 w-4" />
-                      Switch to eBook Mode
+                      Switch to Text Reader
                     </Button>
                   </div>
                 </div>

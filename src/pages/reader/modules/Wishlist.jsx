@@ -59,11 +59,18 @@ export const Wishlist = ({ user, books = [], onUpdateWishlist }) => {
                       <span className="flex items-center gap-0.5 text-amber-500 font-bold"><Star className="h-3 w-3 fill-amber-500 animate-pulse" /> {book.rating ? book.rating.toFixed(1) : "—"}</span>
                     </div>
 
-                    <div className="text-[10px] font-mono font-bold text-brand-accent uppercase mt-auto">
+                    <div className="flex items-center gap-2 text-[10px] font-mono font-bold uppercase mt-auto">
                       {isOwned ? (
-                        "Owned • Ready to read"
+                        <span className="text-brand-accent font-bold">Owned • Ready to read</span>
                       ) : (
-                        book.price && Number(book.price) > 0 ? `Price: ₹${book.price}` : "FREE"
+                        <>
+                          <span className="text-emerald-500 font-extrabold bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-md">
+                            FREE (1st Year Free)
+                          </span>
+                          {book.price > 0 && (
+                            <span className="line-through text-brand-text-secondary opacity-60">₹{book.price}</span>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

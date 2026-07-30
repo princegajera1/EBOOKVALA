@@ -182,7 +182,9 @@ export const AppProvider = ({ children }) => {
             try {
               await updateDoc(sessionDocRef, { location: resolvedLoc });
             } catch (locErr) {
-              console.error("Non-blocking location update error:", locErr);
+              if (locErr?.code !== "permission-denied") {
+                console.warn("Non-blocking location update warning:", locErr);
+              }
             }
           }
         });
@@ -193,7 +195,9 @@ export const AppProvider = ({ children }) => {
             try {
               await updateDoc(sessionDocRef, { lastSeen: serverTimestamp() });
             } catch (heartbeatErr) {
-              console.error("Heartbeat sync error:", heartbeatErr);
+              if (heartbeatErr?.code !== "permission-denied") {
+                console.warn("Heartbeat sync warning:", heartbeatErr);
+              }
             }
           }
         }, 30000);
@@ -214,7 +218,9 @@ export const AppProvider = ({ children }) => {
         window.addEventListener("beforeunload", unloadHandler);
 
       } catch (err) {
-        console.error("Real-time presence error:", err);
+        if (err?.code !== "permission-denied") {
+          console.warn("Real-time presence notification:", err?.message || err);
+        }
       }
     };
 

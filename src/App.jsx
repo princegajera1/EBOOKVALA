@@ -32,6 +32,7 @@ const Terms = lazy(() => import("./pages/Terms").then(m => ({ default: m.Terms }
 const Privacy = lazy(() => import("./pages/Privacy").then(m => ({ default: m.Privacy })));
 const SearchResults = lazy(() => import("./pages/SearchResults").then(m => ({ default: m.SearchResults })));
 const Pricing = lazy(() => import("./pages/Pricing").then(m => ({ default: m.Pricing })));
+const FeatureShowcase = lazy(() => import("./pages/FeatureShowcase").then(m => ({ default: m.FeatureShowcase })));
 const NotFound = lazy(() => import("./pages/NotFound").then(m => ({ default: m.NotFound })));
 
 // Auth pages — lazy loaded
@@ -117,6 +118,7 @@ function App() {
                 <Route path="/" element={<Landing />} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/book/:slug" element={<BookDetail />} />
+                <Route path="/feature/:featureId" element={<FeatureShowcase />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/our-mission" element={<OurMission />} />
                 <Route path="/terms" element={<Terms />} />

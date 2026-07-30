@@ -304,8 +304,9 @@ export const Navbar = () => {
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-full hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-all duration-200 cursor-pointer"
-                aria-label="Toggle Theme"
+                className="p-2 rounded-full border border-brand-border/60 bg-brand-card/90 hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-all duration-200 cursor-pointer shadow-sm hover:scale-105"
+                aria-label={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
                 {theme === "dark" ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
               </button>

@@ -158,19 +158,28 @@ const PillNav = ({
         </div>
 
         {/* Right: Actions menu (Toggle Theme, Login/Register, Log Out) */}
-        <div className="pill-nav-right" ref={rightRef}>
+        <div className="pill-nav-right flex items-center gap-3" ref={rightRef}>
           {rightItems.map((item, i) => {
             const isRegister = item.label === "Register";
+            const isThemeToggle = item.label.includes("Toggle Theme");
             const IconComponent = item.icon;
             const key = item.label ? `nav-right-${item.label.replace(/\s+/g, '-').toLowerCase()}` : `right-${i}`;
+            
+            const buttonClassName = isRegister
+              ? "pill-register-btn"
+              : isThemeToggle
+              ? "p-2.5 rounded-full border border-brand-border/60 bg-brand-card/90 hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-all duration-200 cursor-pointer flex items-center justify-center shadow-sm hover:scale-105"
+              : "pill-nav-right-link" + (IconComponent ? " flex items-center justify-center p-2.5 rounded-full border border-brand-border/60 bg-brand-card/90 hover:bg-brand-bg-secondary text-brand-text-secondary hover:text-brand-text transition-all duration-200 cursor-pointer" : "");
+
             return (
               <div key={key} role="none">
                 {item.onClick ? (
                   <button
                     role="menuitem"
                     onClick={item.onClick}
-                    className={"pill-nav-right-link" + (IconComponent ? " flex items-center justify-center" : "")}
+                    className={buttonClassName}
                     aria-label={item.ariaLabel || item.label}
+                    title={item.ariaLabel || item.label}
                   >
                     {IconComponent ? <IconComponent className="h-4.5 w-4.5" /> : item.label}
                   </button>
@@ -178,8 +187,9 @@ const PillNav = ({
                   <Link
                     role="menuitem"
                     to={item.href}
-                    className={isRegister ? "pill-register-btn" : "pill-nav-right-link" + (IconComponent ? " flex items-center justify-center" : "")}
+                    className={buttonClassName}
                     aria-label={item.ariaLabel || item.label}
+                    title={item.ariaLabel || item.label}
                   >
                     {IconComponent ? <IconComponent className="h-4.5 w-4.5" /> : item.label}
                   </Link>
@@ -187,8 +197,9 @@ const PillNav = ({
                   <a
                     role="menuitem"
                     href={item.href || '#'}
-                    className={isRegister ? "pill-register-btn" : "pill-nav-right-link" + (IconComponent ? " flex items-center justify-center" : "")}
+                    className={buttonClassName}
                     aria-label={item.ariaLabel || item.label}
+                    title={item.ariaLabel || item.label}
                   >
                     {IconComponent ? <IconComponent className="h-4.5 w-4.5" /> : item.label}
                   </a>

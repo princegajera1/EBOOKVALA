@@ -42,6 +42,21 @@ export const MarketLayout = () => {
 
   if (isAuthenticated) {
     navItems.push({ label: "Dashboard", href: getDashboardLink() });
+  }
+
+  // Theme Toggle Button (rendered next to Dashboard / action links)
+  navItems.push({ 
+    label: "Toggle Theme", 
+    href: "#", 
+    onClick: (e) => {
+      if (e && e.preventDefault) e.preventDefault();
+      toggleTheme();
+    },
+    icon: theme === "dark" ? Sun : Moon,
+    ariaLabel: theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
+  });
+
+  if (isAuthenticated) {
     navItems.push({ label: "Log Out", href: "#", onClick: handleSignOut });
   } else {
     navItems.push({ label: "Log In", href: "/login" });

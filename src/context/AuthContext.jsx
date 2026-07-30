@@ -355,7 +355,7 @@ export const AuthProvider = ({ children }) => {
   // 9. Dedicated Role Upgrade to Author
   // Safely updates role to 'author' in Firestore and initializes author profile
   // --------------------------------------------------------------------------
-  const upgradeToAuthor = async () => {
+  const upgradeToAuthor = useCallback(async () => {
     if (!auth.currentUser) throw new Error("No authenticated user session.");
 
     try {
@@ -401,7 +401,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user, syncUserProfile]);
 
   return (
     <AuthContext.Provider

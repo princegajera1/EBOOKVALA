@@ -60,7 +60,11 @@ export const Wishlist = ({ user, books = [], onUpdateWishlist }) => {
                     </div>
 
                     <div className="text-[10px] font-mono font-bold text-brand-accent uppercase mt-auto">
-                      {isOwned ? "Owned • Ready to read" : `Price: ₹${book.price || 299}`}
+                      {isOwned ? (
+                        "Owned • Ready to read"
+                      ) : (
+                        book.price && Number(book.price) > 0 ? `Price: ₹${book.price}` : "FREE"
+                      )}
                     </div>
                   </div>
                 </div>

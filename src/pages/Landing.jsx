@@ -59,52 +59,76 @@ const AnimatedCounter = ({ value, duration = 1.5 }) => {
 
 const PLATFORM_BENEFITS = [
   {
+    id: "offline-reading",
     title: "Offline Reading",
     description: "Download your entire library to read anywhere, anytime without requiring an internet connection.",
     icon: Download,
-    color: "bg-blue-500/10 text-blue-500 border-blue-500/20"
+    color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    link: "/feature/offline-reading",
+    badge: "PWA Sync"
   },
   {
+    id: "reading-streak",
     title: "Reading Streak",
     description: "Track daily reading goals and maintain your momentum with habit-building streak trackers.",
     icon: Flame,
-    color: "bg-amber-500/10 text-amber-500 border-amber-500/20"
+    color: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    link: "/feature/reading-streak",
+    badge: "Streak Tracker"
   },
   {
+    id: "smart-bookmarks",
     title: "Smart Bookmarks",
     description: "Save important pages with quick visual tabs and category tags for easy reference.",
     icon: BookMarked,
-    color: "bg-purple-500/10 text-purple-500 border-purple-500/20"
+    color: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+    link: "/feature/smart-bookmarks",
+    badge: "Visual Tabs"
   },
   {
+    id: "multi-color-highlights",
     title: "Multi-Color Highlights",
     description: "Organize key quotes using customizable highlight colors and instant filter views.",
     icon: Sparkles,
-    color: "bg-pink-500/10 text-pink-500 border-pink-500/20"
+    color: "bg-pink-500/10 text-pink-500 border-pink-500/20",
+    link: "/feature/multi-color-highlights",
+    badge: "10 Colors"
   },
   {
+    id: "instant-ai-translator",
     title: "Instant AI Translator",
     description: "Translate highlighted paragraphs into 30+ languages in real-time with high accuracy.",
     icon: Globe,
-    color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
+    color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+    link: "/feature/instant-ai-translator",
+    badge: "30+ Languages"
   },
   {
+    id: "reading-achievements",
     title: "Reading Achievements",
     description: "Unlock milestones, earn reading badges, and celebrate completed books.",
     icon: Trophy,
-    color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+    color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+    link: "/feature/reading-achievements",
+    badge: "Badges"
   },
   {
+    id: "multi-device-sync",
     title: "Multi-Device Sync",
     description: "Seamlessly switch from laptop browser to phone app without losing your exact reading position.",
     icon: Smartphone,
-    color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"
+    color: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+    link: "/feature/multi-device-sync",
+    badge: "Cloud Sync"
   },
   {
+    id: "reading-analytics",
     title: "Reading Analytics",
     description: "Visualize your reading speed, total minutes read, finished chapters, and monthly trends.",
     icon: BarChart3,
-    color: "bg-orange-500/10 text-orange-500 border-orange-500/20"
+    color: "bg-orange-500/10 text-orange-500 border-orange-500/20",
+    link: "/feature/reading-analytics",
+    badge: "Live Charts"
   }
 ];
 export const Landing = () => {
@@ -423,16 +447,30 @@ export const Landing = () => {
               const Icon = benefit.icon;
               return (
                 <FadeUp key={idx} delay={idx * 0.05} className="h-full">
-                  <div className="h-full p-5 sm:p-6 bg-brand-card border border-brand-border rounded-[22px] shadow-brand text-left hover:shadow-brand-hover hover:border-brand-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-start group">
-                    <div className={`h-11 w-11 rounded-2xl border flex items-center justify-center mb-4 shrink-0 shadow-sm ${benefit.color}`}>
-                      <Icon className="h-5.5 w-5.5" />
+                  <div 
+                    onClick={() => navigate(benefit.link)}
+                    className="h-full p-5 sm:p-6 bg-brand-card border border-brand-border rounded-[22px] shadow-brand text-left hover:shadow-brand-hover hover:border-brand-accent/40 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`h-11 w-11 rounded-2xl border flex items-center justify-center shrink-0 shadow-sm ${benefit.color}`}>
+                          <Icon className="h-5.5 w-5.5" />
+                        </div>
+                        <span className="text-[10px] font-mono font-bold tracking-wider text-brand-accent bg-brand-accent/10 border border-brand-accent/20 px-2.5 py-0.5 rounded-full uppercase">
+                          {benefit.badge}
+                        </span>
+                      </div>
+                      <h3 className="text-base font-bold text-brand-text font-display shrink-0 leading-tight group-hover:text-brand-accent transition-colors">
+                        {benefit.title}
+                      </h3>
+                      <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed">
+                        {benefit.description}
+                      </p>
                     </div>
-                    <h3 className="text-base font-bold text-brand-text font-display shrink-0 leading-tight group-hover:text-brand-accent transition-colors">
-                      {benefit.title}
-                    </h3>
-                    <p className="text-xs text-brand-text-secondary mt-2 leading-relaxed">
-                      {benefit.description}
-                    </p>
+                    <div className="mt-5 pt-3 border-t border-brand-border/40 flex items-center justify-between text-[11px] font-bold text-brand-accent group-hover:translate-x-0.5 transition-transform">
+                      <span>Try Feature Live</span>
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </div>
                   </div>
                 </FadeUp>
               );

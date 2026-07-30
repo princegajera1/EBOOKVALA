@@ -44,7 +44,7 @@ export const Wishlist = ({ user, books = [], onUpdateWishlist }) => {
                 onClick={() => navigate(`/book/${book.slug || book.id}`)}
               >
                 <div className="flex gap-4 items-start">
-                  <div className="h-28 w-19 bg-[#161616] border border-brand-border/60 rounded-[8px] overflow-hidden shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-103 group-hover:shadow-md">
+                  <div className="h-28 w-19 bg-brand-bg-secondary border border-brand-border/60 rounded-[8px] overflow-hidden shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-103 group-hover:shadow-md">
                     <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
                   </div>
                   

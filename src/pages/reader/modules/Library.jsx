@@ -168,51 +168,17 @@ export const Library = ({ user, books = [], onTabChange }) => {
         </>
       )}
 
-      {/* 4. PREMIUM EMPTY STATE (When reader owns 0 books) */}
+      {/* 4. CLEAN EMPTY STATE (When reader owns 0 books) */}
       {myBooks.length === 0 && (
-        <div className="flex flex-col gap-8">
-          <div className="text-center py-12 border border-dashed border-brand-border/60 rounded-[24px] bg-brand-card/40 backdrop-blur-md p-8 select-none flex flex-col items-center max-w-xl mx-auto shadow-brand">
-            <div className="h-16 w-16 bg-brand-accent/8 border border-brand-accent/25 rounded-full flex items-center justify-center text-brand-accent mb-4">
-              <ShoppingBag className="h-7 w-7 animate-pulse" />
-            </div>
-            <h3 className="text-sm font-bold text-brand-text tracking-tight font-display uppercase">Your Library is Empty</h3>
-            <p className="text-[11px] text-brand-text-secondary mt-1.5 max-w-sm font-medium leading-relaxed">
-              Explore EbookVala's premium collection of books, including self-help, business, technology, and programming. Start your reading journey today!
-            </p>
-            <div className="flex gap-3 mt-6">
-              <Button onClick={() => navigate("/marketplace")} className="rounded-full text-[10px] font-bold h-9 px-4.5 bg-brand-accent shadow-sm">
-                Shop Marketplace
-              </Button>
-              <Button onClick={() => onTabChange("community")} variant="outline" className="rounded-full text-[10px] font-bold h-9 px-4.5 border-brand-border bg-brand-card">
-                Join Discussions
-              </Button>
-            </div>
-          </div>
-
-          {/* Recommended Horizontal Shelf */}
-          <div>
-            <div className="border-b border-brand-border/60 pb-2 mb-5">
-              <h3 className="text-xs font-bold text-brand-text uppercase tracking-widest font-mono">Trending on EBOOKVALA</h3>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {trendingBooks.map((book) => (
-                <div 
-                  key={book.id} 
-                  onClick={() => navigate(`/book/${book.slug || book.id}`)}
-                  className="bg-brand-card border border-brand-border/60 rounded-[18px] p-3 shadow-brand hover:shadow-brand-hover hover:border-brand-accent/20 cursor-pointer flex gap-3.5 items-start text-left group"
-                >
-                  <div className="h-20 w-14 bg-[#161616] border border-brand-border/60 rounded-[6px] overflow-hidden shrink-0">
-                    <img src={book.coverURL} alt="" className="h-full w-full object-cover" />
-                  </div>
-                  <div className="min-w-0 flex-grow">
-                    <h4 className="text-[11px] font-bold text-brand-text group-hover:text-brand-accent transition-colors duration-200 truncate leading-snug">{book.title}</h4>
-                    <p className="text-[9px] text-brand-text-secondary mt-0.5 truncate font-semibold">by {book.authorName}</p>
-                    <p className="text-[9px] font-mono text-brand-accent mt-3 uppercase tracking-wider font-bold">Explore →</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="text-center py-16 border border-dashed border-brand-border/60 rounded-[24px] bg-brand-card p-8 select-none flex flex-col items-center max-w-md mx-auto shadow-brand">
+          <BookOpen className="mx-auto h-9 w-9 text-brand-text-secondary opacity-60 mb-2 animate-pulse" />
+          <h3 className="text-xs font-bold text-brand-text tracking-tight font-display uppercase">No Books In Your Library</h3>
+          <p className="text-[11px] text-brand-text-secondary mt-1.5 font-medium leading-relaxed">
+            Books you purchase or add to your collection will appear here for easy reading.
+          </p>
+          <Button onClick={() => navigate("/marketplace")} className="mt-5 rounded-full text-[10px] font-bold h-8.5 px-4 bg-brand-accent shadow-sm">
+            Discover eBooks
+          </Button>
         </div>
       )}
 

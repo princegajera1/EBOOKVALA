@@ -32,6 +32,10 @@ export const ProtectedRoute = ({ role, children }) => {
         }
         navigate("/login", { state: { from: location.pathname } });
       } else if (role && user?.role !== role) {
+        if (role === "reader" && (user?.role === "author" || user?.role === "admin")) {
+          // Allow author or admin to view reader workspace
+          return;
+        }
         if (role === "author" && user?.role === "reader") {
           if (!isUpgradingRef.current) {
             isUpgradingRef.current = true;
@@ -48,12 +52,8 @@ export const ProtectedRoute = ({ role, children }) => {
                 isUpgradingRef.current = false;
               });
           }
-        } else if (user?.role === "author") {
-          navigate("/author/dashboard", { replace: true });
         } else if (user?.role === "admin") {
           navigate("/admin/dashboard", { replace: true });
-        } else if (user?.role === "reader") {
-          navigate("/dashboard", { replace: true });
         } else {
           toast.error("Access denied");
           navigate("/");
@@ -62,7 +62,9 @@ export const ProtectedRoute = ({ role, children }) => {
     }
   }, [isAuthenticated, user?.role, initialLoading, navigate, role, location.pathname, upgradeToAuthor]);
 
-  if (initialLoading || !isAuthenticated || (role && user?.role !== role)) {
+  const hasAccess = isAuthenticated && (!role || user?.role === role || (role === "reader" && (user?.role === "author" || user?.role === "admin")));
+
+  if (initialLoading || !hasAccess) {
     return <FullScreenSpinner />;
   }
 

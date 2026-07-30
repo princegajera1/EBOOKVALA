@@ -39,9 +39,6 @@ export const AdminDashboard = () => {
   const { updateTheme } = useTheme();
   const { rtdbAdminSynced } = useApp();
   const { user, updateProfile } = useAuth();
-  useEffect(() => {
-    updateTheme("dark");
-  }, [updateTheme]);
 
   // Database states
   const [books, setBooks] = useState([]);

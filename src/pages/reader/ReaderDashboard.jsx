@@ -89,8 +89,8 @@ export const ReaderDashboard = () => {
       
       {/* Dynamic Command Palette (Arc Browser style search overlay) */}
       {commandOpen && (
-        <div className="fixed inset-0 bg-[#000000]/60 backdrop-blur-md z-50 flex items-start justify-center pt-[15vh] px-4 animate-fade-in">
-          <div className="bg-[#161618] border border-brand-border/60 rounded-[24px] w-full max-w-xl shadow-brand-hover overflow-hidden flex flex-col">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-start justify-center pt-[15vh] px-4 animate-fade-in">
+          <div className="bg-brand-card border border-brand-border/60 rounded-[24px] w-full max-w-xl shadow-brand-hover overflow-hidden flex flex-col">
             <div className="flex items-center gap-3 p-4 border-b border-brand-border/60">
               <Search className="h-4.5 w-4.5 text-brand-text-secondary opacity-85 shrink-0" />
               <input 
@@ -117,7 +117,7 @@ export const ReaderDashboard = () => {
                       className="flex items-center justify-between p-2.5 rounded-[12px] hover:bg-brand-bg-secondary/40 cursor-pointer select-none transition-colors group"
                     >
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="h-10 w-7 bg-[#111] rounded border border-brand-border/40 overflow-hidden shrink-0">
+                        <div className="h-10 w-7 bg-brand-bg-secondary rounded border border-brand-border/40 overflow-hidden shrink-0">
                           <img src={b.coverURL} alt={`Cover of the book ${b.title}`} decoding="async" className="h-full w-full object-cover" />
                         </div>
                         <div className="min-w-0 text-left">

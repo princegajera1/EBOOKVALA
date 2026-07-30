@@ -183,11 +183,17 @@ export const Landing = () => {
     }
   };
 
+  const [submittingNewsletter, setSubmittingNewsletter] = useState(false);
+
   const handleSubscribe = async (e) => {
     e.preventDefault();
     const subscriberEmail = email.trim().toLowerCase();
-    if (!subscriberEmail) return;
+    if (!subscriberEmail) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
 
+    setSubmittingNewsletter(true);
     try {
       const res = await dbService.subscribeNewsletter(subscriberEmail);
       setSubscribed(true);
@@ -196,6 +202,8 @@ export const Landing = () => {
     } catch (err) {
       console.error("Newsletter subscription error:", err);
       toast.error(err.message || "Failed to subscribe. Please try again.");
+    } finally {
+      setSubmittingNewsletter(false);
     }
   };
 
@@ -494,7 +502,7 @@ export const Landing = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     className="flex-1 bg-brand-bg border border-brand-border px-5 py-3 text-xs sm:text-sm rounded-[16px] text-brand-text placeholder:text-brand-text-secondary/50 focus:outline-none focus:ring-4 focus:ring-brand-accent/5 focus:border-brand-accent transition-all font-semibold"
                   />
-                  <Button type="submit" variant="primary" className="rounded-full h-11 px-6 text-xs font-bold shrink-0">
+                  <Button type="submit" variant="primary" loading={submittingNewsletter} disabled={submittingNewsletter} className="rounded-full h-11 px-6 text-xs font-bold shrink-0">
                     Subscribe
                   </Button>
                 </form>

@@ -78,7 +78,6 @@ const generateBookChapters = (bookData) => {
       pTitle = `Page ${i} — Chapter ${chapNum}.${secNum}`;
       pContent = `Continued discussion and analysis for "${title}" (Page ${i} of ${numPages}).\n\nReviewing key domain concepts, advanced patterns, and actionable takeaways for Chapter ${chapNum}.${secNum}.`;
     }
-    }
 
     chaptersList.push({
       id: `ch-${i}`,
@@ -373,8 +372,26 @@ export const Reader = () => {
       toast.error("No PDF document available for download.");
       return;
     }
+
+    // Persist download tracking in profile & local storage
+    if (user) {
+      const currentDL = user.downloadedBooks || [];
+      if (!currentDL.includes(book.id)) {
+        await updateProfile({ downloadedBooks: [...currentDL, book.id] }).catch(() => {});
+      }
+      await dbService.recordBookDownload(book, user).catch(() => {});
+    }
+
+    try {
+      let localDL = JSON.parse(localStorage.getItem("eb_downloaded_books") || "[]");
+      if (!localDL.includes(book.id)) {
+        localDL.push(book.id);
+        localStorage.setItem("eb_downloaded_books", JSON.stringify(localDL));
+      }
+    } catch (err) {}
+
     await dbService.incrementBookDownloads(book.id);
-    toast.success("Starting download...");
+    toast.success(`Starting download for "${book.title}"... 📥`);
     const link = document.createElement("a");
     link.href = pdfUrl;
     link.setAttribute("download", `${book.title}.pdf`);
@@ -441,7 +458,6 @@ export const Reader = () => {
 
         <div className="flex items-center gap-2">
           
-<<<<<<< HEAD
           {/* View Mode Toggle: eBook Mode vs PDF View */}
           {book && (book.pdfURL || book.pdf_url) && (
             <div className="flex items-center bg-black/10 dark:bg-white/10 p-0.5 rounded-full border border-brand-border/60 text-[11px] font-bold select-none">
@@ -471,7 +487,7 @@ export const Reader = () => {
               </button>
             </div>
           )}
-=======
+
           {/* Table of Contents Drawer Trigger */}
           <button
             onClick={() => setShowTocDrawer(!showTocDrawer)}
@@ -480,7 +496,6 @@ export const Reader = () => {
           >
             <List className="h-4.5 w-4.5" />
           </button>
->>>>>>> dev
 
           {/* Highlights & Notes Drawer Trigger */}
           <button
@@ -659,13 +674,7 @@ export const Reader = () => {
                     <h3 className="text-lg font-display font-black text-brand-text">
                       {!isPdfValid ? "No PDF File Uploaded" : "PDF Preview Unavailable"}
                     </h3>
-                    <p className="text-xs text-brand-text-secondary leading-relaxed max-w-xs">
-<<<<<<< HEAD
-                      Switch to Interactive eBook Mode to read with text formatting and multi-color highlighters!
-=======
-                      Switch to Text Reader mode to read formatted text with AI tutor and multi-color highlighters!
->>>>>>> dev
-                    </p>
+                      Switch to Interactive eBook Mode to read with text formatting, AI assistance, and multi-color highlighters!
                     <Button 
                       onClick={() => setViewMode("text")} 
                       variant="primary" 
@@ -723,12 +732,6 @@ export const Reader = () => {
               </div>
               
               {/* Paragraph Content */}
-<<<<<<< HEAD
-              <div className="flex flex-col gap-6 font-sans leading-relaxed" style={{ fontSize: `${fontSize}px` }}>
-                <p className="indent-4 text-justify font-medium opacity-95 relative leading-relaxed">
-                  {chapters[currentChapterIdx]?.content}
-                </p>
-=======
               <div className={`flex flex-col gap-6 ${fontFamilies[fontFamily]} ${lineHeights[lineHeight]}`} style={{ fontSize: `${fontSize}px` }}>
                 {(() => {
                   const currentCh = chapters[currentChapterIdx];
@@ -742,7 +745,6 @@ export const Reader = () => {
                     </p>
                   ));
                 })()}
->>>>>>> dev
               </div>
 
               {/* Render Saved Highlights in this chapter */}

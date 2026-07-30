@@ -27,7 +27,7 @@ export const ReaderInsightsCenter = () => {
   return (
     <div className="space-y-8">
       {/* Header Banner */}
-      <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-6 flex items-center justify-between">
+      <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-6 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-display font-black text-brand-text flex items-center gap-2">
             <Users className="h-5 w-5 text-brand-accent" />
@@ -41,7 +41,7 @@ export const ReaderInsightsCenter = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Country Heat Distribution */}
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-6 space-y-4">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-6 space-y-4">
           <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2 border-b border-brand-border/40 pb-3">
             <Globe className="h-4 w-4 text-emerald-400" />
             Geographic Reader Distribution
@@ -64,7 +64,7 @@ export const ReaderInsightsCenter = () => {
         </div>
 
         {/* Age Groups & Gender Split */}
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-6 space-y-6">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-6 space-y-6">
           <div className="space-y-4">
             <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2 border-b border-brand-border/40 pb-3">
               <Users className="h-4 w-4 text-sky-400" />
@@ -88,7 +88,7 @@ export const ReaderInsightsCenter = () => {
             <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-brand-text-secondary">Reading Devices</h4>
             <div className="space-y-2">
               {data.topDevices.map((d, idx) => (
-                <div key={idx} className="bg-[#111113] border border-brand-border/60 rounded-xl p-3 flex items-center justify-between text-xs">
+                <div key={idx} className="bg-brand-bg-secondary border border-brand-border/60 rounded-xl p-3 flex items-center justify-between text-xs">
                   <span className="font-bold text-brand-text">{d.device}</span>
                   <span className="font-mono text-brand-accent">{d.percentage}%</span>
                 </div>

@@ -163,7 +163,7 @@ export const AuthorDashboard = () => {
     >
       <div className="space-y-8 select-none">
         {/* HERO SECTION */}
-        <div className="bg-[#111115] border border-white/10 rounded-2xl p-6 md:p-8 relative overflow-hidden backdrop-blur-md shadow-2xl">
+        <div className="bg-brand-card border border-brand-border/70 rounded-2xl p-6 md:p-8 relative overflow-hidden backdrop-blur-md shadow-brand text-left">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative z-10">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
@@ -188,7 +188,7 @@ export const AuthorDashboard = () => {
         {activeTab === "overview" && (
           <>
             {/* ESSENTIAL METRICS GRID */}
-            <div className="space-y-3">
+            <div className="space-y-3 text-left">
               <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-brand-text-secondary">
                 Overview & Key Metrics
               </h3>
@@ -199,7 +199,7 @@ export const AuthorDashboard = () => {
                     <motion.div
                       key={idx}
                       whileHover={{ scale: 1.02 }}
-                      className="bg-[#161618] border border-white/10 hover:border-brand-accent/40 rounded-2xl p-4 space-y-2 transition-all shadow-sm cursor-pointer"
+                      className="bg-brand-card border border-brand-border/70 hover:border-brand-accent/40 rounded-2xl p-4 space-y-2 transition-all shadow-sm cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-brand-text-secondary truncate">{kpi.label}</span>
@@ -212,11 +212,11 @@ export const AuthorDashboard = () => {
               </div>
             </div>
 
-            {/* Sales Chart Container (Expanded Full Width) */}
-            <div className="grid grid-cols-1 gap-6">
+            {/* Sales Chart & Performance Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
               {/* Monthly Sales Area Chart */}
-              <div className="bg-[#161618] border border-white/10 rounded-2xl p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <div className="lg:col-span-2 bg-brand-card border border-brand-border/70 rounded-2xl p-6 space-y-4 shadow-brand">
+                <div className="flex items-center justify-between border-b border-brand-border/40 pb-3">
                   <div>
                     <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2">
                       <TrendingUp className="h-4 w-4 text-emerald-400" /> Monthly Sales & Downloads Velocity
@@ -237,10 +237,55 @@ export const AuthorDashboard = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="#252529" vertical={false} />
                       <XAxis dataKey="month" stroke="#71717A" fontSize={10} tickLine={false} />
                       <YAxis stroke="#71717A" fontSize={10} tickLine={false} />
-                      <Tooltip contentStyle={{ backgroundColor: "#161618", borderColor: "#252529", borderRadius: "12px" }} />
+                      <Tooltip contentStyle={{ backgroundColor: "var(--card, #18181B)", borderColor: "rgba(255,255,255,0.1)", borderRadius: "12px" }} />
                       <Area type="monotone" dataKey="sales" stroke="#10B981" strokeWidth={2.5} fillOpacity={1} fill="url(#salesGrad)" />
                     </AreaChart>
                   </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Author Financial & Audience Summary Panel */}
+              <div className="bg-brand-card border border-brand-border/70 rounded-2xl p-6 shadow-brand flex flex-col justify-between space-y-5">
+                <div>
+                  <div className="flex items-center justify-between border-b border-brand-border/40 pb-3">
+                    <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-brand-text flex items-center gap-2">
+                      <DollarSign className="h-4 w-4 text-emerald-400" /> Royalty Summary
+                    </h3>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full font-bold">80% Share</span>
+                  </div>
+
+                  <div className="mt-4 space-y-3">
+                    <div className="p-3 rounded-xl bg-brand-bg-secondary border border-brand-border/60 flex items-center justify-between">
+                      <span className="text-xs text-brand-text-secondary font-medium">Gross Sales Volume</span>
+                      <span className="text-sm font-display font-bold text-brand-text">₹{grossRev.toLocaleString()}</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-brand-bg-secondary border border-brand-border/60 flex items-center justify-between">
+                      <span className="text-xs text-brand-text-secondary font-medium">Author Net Earnings</span>
+                      <span className="text-sm font-display font-black text-emerald-400">₹{netRoyalties.toLocaleString()}</span>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-brand-bg-secondary border border-brand-border/60 flex items-center justify-between">
+                      <span className="text-xs text-brand-text-secondary font-medium">Pending Settlement</span>
+                      <span className="text-sm font-display font-bold text-amber-400">₹{pendingPayout.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-brand-border/40 space-y-2">
+                  <Button 
+                    onClick={() => setActiveTab("publish-wizard")}
+                    className="w-full h-9 rounded-xl text-xs font-bold bg-brand-accent text-white hover:scale-101 shadow-sm"
+                  >
+                    + Publish New Book
+                  </Button>
+                  <Button 
+                    onClick={() => setActiveTab("revenue")}
+                    variant="outline"
+                    className="w-full h-9 rounded-xl text-xs font-bold border-brand-border text-brand-text hover:bg-brand-bg-secondary"
+                  >
+                    View Royalty Statements →
+                  </Button>
                 </div>
               </div>
             </div>

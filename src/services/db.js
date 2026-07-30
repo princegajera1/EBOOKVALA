@@ -1392,18 +1392,79 @@ export const dbService = {
   createNotification: async (notifData) => {
     try {
       const docRef = doc(collection(db, "notifications"));
+      const targetUserId = notifData.userId || notifData.recipientId || notifData.authorId || notifData.readerId || "";
       const newNotif = {
         id: docRef.id,
+        userId: targetUserId,
         isRead: false,
         createdAt: new Date().toISOString(),
         ...notifData
       };
       await setDoc(docRef, newNotif);
+
+      // Backup to localStorage for client offline/fallback
+      try {
+        let localNotifs = JSON.parse(localStorage.getItem(`eb_notifs_${targetUserId}`) || "[]");
+        localNotifs.unshift(newNotif);
+        localStorage.setItem(`eb_notifs_${targetUserId}`, JSON.stringify(localNotifs.slice(0, 50)));
+      } catch (err) {}
+
       return newNotif;
     } catch (err) {
       console.error("Error creating notification in dbService:", err);
-      throw err;
+      return null;
     }
+  },
+
+  getUserNotifications: async (userId) => {
+    if (!userId) return [];
+    try {
+      const q = query(collection(db, "notifications"), where("userId", "==", userId));
+      const snap = await getDocs(q);
+      const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      return list;
+    } catch (err) {
+      console.warn("getUserNotifications Firestore fallback to localStorage:", err);
+      try {
+        return JSON.parse(localStorage.getItem(`eb_notifs_${userId}`) || "[]");
+      } catch (e) {
+        return [];
+      }
+    }
+  },
+
+  markNotificationRead: async (notifId, userId) => {
+    if (!notifId) return;
+    try {
+      const docRef = doc(db, "notifications", notifId);
+      await updateDoc(docRef, { isRead: true });
+    } catch (err) {
+      console.warn("markNotificationRead error:", err);
+    }
+    if (userId) {
+      try {
+        let localNotifs = JSON.parse(localStorage.getItem(`eb_notifs_${userId}`) || "[]");
+        localNotifs = localNotifs.map(n => n.id === notifId ? { ...n, isRead: true } : n);
+        localStorage.setItem(`eb_notifs_${userId}`, JSON.stringify(localNotifs));
+      } catch (err) {}
+    }
+  },
+
+  markAllNotificationsRead: async (userId) => {
+    if (!userId) return;
+    try {
+      const list = await dbService.getUserNotifications(userId);
+      const unread = list.filter(n => !n.isRead);
+      await Promise.all(unread.map(n => updateDoc(doc(db, "notifications", n.id), { isRead: true })));
+    } catch (err) {
+      console.warn("markAllNotificationsRead error:", err);
+    }
+    try {
+      let localNotifs = JSON.parse(localStorage.getItem(`eb_notifs_${userId}`) || "[]");
+      localNotifs = localNotifs.map(n => ({ ...n, isRead: true }));
+      localStorage.setItem(`eb_notifs_${userId}`, JSON.stringify(localNotifs));
+    } catch (err) {}
   },
 
   // CATEGORIES
@@ -2081,33 +2142,59 @@ export const dbService = {
 
   // NEWSLETTER SUBSCRIPTION
   subscribeNewsletter: async (email) => {
-    if (!email || !email.includes("@")) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email.trim())) {
       throw new Error("Please enter a valid email address");
     }
     const cleanEmail = email.toLowerCase().trim();
+    let isAlreadySubscribed = false;
+
+    // Check localStorage first
+    let local = [];
+    try {
+      local = JSON.parse(localStorage.getItem("ebookvala_subscribers") || "[]");
+    } catch (err) {}
+    if (local.includes(cleanEmail)) {
+      isAlreadySubscribed = true;
+    }
+
     try {
       const q = query(collection(db, "newsletter_subscriptions"), where("email", "==", cleanEmail));
       const snap = await getDocs(q);
       if (!snap.empty) {
-        return { success: true, message: "You're already subscribed!" };
+        isAlreadySubscribed = true;
+      } else {
+        await addDoc(collection(db, "newsletter_subscriptions"), {
+          email: cleanEmail,
+          status: "active",
+          createdAt: new Date().toISOString()
+        });
       }
-      await addDoc(collection(db, "newsletter_subscriptions"), {
-        email: cleanEmail,
-        createdAt: new Date().toISOString()
-      });
     } catch (e) {
       console.warn("Firestore newsletter fallback to localStorage:", e);
-      let local = [];
-      try {
-        local = JSON.parse(localStorage.getItem("ebookvala_subscribers") || "[]");
-      } catch (err) {}
-      if (local.includes(cleanEmail)) {
-        return { success: true, message: "You're already subscribed!" };
-      }
+    }
+
+    if (!local.includes(cleanEmail)) {
       local.push(cleanEmail);
       localStorage.setItem("ebookvala_subscribers", JSON.stringify(local));
     }
-    return { success: true, message: "Successfully subscribed to newsletter!" };
+
+    if (isAlreadySubscribed) {
+      return { success: true, isAlreadySubscribed: true, message: "You're already subscribed to updates!" };
+    }
+
+    // Try sending welcome email via serverless api endpoint
+    try {
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "newsletter", email: cleanEmail })
+      }).catch(err => console.warn("Optional confirmation email dispatch notice:", err));
+    } catch (emailErr) {
+      // Non-blocking
+    }
+
+    return { success: true, isAlreadySubscribed: false, message: "Thank you for subscribing! Check your inbox soon. 📖" };
   },
 
   // BOOK APPROVAL / REJECTION / DELETION

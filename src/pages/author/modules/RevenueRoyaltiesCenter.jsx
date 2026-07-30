@@ -99,7 +99,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
     <div className="space-y-8">
       {/* Financial KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-5 space-y-2">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-5 space-y-2">
           <div className="flex items-center justify-between text-brand-text-secondary">
             <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Today's Royalties</span>
             <DollarSign className="h-4 w-4 text-emerald-400" />
@@ -110,7 +110,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
           </p>
         </div>
 
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-5 space-y-2">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-5 space-y-2">
           <div className="flex items-center justify-between text-brand-text-secondary">
             <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Lifetime Net Royalties</span>
             <TrendingUp className="h-4 w-4 text-sky-400" />
@@ -119,7 +119,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
           <p className="text-[10px] text-brand-text-secondary font-mono">80% Author Royalty Share</p>
         </div>
 
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-5 space-y-2">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-5 space-y-2">
           <div className="flex items-center justify-between text-brand-text-secondary">
             <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Withdrawable Balance</span>
             <ShieldCheck className="h-4 w-4 text-amber-400" />
@@ -128,7 +128,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
           <p className="text-[10px] text-amber-400/80 font-mono">Ready for direct payout</p>
         </div>
 
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-5 space-y-2">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-5 space-y-2">
           <div className="flex items-center justify-between text-brand-text-secondary">
             <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Pending Settlement</span>
             <Clock className="h-4 w-4 text-purple-400" />
@@ -139,7 +139,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
       </div>
 
       {/* Revenue Area Chart */}
-      <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-6 space-y-4">
+      <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-6 space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-brand-border/40 pb-4">
           <div>
             <h3 className="text-base font-display font-black text-brand-text flex items-center gap-2">
@@ -185,7 +185,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
 
       {/* Royalties Timeline & Tax Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-6 md:col-span-2 space-y-4">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-6 md:col-span-2 space-y-4">
           <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2 border-b border-brand-border/40 pb-3">
             <Clock className="h-4 w-4 text-brand-accent" />
             Payout Timeline & Settlement Status
@@ -193,14 +193,14 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
 
           <div className="space-y-3">
             {transactions.length === 0 ? (
-              <div className="bg-[#111113] border border-brand-border/60 rounded-xl p-5 text-center text-xs text-brand-text-secondary space-y-1">
+              <div className="bg-brand-bg-secondary border border-brand-border/60 rounded-xl p-5 text-center text-xs text-brand-text-secondary space-y-1">
                 <Clock className="h-6 w-6 text-brand-text-secondary mx-auto mb-1 opacity-50" />
                 <p className="font-bold text-brand-text">No Payout Records Yet</p>
                 <p className="text-[11px] text-brand-text-secondary">Payouts are scheduled automatically on the 1st of every month when net royalties reach ₹500.</p>
               </div>
             ) : (
               transactions.map((tx, idx) => (
-                <div key={tx.id || idx} className="bg-[#111113] border border-brand-border/60 rounded-xl p-4 flex items-center justify-between">
+                <div key={tx.id || idx} className="bg-brand-bg-secondary border border-brand-border/60 rounded-xl p-4 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center ${tx.status === "Paid" ? "bg-emerald-500/15 text-emerald-400" : "bg-amber-500/15 text-amber-400"}`}>
                       {tx.status === "Paid" ? <CheckCircle2 className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
@@ -222,7 +222,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
         </div>
 
         {/* Tax Summary Box */}
-        <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-6 space-y-4">
+        <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-6 space-y-4">
           <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2 border-b border-brand-border/40 pb-3">
             <FileText className="h-4 w-4 text-purple-400" />
             Tax & Deduction Summary
@@ -250,7 +250,7 @@ export const RevenueRoyaltiesCenter = ({ user, books = [] }) => {
       </div>
 
       {/* Recent Transactions Table */}
-      <div className="bg-[#161618] border border-brand-border/60 rounded-2xl p-6 space-y-4">
+      <div className="bg-brand-card border border-brand-border/60 rounded-2xl p-6 space-y-4">
         <h3 className="text-sm font-display font-black text-brand-text flex items-center gap-2 border-b border-brand-border/40 pb-3">
           <DollarSign className="h-4 w-4 text-emerald-400" />
           Recent Transaction Ledger ({transactions.length})

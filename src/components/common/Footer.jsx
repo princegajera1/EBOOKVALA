@@ -18,11 +18,17 @@ export const Footer = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleSubscribe = async (e) => {
     e.preventDefault();
     const subscriberEmail = email.trim().toLowerCase();
-    if (!subscriberEmail) return;
+    if (!subscriberEmail) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
 
+    setSubmitting(true);
     try {
       const result = await dbService.subscribeNewsletter(subscriberEmail);
       setSubscribed(true);
@@ -31,6 +37,8 @@ export const Footer = () => {
     } catch (err) {
       console.error("Newsletter subscription error:", err);
       toast.error(err.message || "Failed to subscribe. Please try again.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -83,7 +91,7 @@ export const Footer = () => {
                     placeholder="Enter your email" 
                     className="flex-grow bg-brand-bg-secondary border border-brand-border rounded-full py-2 px-4 text-xs focus:outline-none focus:bg-brand-bg focus:border-brand-accent text-brand-text font-medium transition-all"
                   />
-                  <Button type="submit" variant="primary" className="h-9 px-5 text-xs font-bold shrink-0 shadow-sm rounded-full">
+                  <Button type="submit" variant="primary" loading={submitting} disabled={submitting} className="h-9 px-5 text-xs font-bold shrink-0 shadow-sm rounded-full">
                     Join
                   </Button>
                 </form>

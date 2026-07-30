@@ -10,7 +10,7 @@ import { db } from "../../lib/firebase";
 import { toast } from "react-hot-toast";
 
 export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChange, children }) => {
-  const { user, initialLoading, isAuthenticated, updateProfile } = useAuth();
+  const { user, initialLoading, isAuthenticated, updateProfile, upgradeToAuthor } = useAuth();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -288,7 +288,7 @@ export const DashboardLayout = ({ requiredRole, links = [], activeTab, onTabChan
                 onClick={async () => {
                   const toastId = toast.loading("Switching to Author Workspace...");
                   if (user?.role !== "author") {
-                    await updateProfile({ role: "author" }).catch(() => {});
+                    await upgradeToAuthor().catch(() => {});
                   }
                   toast.success("Switched to Author Workspace! 🚀", { id: toastId });
                   navigate("/author/dashboard");

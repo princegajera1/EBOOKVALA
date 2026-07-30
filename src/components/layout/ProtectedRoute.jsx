@@ -41,28 +41,30 @@ export const ProtectedRoute = ({ role, children }) => {
             isUpgradingRef.current = true;
             upgradeToAuthor()
               .then(() => {
-                toast.success("Welcome to Author Dashboard! 🚀");
+                toast.success("Welcome to Author Dashboard! 🚀", { id: "welcome-author-toast" });
               })
               .catch(err => {
                 console.error("Failed to upgrade role to author:", err);
                 toast.error("Failed to switch to Author Dashboard.");
-                navigate("/dashboard", { replace: true });
-              })
-              .finally(() => {
                 isUpgradingRef.current = false;
+                navigate("/dashboard", { replace: true });
               });
           }
         } else if (user?.role === "admin") {
           navigate("/admin/dashboard", { replace: true });
-        } else {
-          toast.error("Access denied");
-          navigate("/");
+        } else if (user?.role === "author" && role !== "author" && role !== "reader") {
+          navigate("/author/dashboard", { replace: true });
         }
       }
     }
   }, [isAuthenticated, user?.role, initialLoading, navigate, role, location.pathname, upgradeToAuthor]);
 
-  const hasAccess = isAuthenticated && (!role || user?.role === role || (role === "reader" && (user?.role === "author" || user?.role === "admin")));
+  const hasAccess = isAuthenticated && (
+    !role || 
+    user?.role === role || 
+    (role === "reader" && (user?.role === "author" || user?.role === "admin")) ||
+    (role === "author" && (user?.role === "author" || user?.role === "reader"))
+  );
 
   if (initialLoading || !hasAccess) {
     return <FullScreenSpinner />;

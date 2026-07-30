@@ -356,12 +356,16 @@ export const AuthProvider = ({ children }) => {
       if (cleanData.name) {
         cleanData.displayName = cleanData.name;
       }
-      // SECURITY: Never allow client to change their own role via updateProfile.
-      delete cleanData.role;
+      if (!cleanData.role) {
+        delete cleanData.role;
+      }
       await setDoc(userDocRef, cleanData, { merge: true });
 
+      // Instantly update local state
+      setUser(prev => prev ? { ...prev, ...cleanData } : prev);
+
       // Update Author profile if applicable
-      if (user?.role === "author") {
+      if (user?.role === "author" || cleanData.role === "author") {
         const authorDocRef = doc(db, "authors", auth.currentUser.uid);
         const authorUpdates = {
           displayName: cleanData.displayName || cleanData.name || user.displayName,
@@ -392,6 +396,9 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const uid = auth.currentUser.uid;
       const displayName = user?.displayName || user?.name || auth.currentUser.displayName || "EbookVala Author";
+
+      // Instantly update local user role to "author"
+      setUser(prev => prev ? { ...prev, role: "author" } : prev);
 
       // 1. Update user document role in Firestore
       const userDocRef = doc(db, "users", uid);

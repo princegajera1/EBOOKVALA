@@ -899,9 +899,42 @@ export const dbService = {
     await ensureSeeded();
     try {
       const docSnap = await getDoc(doc(db, "authors", id));
-      return docSnap.exists() ? { uid: docSnap.id, ...docSnap.data() } : null;
+      if (docSnap.exists()) {
+        return { uid: docSnap.id, ...docSnap.data() };
+      }
+
+      // Check SEED_AUTHORS fallback
+      const seedMatch = SEED_AUTHORS.find(a => a.uid === id);
+      if (seedMatch) return seedMatch;
+
+      // If user document exists, create default author profile on-the-fly
+      const userSnap = await getDoc(doc(db, "users", id));
+      if (userSnap.exists()) {
+        const uData = userSnap.data();
+        const fallbackAuthor = {
+          uid: id,
+          displayName: uData.name || uData.displayName || uData.email?.split("@")[0] || "Author",
+          photoURL: uData.photoURL || "",
+          bio: `Hello! I am ${uData.name || "an author"} on EBOOKVALA.`,
+          socialLinks: {},
+          isVerified: false,
+          verificationStatus: "unverified",
+          totalEarnings: 0,
+          availableBalance: 0,
+          pendingBalance: 0,
+          followers: [],
+          totalSales: 0,
+          createdAt: uData.createdAt || new Date().toISOString()
+        };
+        await setDoc(doc(db, "authors", id), fallbackAuthor).catch(() => null);
+        return fallbackAuthor;
+      }
+
+      return null;
     } catch (error) {
       console.error("Firestore getAuthorById error:", error);
+      const seedMatch = SEED_AUTHORS.find(a => a.uid === id);
+      if (seedMatch) return seedMatch;
       return null;
     }
   },

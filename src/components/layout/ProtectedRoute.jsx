@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { toast } from "react-hot-toast";
@@ -16,9 +16,10 @@ export const FullScreenSpinner = () => (
 );
 
 export const ProtectedRoute = ({ role, children }) => {
-  const { user, initialLoading, isAuthenticated, updateProfile } = useAuth();
+  const { user, initialLoading, isAuthenticated, upgradeToAuthor } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isUpgradingRef = useRef(false);
 
   useEffect(() => {
     if (!initialLoading) {
@@ -29,12 +30,24 @@ export const ProtectedRoute = ({ role, children }) => {
         } else {
           toast.error("Please sign in to continue");
         }
-        navigate("/login", { state: { from: location } });
+        navigate("/login", { state: { from: location.pathname } });
       } else if (role && user?.role !== role) {
-        if (role === "author") {
-          updateProfile({ role: "author" }).then(() => {
-            toast.success("Welcome to Author Dashboard! 🚀");
-          });
+        if (role === "author" && user?.role === "reader") {
+          if (!isUpgradingRef.current) {
+            isUpgradingRef.current = true;
+            upgradeToAuthor()
+              .then(() => {
+                toast.success("Welcome to Author Dashboard! 🚀");
+              })
+              .catch(err => {
+                console.error("Failed to upgrade role to author:", err);
+                toast.error("Failed to switch to Author Dashboard.");
+                navigate("/dashboard", { replace: true });
+              })
+              .finally(() => {
+                isUpgradingRef.current = false;
+              });
+          }
         } else if (user?.role === "author") {
           navigate("/author/dashboard", { replace: true });
         } else if (user?.role === "admin") {
@@ -47,7 +60,7 @@ export const ProtectedRoute = ({ role, children }) => {
         }
       }
     }
-  }, [isAuthenticated, user, initialLoading, navigate, role, location, updateProfile]);
+  }, [isAuthenticated, user?.role, initialLoading, navigate, role, location.pathname, upgradeToAuthor]);
 
   if (initialLoading || !isAuthenticated || (role && user?.role !== role)) {
     return <FullScreenSpinner />;

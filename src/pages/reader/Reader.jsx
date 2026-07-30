@@ -26,35 +26,70 @@ export const HIGHLIGHT_COLORS = [
   { id: "indigo", name: "Indigo", bg: "bg-indigo-300/80 dark:bg-indigo-400/40 text-slate-900 dark:text-slate-100", dot: "bg-indigo-400", hex: "#818CF8" }
 ];
 
-// Generates rich mock chapters for interactive eBook mode
+// Generates page-by-page content matching PDF View and interactive eBook mode
 const generateBookChapters = (bookData) => {
-  if (bookData?.chapters && bookData.chapters.length > 0) {
-    return bookData.chapters;
+  if (bookData?.chapters && Array.isArray(bookData.chapters) && bookData.chapters.length > 0) {
+    return bookData.chapters.map((ch, idx) => ({
+      id: ch.id || `ch-${idx + 1}`,
+      chapter: ch.chapter || ch.title || `Page ${idx + 1}`,
+      content: ch.content || (Array.isArray(ch.paragraphs) ? ch.paragraphs.join("\n\n") : ch.text || ""),
+      paragraphs: Array.isArray(ch.paragraphs) ? ch.paragraphs : (ch.content ? ch.content.split("\n\n") : []),
+      pageNumber: ch.pageNumber || idx + 1
+    }));
   }
-  
+
+  if (bookData?.extractedPages && Array.isArray(bookData.extractedPages) && bookData.extractedPages.length > 0) {
+    return bookData.extractedPages.map((pgText, idx) => ({
+      id: `page-${idx + 1}`,
+      chapter: `Page ${idx + 1}`,
+      content: pgText,
+      paragraphs: typeof pgText === "string" ? pgText.split("\n\n") : [String(pgText)],
+      pageNumber: idx + 1
+    }));
+  }
+
   const title = bookData?.title || "eBook";
-  return [
-    {
-      id: "ch-1",
-      chapter: "Chapter 1: The Beginning",
-      content: `Welcome to "${title}". ${bookData?.description || "This is chapter 1 content."} Enjoy reading through the chapters in clean text mode with multi-color highlights!`
-    },
-    {
-      id: "ch-2",
-      chapter: "Chapter 2: Core Concepts & Insights",
-      content: `In this section of "${title}", we explore key concepts, strategies, and principles. Select any text to apply one of six vibrant highlight colors or save notes.`
-    },
-    {
-      id: "ch-3",
-      chapter: "Chapter 3: Practical Applications",
-      content: `Practical execution is essential. Discover actionable guidance and steps within "${title}" designed for long-term growth.`
-    },
-    {
-      id: "ch-4",
-      chapter: "Chapter 4: Advanced Mastery",
-      content: `Deep dive into advanced applications and synthesis for "${title}". Track your reading streak and highlights seamlessly.`
+  const subtitle = bookData?.subtitle || bookData?.aiDescription || "";
+  const description = bookData?.description || "Explore core concepts, strategies, and principles.";
+  const totalBookPages = bookData?.pages || 24;
+
+  const chaptersList = [];
+  const numPages = Math.max(totalBookPages, 4);
+
+  for (let i = 1; i <= numPages; i++) {
+    let pTitle = `Page ${i}`;
+    let pContent = "";
+
+    if (i === 1) {
+      pTitle = `Page 1 — ${title}`;
+      pContent = `Welcome to "${title}". ${subtitle ? subtitle + "\n\n" : ""}${description}\n\nThis section establishes the overarching framework and primary objectives of the publication. Select any text on this page to highlight with 6 colors or add notes.`;
+    } else if (i === 2) {
+      pTitle = `Page 2 — Chapter 1: Foundations`;
+      pContent = `In this section of "${title}", we explore baseline principles, system rules, and design methodologies.\n\nMaintaining decoupled structures ensures maximum resilience and scalability under high load.`;
+    } else if (i === 3) {
+      pTitle = `Page 3 — 1.1 Core Architecture`;
+      pContent = `Architectural optimization in "${title}" relies on clear patterns, strict data typing, and micro-metric analysis.\n\nBy establishing predictable execution pipelines, systems remain performant and maintainable.`;
+    } else if (i === 4) {
+      pTitle = `Page 4 — 1.2 Execution & Strategy`;
+      pContent = `Practical execution requires strategic alignment and continuous user feedback. Apply the concepts introduced in "${title}" to build high-performance products.`;
+    } else {
+      const chapNum = Math.floor((i - 1) / 3) + 1;
+      const secNum = ((i - 1) % 3) + 1;
+      pTitle = `Page ${i} — Chapter ${chapNum}.${secNum}`;
+      pContent = `Continued discussion and analysis for "${title}" (Page ${i} of ${numPages}).\n\nReviewing key domain concepts, advanced patterns, and actionable takeaways for Chapter ${chapNum}.${secNum}.`;
     }
-  ];
+    }
+
+    chaptersList.push({
+      id: `ch-${i}`,
+      chapter: pTitle,
+      content: pContent,
+      paragraphs: pContent.split("\n\n"),
+      pageNumber: i
+    });
+  }
+
+  return chaptersList;
 };
 
 export const Reader = () => {
@@ -238,6 +273,7 @@ export const Reader = () => {
 
   // Turn Page / Chapter Change
   const handlePageTurn = async (newIdx) => {
+    if (newIdx < 0 || newIdx >= chapters.length) return;
     setCurrentChapterIdx(newIdx);
     if (isSpeaking) {
       window.speechSynthesis.cancel();
@@ -254,7 +290,14 @@ export const Reader = () => {
         progressPercent: Math.round((currentPage / totalPgs) * 100),
         lastRead: new Date().toISOString()
       };
-      await updateProfile({ readingProgress: updatedProgress });
+      try {
+        await dbService.saveReadingProgress(user.uid, book.id, progData);
+        const userProgress = user.readingProgress || {};
+        userProgress[book.id] = progData;
+        await updateProfile({ readingProgress: userProgress });
+      } catch (err) {
+        console.warn("Failed to sync reading progress:", err);
+      }
     }
   };
 
@@ -398,6 +441,7 @@ export const Reader = () => {
 
         <div className="flex items-center gap-2">
           
+<<<<<<< HEAD
           {/* View Mode Toggle: eBook Mode vs PDF View */}
           {book && (book.pdfURL || book.pdf_url) && (
             <div className="flex items-center bg-black/10 dark:bg-white/10 p-0.5 rounded-full border border-brand-border/60 text-[11px] font-bold select-none">
@@ -427,6 +471,16 @@ export const Reader = () => {
               </button>
             </div>
           )}
+=======
+          {/* Table of Contents Drawer Trigger */}
+          <button
+            onClick={() => setShowTocDrawer(!showTocDrawer)}
+            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+            title="Table of Contents"
+          >
+            <List className="h-4.5 w-4.5" />
+          </button>
+>>>>>>> dev
 
           {/* Highlights & Notes Drawer Trigger */}
           <button
@@ -606,7 +660,11 @@ export const Reader = () => {
                       {!isPdfValid ? "No PDF File Uploaded" : "PDF Preview Unavailable"}
                     </h3>
                     <p className="text-xs text-brand-text-secondary leading-relaxed max-w-xs">
+<<<<<<< HEAD
                       Switch to Interactive eBook Mode to read with text formatting and multi-color highlighters!
+=======
+                      Switch to Text Reader mode to read formatted text with AI tutor and multi-color highlighters!
+>>>>>>> dev
                     </p>
                     <Button 
                       onClick={() => setViewMode("text")} 
@@ -614,7 +672,7 @@ export const Reader = () => {
                       className="w-full rounded-full text-xs font-bold h-10 shadow-sm flex items-center justify-center gap-2 cursor-pointer mt-2"
                     >
                       <BookOpen className="h-4 w-4" />
-                      Switch to eBook Mode
+                      Switch to Text Reader
                     </Button>
                   </div>
                 </div>
@@ -626,13 +684,18 @@ export const Reader = () => {
               fullPdfUrl = window.location.origin + rawPdfUrl;
             }
             
-            const iframeSrc = (fullPdfUrl.startsWith("http://") || fullPdfUrl.startsWith("https://")) && !fullPdfUrl.includes("localhost")
-              ? `https://docs.google.com/viewer?url=${encodeURIComponent(fullPdfUrl)}&embedded=true`
-              : fullPdfUrl;
+            const pdfPageHash = `#page=${currentChapterIdx + 1}`;
+            let iframeSrc = fullPdfUrl;
+            if ((fullPdfUrl.startsWith("http://") || fullPdfUrl.startsWith("https://")) && !fullPdfUrl.includes(window.location.hostname)) {
+              iframeSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(fullPdfUrl)}&embedded=true${pdfPageHash}`;
+            } else {
+              iframeSrc = `${fullPdfUrl}${pdfPageHash}`;
+            }
 
             return (
               <div className="flex-grow relative bg-brand-bg-secondary flex flex-col items-stretch justify-center overflow-hidden w-full">
                 <iframe 
+                  key={`pdf-frame-page-${currentChapterIdx + 1}`}
                   src={iframeSrc} 
                   className="w-full h-full flex-grow border-none" 
                   title={book?.title || "PDF Document"}
@@ -660,10 +723,26 @@ export const Reader = () => {
               </div>
               
               {/* Paragraph Content */}
+<<<<<<< HEAD
               <div className="flex flex-col gap-6 font-sans leading-relaxed" style={{ fontSize: `${fontSize}px` }}>
                 <p className="indent-4 text-justify font-medium opacity-95 relative leading-relaxed">
                   {chapters[currentChapterIdx]?.content}
                 </p>
+=======
+              <div className={`flex flex-col gap-6 ${fontFamilies[fontFamily]} ${lineHeights[lineHeight]}`} style={{ fontSize: `${fontSize}px` }}>
+                {(() => {
+                  const currentCh = chapters[currentChapterIdx];
+                  const paras = currentCh?.paragraphs && currentCh.paragraphs.length > 0
+                    ? currentCh.paragraphs
+                    : (currentCh?.content ? currentCh.content.split("\n\n") : []);
+
+                  return paras.map((pText, pIdx) => (
+                    <p key={pIdx} className="indent-4 text-justify font-medium opacity-95 relative leading-relaxed">
+                      {pText}
+                    </p>
+                  ));
+                })()}
+>>>>>>> dev
               </div>
 
               {/* Render Saved Highlights in this chapter */}
@@ -845,32 +924,30 @@ export const Reader = () => {
         </AnimatePresence>
       </main>
 
-      {/* Bottom Progress Navigation bar */}
-      {viewMode === "text" && (
-        <footer className="h-16 border-t border-inherit px-6 flex items-center justify-between select-none">
-          <button
-            onClick={() => handlePageTurn(currentChapterIdx - 1)}
-            disabled={currentChapterIdx === 0}
-            className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <ChevronLeft className="h-4.5 w-4.5" />
-            <span>Previous Chapter</span>
-          </button>
+      {/* Bottom Progress Navigation bar (rendered in both PDF and eBook text modes for page position parity) */}
+      <footer className="h-16 border-t border-inherit px-6 flex items-center justify-between select-none backdrop-blur-md sticky bottom-0 z-30">
+        <button
+          onClick={() => handlePageTurn(currentChapterIdx - 1)}
+          disabled={currentChapterIdx === 0}
+          className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <ChevronLeft className="h-4.5 w-4.5" />
+          <span>Previous Page</span>
+        </button>
 
-          <span className="text-xs font-mono font-bold opacity-80">
-            Chapter {currentChapterIdx + 1} of {chapters.length}
-          </span>
+        <span className="text-xs font-mono font-bold opacity-80">
+          Page {currentChapterIdx + 1} of {chapters.length}
+        </span>
 
-          <button
-            onClick={() => handlePageTurn(currentChapterIdx + 1)}
-            disabled={currentChapterIdx === chapters.length - 1}
-            className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <span>Next Chapter</span>
-            <ChevronRight className="h-4.5 w-4.5" />
-          </button>
-        </footer>
-      )}
+        <button
+          onClick={() => handlePageTurn(currentChapterIdx + 1)}
+          disabled={currentChapterIdx >= chapters.length - 1}
+          className="flex items-center gap-1.5 text-xs font-bold hover:opacity-80 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+        >
+          <span>Next Page</span>
+          <ChevronRight className="h-4.5 w-4.5" />
+        </button>
+      </footer>
 
     </div>
   );

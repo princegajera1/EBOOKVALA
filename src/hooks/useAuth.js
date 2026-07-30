@@ -9,7 +9,8 @@ export const useAuth = () => {
     signup, 
     logout, 
     forgotPassword, 
-    updateProfile 
+    updateProfile,
+    upgradeToAuthor 
   } = useAuthContext();
   
   return {
@@ -24,7 +25,8 @@ export const useAuth = () => {
     register: signup, // Backward-compatible alias
     logout,
     forgotPassword,
-    updateProfile
+    updateProfile,
+    upgradeToAuthor
   };
 };
 

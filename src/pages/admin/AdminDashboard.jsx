@@ -124,7 +124,7 @@ export const AdminDashboard = () => {
   const [filterUserRole, setFilterUserRole] = useState("all");
 
   const [currentPageAllUsers, setCurrentPageAllUsers] = useState(1);
-  const [pageSizeAllUsers, setPageSizeAllUsers] = useState(10);
+  const [pageSizeAllUsers] = useState(10);
   const [allUsersSearchQuery, setAllUsersSearchQuery] = useState("");
   const [sortFieldAllUsers, setSortFieldAllUsers] = useState("createdAt");
   const [sortOrderAllUsers, setSortOrderAllUsers] = useState("desc");
@@ -668,7 +668,6 @@ export const AdminDashboard = () => {
   const [visitorFilter, setVisitorFilter] = useState("all");
 
   const [liveSessions, setLiveSessions] = useState([]);
-  const [tick, setTick] = useState(Date.now());
 
   // Real-time ticking interval for duration display (1s for live feel)
   useEffect(() => {
@@ -798,7 +797,6 @@ export const AdminDashboard = () => {
   ];
 
   const pendingBooks = books.filter(b => b.status === "pending");
-  const pendingVerifications = authors.filter(a => a.verificationStatus === "pending");
 
   // Calculate real downloads trend from database orders
   const getDownloadsTrendData = () => {
@@ -824,8 +822,6 @@ export const AdminDashboard = () => {
       downloads: count
     }));
   };
-
-  const downloadsTrend = getDownloadsTrendData();
 
   // Weekly Reads area chart data from orders
   const getWeeklyReadsData = () => {
@@ -941,7 +937,6 @@ export const AdminDashboard = () => {
   const dynamicVisitorLog = getDynamicVisitorLog();
   const activeCount = dynamicVisitorLog.filter(v => v.status === "Active").length;
   const guestCount = dynamicVisitorLog.filter(v => v.status === "Active" && v.user.includes("Guest")).length;
-  const memberCount = activeCount - guestCount;
 
   // Generate dynamic activities timeline from actual database events
   const getRecentActivities = () => {
@@ -2158,7 +2153,7 @@ export const AdminDashboard = () => {
             }).catch(err => console.warn("Failed to create verification change notification:", err));
 
             toast.success(`Verification status updated to ${nextStatus}.`);
-          } catch (e) {
+          } catch {
             toast.error("Failed to update status.");
           }
         };

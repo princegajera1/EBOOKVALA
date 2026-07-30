@@ -85,8 +85,9 @@ export const StaggeredMenu = ({
       const offscreen = position === 'left' ? -100 : 100;
       gsap.set([panel, ...preLayers], { xPercent: offscreen, opacity: 1 });
       if (preContainer) {
-        gsap.set(preContainer, { xPercent: 0, opacity: 1 });
+        gsap.set(preContainer, { xPercent: offscreen, opacity: 1, visibility: 'hidden', pointerEvents: 'none' });
       }
+      gsap.set(panel, { visibility: 'hidden', pointerEvents: 'none' });
       gsap.set(plusH, { transformOrigin: '50% 50%', rotate: 0 });
       gsap.set(plusV, { transformOrigin: '50% 50%', rotate: 90 });
       gsap.set(icon, { rotate: 0, transformOrigin: '50% 50%' });
@@ -98,6 +99,7 @@ export const StaggeredMenu = ({
 
   const buildOpenTimeline = useCallback(() => {
     const panel = panelRef.current;
+    const preContainer = preLayersRef.current;
     const layers = preLayerElsRef.current;
     if (!panel) return null;
 
@@ -119,6 +121,8 @@ export const StaggeredMenu = ({
     if (numberEls.length) gsap.set(numberEls, { opacity: 0 });
 
     const tl = gsap.timeline({ paused: true });
+
+    tl.set([panel, preContainer], { visibility: 'visible', pointerEvents: 'auto', xPercent: 0 }, 0);
 
     layerStates.forEach((ls, i) => {
       tl.fromTo(ls.el, { xPercent: ls.start }, { xPercent: 0, duration: 0.5, ease: 'power4.out' }, i * 0.07);
@@ -159,15 +163,17 @@ export const StaggeredMenu = ({
     itemEntranceTweenRef.current?.kill();
 
     const panel = panelRef.current;
+    const preContainer = preLayersRef.current;
     const layers = preLayerElsRef.current;
     if (!panel) return;
 
-    const all = [...layers, panel];
+    const all = [...layers, panel, preContainer].filter(Boolean);
     closeTweenRef.current?.kill();
     const offscreen = position === 'left' ? -100 : 100;
     closeTweenRef.current = gsap.to(all, {
       xPercent: offscreen, duration: 0.32, ease: 'power3.in', overwrite: 'auto',
       onComplete: () => {
+        gsap.set([panel, preContainer], { visibility: 'hidden', pointerEvents: 'none' });
         const itemEls = Array.from(panel.querySelectorAll('.sm-panel-itemLabel'));
         if (itemEls.length) gsap.set(itemEls, { yPercent: 140, rotate: 10 });
         const numberEls = Array.from(panel.querySelectorAll('.sm-panel-itemNum'));

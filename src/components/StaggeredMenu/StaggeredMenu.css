@@ -137,6 +137,8 @@
   height: 100vh;
   z-index: 46;
   overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .staggered-menu-wrapper[data-position="right"] .sm-prelayers {
@@ -172,7 +174,14 @@
   flex-direction: column;
   justify-content: space-between;
   overflow-y: auto;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.staggered-menu-wrapper[data-open="true"] .sm-prelayers,
+.staggered-menu-wrapper[data-open="true"] .staggered-menu-panel {
   pointer-events: auto;
+  visibility: visible;
 }
 
 .staggered-menu-wrapper[data-position="right"] .staggered-menu-panel {

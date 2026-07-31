@@ -62,7 +62,7 @@ const generateBookChapters = (bookData) => {
 
     if (i === 1) {
       pTitle = `Page 1 — ${title}`;
-      pContent = `Welcome to "${title}". ${subtitle ? subtitle + "\n\n" : ""}${description}\n\nThis section establishes the overarching framework and primary objectives of the publication. Select any text on this page to highlight with 6 colors or add notes.`;
+      pContent = `Welcome to "${title}". ${subtitle ? subtitle + "\n\n" : ""}${description}\n\nThis section establishes the overarching framework and primary objectives of the publication.`;
     } else if (i === 2) {
       pTitle = `Page 2 — Chapter 1: Foundations`;
       pContent = `In this section of "${title}", we explore baseline principles, system rules, and design methodologies.\n\nMaintaining decoupled structures ensures maximum resilience and scalability under high load.`;
@@ -467,8 +467,7 @@ export const Reader = () => {
           </button>
 
           {/* Reader Configs Dropdown */}
-          {viewMode === "text" && (
-            <div className="relative">
+          <div className="relative">
               <button
                 onClick={() => setShowSettingsDropdown(!showSettingsDropdown)}
                 className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
@@ -553,7 +552,6 @@ export const Reader = () => {
                 )}
               </AnimatePresence>
             </div>
-          )}
 
           {/* Download Button */}
           {book && (book.pdfURL || book.pdf_url) && (
@@ -642,7 +640,6 @@ export const Reader = () => {
           /* Interactive eBook Mode Text Viewport */
           <div 
             className="flex-grow overflow-y-auto py-10 sm:py-14 flex justify-center w-full min-h-[calc(100vh-128px)]"
-            onMouseUp={handleTextSelection}
           >
             <div className="max-w-3xl w-full flex flex-col gap-6 text-left px-6">
               

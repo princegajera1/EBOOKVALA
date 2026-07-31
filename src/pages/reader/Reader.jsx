@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   ChevronLeft, ChevronRight, Settings, Maximize, Minimize, Bookmark, 
-  Highlighter, PenTool, Volume2, VolumeX, Languages, 
+  PenTool, Volume2, VolumeX, Languages, 
   HelpCircle, LogOut, ArrowLeft, RefreshCw, FileText, 
   BookOpen, Download, List, Trash2, Copy, Check, Palette
 } from "lucide-react";
@@ -457,37 +457,6 @@ export const Reader = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          
-          {/* View Mode Toggle: eBook Mode vs PDF View */}
-          {book && (book.pdfURL || book.pdf_url) && (
-            <div className="flex items-center bg-black/10 dark:bg-white/10 p-0.5 rounded-full border border-brand-border/60 text-[11px] font-bold select-none">
-              <button
-                onClick={() => setViewMode("text")}
-                className={`px-3 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 ${
-                  viewMode === "text" 
-                    ? "bg-brand-accent text-white shadow-sm font-extrabold" 
-                    : "text-brand-text-secondary hover:text-brand-text"
-                }`}
-                title="Switch to Interactive eBook Mode for 6-color highlighting"
-              >
-                <BookOpen className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">eBook Mode</span>
-              </button>
-              <button
-                onClick={() => setViewMode("pdf")}
-                className={`px-3 py-1 rounded-full cursor-pointer transition-colors flex items-center gap-1.5 ${
-                  viewMode === "pdf" 
-                    ? "bg-brand-accent text-white shadow-sm font-extrabold" 
-                    : "text-brand-text-secondary hover:text-brand-text"
-                }`}
-                title="Switch to Original PDF View"
-              >
-                <FileText className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">PDF View</span>
-              </button>
-            </div>
-          )}
-
           {/* Table of Contents Drawer Trigger */}
           <button
             onClick={() => setShowTocDrawer(!showTocDrawer)}
@@ -495,20 +464,6 @@ export const Reader = () => {
             title="Table of Contents"
           >
             <List className="h-4.5 w-4.5" />
-          </button>
-
-          {/* Highlights & Notes Drawer Trigger */}
-          <button
-            onClick={() => setShowHighlightsDrawer(!showHighlightsDrawer)}
-            className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer relative"
-            title="Saved Highlights & Notes"
-          >
-            <Highlighter className="h-4.5 w-4.5 text-amber-500" />
-            {highlights.length > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 h-4 w-4 bg-brand-accent text-white text-[9px] font-extrabold rounded-full flex items-center justify-center">
-                {highlights.length}
-              </span>
-            )}
           </button>
 
           {/* Reader Configs Dropdown */}
@@ -626,37 +581,7 @@ export const Reader = () => {
       {/* Main Reading Canvas */}
       <main className="flex-grow flex relative items-stretch">
         
-        {/* Multi-Color Floating Highlighter Toolbar */}
-        <AnimatePresence>
-          {selectedText && (
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 15 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 15 }}
-              className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 bg-brand-card/95 backdrop-blur-lg border border-brand-border/80 rounded-full p-2 shadow-[0_15px_40px_rgba(0,0,0,0.5)] flex items-center gap-2 select-none"
-            >
-              <div className="flex items-center gap-1.5 px-2 border-r border-brand-border">
-                <span className="text-[10px] font-mono font-bold text-brand-text-secondary uppercase">Highlight:</span>
-                {HIGHLIGHT_COLORS.slice(0, 6).map((col) => (
-                  <button
-                    key={col.id}
-                    onClick={() => addHighlightWithColor(col.id)}
-                    className={`h-6 w-6 rounded-full ${col.dot} border-2 border-white/40 hover:scale-125 transition-transform cursor-pointer shadow-sm`}
-                    title={`Highlight in ${col.name}`}
-                  />
-                ))}
-              </div>
 
-              <button
-                onClick={() => setSelectedText("")}
-                className="p-1 rounded-full text-brand-text-secondary hover:bg-brand-bg-secondary cursor-pointer"
-                title="Dismiss highlight selection"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* PDF / eBook Text Viewport */}
         {viewMode === "pdf" ? (
@@ -747,40 +672,7 @@ export const Reader = () => {
                 })()}
               </div>
 
-              {/* Render Saved Highlights in this chapter */}
-              {highlights.length > 0 && (
-                <div className="mt-8 pt-6 border-t border-brand-border">
-                  <h4 className="text-xs font-bold font-mono uppercase tracking-wider mb-3 opacity-70 flex items-center gap-1.5">
-                    <Highlighter className="h-3.5 w-3.5 text-amber-500" /> Color Highlights in Chapter ({highlights.length})
-                  </h4>
-                  <div className="space-y-2">
-                    {highlights.map((h) => {
-                      const colorObj = HIGHLIGHT_COLORS.find(c => c.id === h.colorId) || HIGHLIGHT_COLORS[0];
-                      return (
-                        <div key={h.id} className={`p-3 rounded-xl ${colorObj.bg} text-xs font-medium flex items-center justify-between gap-3 shadow-sm`}>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className={`h-2.5 w-2.5 rounded-full ${colorObj.dot} shrink-0`} />
-                            <span className="truncate">"{h.text}"</span>
-                          </div>
-                          <div className="flex items-center gap-1 shrink-0">
-                            {HIGHLIGHT_COLORS.slice(0, 6).map((col) => (
-                              <button
-                                key={col.id}
-                                onClick={() => recolorHighlight(h.id, col.id)}
-                                className={`h-4 w-4 rounded-full ${col.dot} hover:scale-125 transition-transform cursor-pointer opacity-70 hover:opacity-100`}
-                                title={`Re-color to ${col.name}`}
-                              />
-                            ))}
-                            <button onClick={() => removeHighlight(h.id)} className="text-slate-700 hover:text-red-600 font-bold ml-1 cursor-pointer">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+
             </div>
           </div>
         )}
@@ -825,105 +717,7 @@ export const Reader = () => {
           )}
         </AnimatePresence>
 
-        {/* Saved Highlights Drawer with 6-Color Filter & Re-Color Support */}
-        <AnimatePresence>
-          {showHighlightsDrawer && (
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed right-0 top-16 bottom-16 w-84 bg-brand-card border-l border-brand-border shadow-brand-hover z-40 flex flex-col justify-between text-left p-4 select-none"
-            >
-              <div>
-                <div className="flex items-center justify-between pb-3 border-b border-brand-border mb-3">
-                  <div className="flex items-center gap-2">
-                    <Highlighter className="h-4 w-4 text-amber-500" />
-                    <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-brand-text">Saved Highlights ({highlights.length})</h4>
-                  </div>
-                  <button onClick={() => setShowHighlightsDrawer(false)} className="text-brand-text-secondary hover:text-brand-text cursor-pointer">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
 
-                {/* Color Filter Bar */}
-                <div className="flex items-center gap-1.5 pb-3 mb-3 border-b border-brand-border/60 overflow-x-auto no-scrollbar">
-                  <button
-                    onClick={() => setSelectedColorFilter("all")}
-                    className={`text-[9px] font-bold px-2 py-1 rounded-full cursor-pointer transition-colors ${
-                      selectedColorFilter === "all" ? "bg-brand-accent text-white" : "bg-brand-bg-secondary text-brand-text-secondary"
-                    }`}
-                  >
-                    All ({highlights.length})
-                  </button>
-                  {HIGHLIGHT_COLORS.slice(0, 6).map(col => {
-                    const cnt = highlights.filter(h => h.colorId === col.id).length;
-                    return (
-                      <button
-                        key={col.id}
-                        onClick={() => setSelectedColorFilter(col.id)}
-                        className={`text-[9px] font-bold px-2 py-1 rounded-full cursor-pointer flex items-center gap-1 border ${
-                          selectedColorFilter === col.id ? "border-brand-accent bg-brand-accent/15 text-brand-text" : "border-brand-border text-brand-text-secondary"
-                        }`}
-                      >
-                        <span className={`h-2 w-2 rounded-full ${col.dot}`} />
-                        {cnt}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {viewMode === "pdf" && (
-                  <div className="p-3 mb-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-300 flex flex-col gap-2 select-none">
-                    <p className="leading-snug font-semibold">⚡ You are in PDF View. Switch to <strong>eBook Mode</strong> to select text and highlight in 6 colors!</p>
-                    <Button onClick={() => setViewMode("text")} size="sm" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold h-7 text-[10px] rounded-lg cursor-pointer">
-                      Switch to eBook Mode
-                    </Button>
-                  </div>
-                )}
-
-                {highlights.length === 0 ? (
-                  <p className="text-xs text-brand-text-secondary text-center py-8">No text highlighted yet. Select any text in eBook Mode to highlight with 6 colors!</p>
-                ) : (
-                  <div className="space-y-2.5 max-h-[65vh] overflow-y-auto pr-1">
-                    {highlights
-                      .filter(h => selectedColorFilter === "all" || h.colorId === selectedColorFilter)
-                      .map((h) => {
-                        const colorObj = HIGHLIGHT_COLORS.find(c => c.id === h.colorId) || HIGHLIGHT_COLORS[0];
-                        return (
-                          <div key={h.id} className={`p-3 rounded-xl ${colorObj.bg} text-xs font-medium relative group shadow-sm flex flex-col gap-2`}>
-                            <p className="pr-6 leading-snug">"{h.text}"</p>
-                            
-                            <div className="flex items-center justify-between pt-1 border-t border-black/10 dark:border-white/10">
-                              <span className="text-[9px] opacity-75 font-mono">{h.chapter}</span>
-                              
-                              <div className="flex items-center gap-1">
-                                {HIGHLIGHT_COLORS.slice(0, 6).map((col) => (
-                                  <button
-                                    key={col.id}
-                                    onClick={() => recolorHighlight(h.id, col.id)}
-                                    className={`h-3.5 w-3.5 rounded-full ${col.dot} hover:scale-125 transition-transform cursor-pointer opacity-70 hover:opacity-100`}
-                                    title={`Re-color to ${col.name}`}
-                                  />
-                                ))}
-                                <button
-                                  onClick={() => removeHighlight(h.id)}
-                                  className="p-1 text-slate-700 hover:text-red-600 transition-colors ml-1 cursor-pointer"
-                                  title="Delete highlight"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </main>
 
       {/* Bottom Progress Navigation bar (rendered in both PDF and eBook text modes for page position parity) */}
